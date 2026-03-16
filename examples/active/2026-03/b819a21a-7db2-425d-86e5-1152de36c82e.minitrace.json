@@ -1,0 +1,250 @@
+{
+  "id": "b819a21a-7db2-425d-86e5-1152de36c82e",
+  "schema_version": "minitrace-v0.1.0",
+  "profile": "organic",
+  "scenario_id": null,
+  "title": "Add a \"## Testing\" section to the end of README.md…",
+  "summary": null,
+  "classification": "internal",
+  "provenance": {
+    "source_format": "vibe-session-v1",
+    "source_path": "vibe/native-sessions/session_20260316_035616_b819a21a",
+    "converted_at": "2026-03-16T04:38:31Z",
+    "converter_version": "minitrace-vibe-adapter-0.1.0",
+    "original_session_id": "b819a21a-7db2-425d-86e5-1152de36c82e"
+  },
+  "flags": {
+    "for_research": false,
+    "needs_cleaning": false,
+    "contains_error": false,
+    "contains_pii": false,
+    "category": []
+  },
+  "environment": {
+    "model": "unknown",
+    "model_version": null,
+    "temperature": null,
+    "tools_enabled": [
+      "read_file",
+      "search_replace"
+    ],
+    "system_prompt": null,
+    "agent_framework": "vibe",
+    "agent_version": null,
+    "provider_hint": "mistral"
+  },
+  "operational_context": {
+    "working_directory": "/workspace",
+    "git_branch": null,
+    "git_ref": null,
+    "autonomy_level": null,
+    "sandbox": null,
+    "framework_config": null
+  },
+  "timing": {
+    "privacy_level": "full",
+    "duration_seconds": 2.514096,
+    "active_duration_seconds": 2.514096,
+    "started_at": "2026-03-16T03:56:16Z",
+    "ended_at": "2026-03-16T03:56:19Z",
+    "hour_of_day": 3,
+    "day_of_week": 0
+  },
+  "condition": null,
+  "coordination": {
+    "project_id": null,
+    "predecessor_session": null,
+    "concurrent_sessions": null,
+    "human_attention": "unknown"
+  },
+  "handover": {
+    "received": null,
+    "produced": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "timestamp": null,
+      "role": "user",
+      "source": "human",
+      "content": "Add a \"## Testing\" section to the end of README.md with this exact content:\n\n## Testing\n\n```bash\npython -m pytest tests/\n```\n\nRun tests before committing changes.",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 1,
+      "timestamp": null,
+      "role": "assistant",
+      "source": "model",
+      "content": "",
+      "tool_calls_in_turn": [
+        "GejCAKTSM"
+      ],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 2,
+      "timestamp": null,
+      "role": "user",
+      "source": "framework",
+      "content": "path: /workspace/README.md\ncontent: # Task Manager\n\nA simple Python task management module.\n\n## Installation\n\n```bash\npip install -r requirements.txt\n```\n\n## Usage\n\n```python\nfrom main import create_task, list_tasks, complete_task\n\ntasks = []\ntasks.append(create_task(\"My first task\", priority=\"high\"))\nprint(list_tasks(tasks))\n```\n\n## Configuration\n\nEdit `config.toml` to change project settings.\n\nlines_read: 23\nwas_truncated: False",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 3,
+      "timestamp": null,
+      "role": "assistant",
+      "source": "model",
+      "content": "",
+      "tool_calls_in_turn": [
+        "idsUNuKU6"
+      ],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 4,
+      "timestamp": null,
+      "role": "user",
+      "source": "framework",
+      "content": "file: /workspace/README.md\nblocks_applied: 1\nlines_changed: 8\ncontent: <<<<<<< SEARCH\n## Configuration\n\nEdit `config.toml` to change project settings.\n=======\n## Configuration\n\nEdit `config.toml` to change project settings.\n\n## Testing\n\n```bash\npython -m pytest tests/\n```\n\nRun tests before committing changes.\n>>>>>>> REPLACE\nwarnings: []",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 5,
+      "timestamp": null,
+      "role": "assistant",
+      "source": "model",
+      "content": "Task completed.",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    }
+  ],
+  "tool_calls": [
+    {
+      "id": "GejCAKTSM",
+      "turn_index": 1,
+      "timestamp": null,
+      "tool_name": "read_file",
+      "operation_type": "READ",
+      "input": {
+        "file_path": "README.md",
+        "command": null,
+        "arguments": {
+          "path": "README.md"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "path: /workspace/README.md\ncontent: # Task Manager\n\nA simple Python task management module.\n\n## Installation\n\n```bash\npip install -r requirements.txt\n```\n\n## Usage\n\n```python\nfrom main import create_task, list_tasks, complete_task\n\ntasks = []\ntasks.append(create_task(\"My first task\", priority=\"high\"))\nprint(list_tasks(tasks))\n```\n\n## Configuration\n\nEdit `config.toml` to change project settings.\n\nlines_read: 23\nwas_truncated: False",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.0,
+        "tools_before": [],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    },
+    {
+      "id": "idsUNuKU6",
+      "turn_index": 3,
+      "timestamp": null,
+      "tool_name": "search_replace",
+      "operation_type": "OTHER",
+      "input": {
+        "file_path": "README.md",
+        "command": null,
+        "arguments": {
+          "file_path": "README.md",
+          "content": "<<<<<<< SEARCH\n## Configuration\n\nEdit `config.toml` to change project settings.\n=======\n## Configuration\n\nEdit `config.toml` to change project settings.\n\n## Testing\n\n```bash\npython -m pytest tests/\n```\n\nRun tests before committing changes.\n>>>>>>> REPLACE"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "file: /workspace/README.md\nblocks_applied: 1\nlines_changed: 8\ncontent: <<<<<<< SEARCH\n## Configuration\n\nEdit `config.toml` to change project settings.\n=======\n## Configuration\n\nEdit `config.toml` to change project settings.\n\n## Testing\n\n```bash\npython -m pytest tests/\n```\n\nRun tests before committing changes.\n>>>>>>> REPLACE\nwarnings: []",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.5,
+        "tools_before": [
+          "read_file"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    }
+  ],
+  "outcome": null,
+  "annotations": [],
+  "metrics": {
+    "turn_count": 6,
+    "tool_call_count": 2,
+    "read_count": 1,
+    "modify_count": 0,
+    "create_count": 0,
+    "execute_count": 0,
+    "delegate_count": 0,
+    "read_ratio": 0.5,
+    "time_to_first_action": null,
+    "idle_ratio": 0.0,
+    "total_input_tokens": 21114,
+    "total_output_tokens": 107,
+    "total_cache_read_tokens": null,
+    "total_cache_creation_tokens": null,
+    "total_reasoning_tokens": null,
+    "total_tool_tokens": null,
+    "session_cost": 0.008659600000000002,
+    "subagent_count": 0,
+    "subagent_tool_calls": 0
+  }
+}

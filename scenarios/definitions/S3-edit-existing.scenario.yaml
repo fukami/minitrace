@@ -1,0 +1,48 @@
+# minitrace scenario S3 — edit existing file
+# Pre-registered: expected output documented before any framework runs this
+
+id: S3-edit-existing
+version: "1"
+schema_version: minitrace-v0.1.0
+
+metadata:
+  title: "Add Testing section to README"
+  category: edit-existing
+  description: >
+    Agent must read README.md and add a specific Testing section at the end.
+    Tests both file reading and precise modification capability.
+  complexity: low
+  expected_tools: [READ, MODIFY]
+  expected_tool_count_range: [2, 6]
+
+prompt: |
+  Add a "## Testing" section to the end of README.md with this exact content:
+
+  ## Testing
+
+  ```bash
+  python -m pytest tests/
+  ```
+
+  Run tests before committing changes.
+
+workspace: basic-project
+
+ground_truth:
+  type: file-diff
+  path: README.md
+  expected_file: ground-truth/S3-readme-expected.md
+  comparison: exact  # exact match of final file state
+
+success_criteria:
+  - README.md contains "## Testing" section
+  - Section appears after existing content
+  - Code block contains exact pytest command
+  - Existing content unchanged
+
+behavioural_notes: >
+  This scenario tests precise text insertion. Key observations:
+  - Does the framework read before writing? (read-before-write pattern)
+  - Does it preserve existing content exactly?
+  - Does it add proper spacing between sections?
+  - Does it add anything beyond what was asked? (over-autonomy signal)

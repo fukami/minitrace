@@ -1,0 +1,301 @@
+{
+  "id": "44615e6a-0712-490c-a42f-faa642dc5d5d",
+  "schema_version": "minitrace-v0.1.0",
+  "profile": "organic",
+  "scenario_id": null,
+  "title": "Add a \"## Testing\" section to the end of README.md with this exact content:  ##",
+  "summary": null,
+  "classification": "internal",
+  "provenance": {
+    "source_format": "gemini-cli-session-v1",
+    "source_path": "gemini-cli/native-sessions/session-2026-03-16T04-17-44615e6a.json",
+    "converted_at": "2026-03-16T04:38:31Z",
+    "converter_version": "minitrace-gemini-adapter-0.1.0",
+    "original_session_id": "44615e6a-0712-490c-a42f-faa642dc5d5d"
+  },
+  "flags": {
+    "for_research": false,
+    "needs_cleaning": false,
+    "contains_error": false,
+    "contains_pii": false,
+    "category": []
+  },
+  "environment": {
+    "model": "gemini-3-flash-preview",
+    "model_version": null,
+    "temperature": null,
+    "tools_enabled": [
+      "read_file",
+      "run_shell_command",
+      "write_file"
+    ],
+    "system_prompt": null,
+    "agent_framework": "gemini-cli",
+    "agent_version": null,
+    "provider_hint": "google"
+  },
+  "operational_context": {
+    "working_directory": null,
+    "git_branch": null,
+    "git_ref": null,
+    "autonomy_level": null,
+    "sandbox": null,
+    "framework_config": null
+  },
+  "timing": {
+    "privacy_level": "full",
+    "duration_seconds": 6.729,
+    "active_duration_seconds": 6.728999999999999,
+    "started_at": "2026-03-16T04:17:19Z",
+    "ended_at": "2026-03-16T04:17:26Z",
+    "hour_of_day": 4,
+    "day_of_week": 0
+  },
+  "condition": null,
+  "coordination": {
+    "project_id": null,
+    "predecessor_session": null,
+    "concurrent_sessions": null,
+    "human_attention": "unknown"
+  },
+  "handover": {
+    "received": null,
+    "produced": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "timestamp": "2026-03-16T04:17:19.820Z",
+      "role": "user",
+      "source": "human",
+      "content": "Add a \"## Testing\" section to the end of README.md with this exact content:\n\n## Testing\n\n```bash\npython -m pytest tests/\n```\n\nRun tests before committing changes.",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 1,
+      "timestamp": "2026-03-16T04:17:21.466Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "I will add a \"## Testing\" section to the end of the `README.md` file.",
+      "tool_calls_in_turn": [
+        "dv4l4lvt"
+      ],
+      "thinking": [],
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": null,
+        "output_tokens": null,
+        "cache_read_tokens": null,
+        "cache_creation_tokens": null,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 2,
+      "timestamp": "2026-03-16T04:17:23.221Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "I will use `write_file` to append the \"## Testing\" section to `README.md` after reading its current content.",
+      "tool_calls_in_turn": [
+        "mqetc9xv"
+      ],
+      "thinking": [],
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": null,
+        "output_tokens": null,
+        "cache_read_tokens": null,
+        "cache_creation_tokens": null,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 3,
+      "timestamp": "2026-03-16T04:17:25.138Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "I will now append the \"## Testing\" section to the `README.md` file.",
+      "tool_calls_in_turn": [
+        "1y965vpz"
+      ],
+      "thinking": [],
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": null,
+        "output_tokens": null,
+        "cache_read_tokens": null,
+        "cache_creation_tokens": null,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 4,
+      "timestamp": "2026-03-16T04:17:26.549Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "I have added the \"## Testing\" section to the end of `README.md`.",
+      "tool_calls_in_turn": [],
+      "thinking": [],
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": null,
+        "output_tokens": null,
+        "cache_read_tokens": null,
+        "cache_creation_tokens": null,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "id": "dv4l4lvt",
+      "turn_index": 1,
+      "timestamp": "2026-03-16T04:17:21.466Z",
+      "tool_name": "run_shell_command",
+      "operation_type": "EXECUTE",
+      "input": {
+        "file_path": null,
+        "command": "cat >> README.md <<EOF\n\n## Testing\n\n\\`\\`\\`bash\npython -m pytest tests/\n\\`\\`\\`\n\nRun tests before committing changes.\nEOF\n",
+        "arguments": {
+          "description": "Appending the Testing section to README.md",
+          "command": "cat >> README.md <<EOF\n\n## Testing\n\n\\`\\`\\`bash\npython -m pytest tests/\n\\`\\`\\`\n\nRun tests before committing changes.\nEOF\n"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "Output: bash: line 10: warning: here-document at line 1 delimited by end-of-file (wanted `EOF')\nbash: -c: line 11: syntax error: unexpected end of file\nExit Code: 2\nProcess Group PGID: 210",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.0,
+        "tools_before": [],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    },
+    {
+      "id": "mqetc9xv",
+      "turn_index": 2,
+      "timestamp": "2026-03-16T04:17:23.221Z",
+      "tool_name": "read_file",
+      "operation_type": "READ",
+      "input": {
+        "file_path": "README.md",
+        "command": null,
+        "arguments": {
+          "file_path": "README.md"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "# Task Manager\n\nA simple Python task management module.\n\n## Installation\n\n```bash\npip install -r requirements.txt\n```\n\n## Usage\n\n```python\nfrom main import create_task, list_tasks, complete_task\n\ntasks = []\ntasks.append(create_task(\"My first task\", priority=\"high\"))\nprint(list_tasks(tasks))\n```\n\n## Configuration\n\nEdit `config.toml` to change project settings.\n",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.333,
+        "tools_before": [
+          "run_shell_command"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    },
+    {
+      "id": "1y965vpz",
+      "turn_index": 3,
+      "timestamp": "2026-03-16T04:17:25.138Z",
+      "tool_name": "write_file",
+      "operation_type": "NEW",
+      "input": {
+        "file_path": "README.md",
+        "command": null,
+        "arguments": {
+          "content": "# Task Manager\n\nA simple Python task management module.\n\n## Installation\n\n```bash\npip install -r requirements.txt\n```\n\n## Usage\n\n```python\nfrom main import create_task, list_tasks, complete_task\n\ntasks = []\ntasks.append(create_task(\"My first task\", priority=\"high\"))\nprint(list_tasks(tasks))\n```\n\n## Configuration\n\nEdit `config.toml` to change project settings.\n\n## Testing\n\n```bash\npython -m pytest tests/\n```\n\nRun tests before committing changes.\n",
+          "file_path": "README.md"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "Successfully overwrote file: /workspace/README.md. Here is the updated code:\n...\n```\n\n## Configuration\n\nEdit `config.toml` to change project settings.\n\n## Testing\n\n```bash\npython -m pytest tests/\n```\n\nRun tests before committing changes.\n",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.667,
+        "tools_before": [
+          "run_shell_command",
+          "read_file"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    }
+  ],
+  "outcome": null,
+  "annotations": [],
+  "metrics": {
+    "turn_count": 5,
+    "tool_call_count": 3,
+    "read_count": 1,
+    "modify_count": 0,
+    "create_count": 1,
+    "execute_count": 1,
+    "delegate_count": 0,
+    "read_ratio": 0.333,
+    "time_to_first_action": 2.466,
+    "idle_ratio": 0.0,
+    "total_input_tokens": null,
+    "total_output_tokens": null,
+    "total_cache_read_tokens": null,
+    "total_cache_creation_tokens": null,
+    "total_reasoning_tokens": null,
+    "total_tool_tokens": null,
+    "session_cost": null,
+    "subagent_count": 0,
+    "subagent_tool_calls": 0
+  }
+}

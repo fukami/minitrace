@@ -1,0 +1,5 @@
+main.py:16: # IMPROVE: Add input validation for task titles (empty strings, special chars)
+main.py:33: # IMPROVE: Replace with UUID or proper ID generation
+main.py:38: # IMPROVE: Add filtering by date range
+main.py:58: # IMPROVE: Add soft delete option instead of hard delete
+main.py:111: # IMPROVE: Implement task sorting by priority

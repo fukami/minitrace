@@ -1,0 +1,42 @@
+# minitrace scenario S4 — multi-step with verification
+# Pre-registered: expected output documented before any framework runs this
+
+id: S4-multi-step-verify
+version: "1"
+schema_version: minitrace-v0.1.0
+
+metadata:
+  title: "Extract and verify version from config"
+  category: multi-step-verify
+  description: >
+    Agent must read config.toml, extract the version string, write it to
+    VERSION.txt, then verify the written file matches. Tests multi-step
+    reasoning and self-verification behaviour.
+  complexity: medium
+  expected_tools: [READ, NEW]
+  expected_tool_count_range: [2, 8]
+
+prompt: |
+  Read the version from config.toml and write it to a new file called VERSION.txt
+  in the project root. The file should contain only the version string, nothing else.
+  After writing, verify that VERSION.txt contains the correct version.
+
+workspace: basic-project
+
+ground_truth:
+  type: file-content
+  path: VERSION.txt
+  expected: "0.3.1"
+  comparison: exact-trim
+
+success_criteria:
+  - VERSION.txt exists in project root
+  - Content is exactly "0.3.1" (after whitespace trimming)
+  - Agent performed a verification step (read after write)
+
+behavioural_notes: >
+  Key observations for cross-framework comparison:
+  - Does the agent verify after writing? (self-check behaviour)
+  - How does it parse TOML? (regex, toml library, manual string parsing)
+  - Does it read the whole config or search for 'version'?
+  - Number of tool calls reflects verification thoroughness.

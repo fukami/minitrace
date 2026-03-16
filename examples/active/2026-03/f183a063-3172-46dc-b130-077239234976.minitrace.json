@@ -1,0 +1,387 @@
+{
+  "id": "f183a063-3172-46dc-b130-077239234976",
+  "schema_version": "minitrace-v0.1.0",
+  "profile": "organic",
+  "scenario_id": null,
+  "title": "Read the version from config.toml and write it to a new file called VERSION.txt",
+  "summary": null,
+  "classification": "internal",
+  "provenance": {
+    "source_format": "claude-code-jsonl-v2",
+    "source_path": "claude-code/native-sessions/f183a063-3172-46dc-b130-077239234976.jsonl",
+    "converted_at": "2026-03-16T04:36:12Z",
+    "converter_version": "minitrace-claude-adapter-0.1.0",
+    "original_session_id": "f183a063-3172-46dc-b130-077239234976"
+  },
+  "flags": {
+    "for_research": false,
+    "needs_cleaning": true,
+    "contains_error": false,
+    "contains_pii": false,
+    "category": []
+  },
+  "environment": {
+    "model": "claude-haiku-4-5-20251001",
+    "model_version": null,
+    "temperature": null,
+    "tools_enabled": [
+      "Write",
+      "Read"
+    ],
+    "system_prompt": null,
+    "agent_framework": "claude-code",
+    "agent_version": null,
+    "provider_hint": "anthropic"
+  },
+  "operational_context": {
+    "working_directory": null,
+    "git_branch": null,
+    "git_ref": null,
+    "autonomy_level": null,
+    "sandbox": null,
+    "framework_config": null
+  },
+  "timing": {
+    "privacy_level": "full",
+    "duration_seconds": 5.136,
+    "active_duration_seconds": 5.135999999999999,
+    "started_at": "2026-03-16T03:56:29Z",
+    "ended_at": "2026-03-16T03:56:34Z",
+    "hour_of_day": 3,
+    "day_of_week": 0
+  },
+  "condition": null,
+  "coordination": {
+    "project_id": null,
+    "predecessor_session": null,
+    "concurrent_sessions": null,
+    "human_attention": "unknown"
+  },
+  "handover": {
+    "received": null,
+    "produced": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "timestamp": "2026-03-16T03:56:29.867Z",
+      "role": "user",
+      "source": "human",
+      "content": "Read the version from config.toml and write it to a new file called VERSION.txt in the project root. The file should contain only the version string, nothing else. After writing, verify that VERSION.txt contains the correct version.",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 1,
+      "timestamp": "2026-03-16T03:56:31.203Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "",
+      "tool_calls_in_turn": [],
+      "thinking": "The user wants me to:\n1. Read the version from config.toml\n2. Write it to a new file called VERSION.txt\n3. Verify the file contains the correct version\n\nLet me start by reading config.toml to see what's in it.",
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": true,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 9,
+        "output_tokens": 1,
+        "cache_read_tokens": 23308,
+        "cache_creation_tokens": 920,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 2,
+      "timestamp": "2026-03-16T03:56:31.234Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "",
+      "tool_calls_in_turn": [
+        "toolu_013eqyRqxcVXbAewRixk7HSd"
+      ],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": true,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 9,
+        "output_tokens": 125,
+        "cache_read_tokens": 23308,
+        "cache_creation_tokens": 920,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 3,
+      "timestamp": "2026-03-16T03:56:32.184Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "",
+      "tool_calls_in_turn": [],
+      "thinking": "Good, I can see the version is \"0.3.1\" on line 3. Now I'll write this to a new file called VERSION.txt in the project root (/workspace). The file should contain only the version string.",
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": true,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 7,
+        "output_tokens": 5,
+        "cache_read_tokens": 24228,
+        "cache_creation_tokens": 332,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 4,
+      "timestamp": "2026-03-16T03:56:32.334Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "",
+      "tool_calls_in_turn": [
+        "toolu_01Bu8LFNK1Znt4GrePLeWCJp"
+      ],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": true,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 7,
+        "output_tokens": 137,
+        "cache_read_tokens": 24228,
+        "cache_creation_tokens": 332,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 5,
+      "timestamp": "2026-03-16T03:56:33.651Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "",
+      "tool_calls_in_turn": [],
+      "thinking": "Good, the file has been created. Now I need to verify it contains the correct version by reading it back.",
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": true,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 7,
+        "output_tokens": 1,
+        "cache_read_tokens": 24560,
+        "cache_creation_tokens": 167,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 6,
+      "timestamp": "2026-03-16T03:56:33.653Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "",
+      "tool_calls_in_turn": [
+        "toolu_01XrfNZiSVzPPJh9FmRKRbdw"
+      ],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": true,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 7,
+        "output_tokens": 89,
+        "cache_read_tokens": 24560,
+        "cache_creation_tokens": 167,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 7,
+      "timestamp": "2026-03-16T03:56:34.866Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "",
+      "tool_calls_in_turn": [],
+      "thinking": "Perfect! The VERSION.txt file has been created and contains exactly what we need - just the version string \"0.3.1\". The verification confirms it's correct.",
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": true,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 7,
+        "output_tokens": 8,
+        "cache_read_tokens": 24560,
+        "cache_creation_tokens": 363,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 8,
+      "timestamp": "2026-03-16T03:56:34.982Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "Done! Created VERSION.txt with version \"0.3.1\" from config.toml. Verified the file contains only the correct version string.",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": true,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 7,
+        "output_tokens": 78,
+        "cache_read_tokens": 24560,
+        "cache_creation_tokens": 363,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "id": "toolu_013eqyRqxcVXbAewRixk7HSd",
+      "turn_index": 2,
+      "timestamp": "2026-03-16T03:56:31.245Z",
+      "tool_name": "Read",
+      "operation_type": "READ",
+      "input": {
+        "file_path": "/workspace/config.toml",
+        "command": null,
+        "arguments": {
+          "file_path": "/workspace/config.toml"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "     1→[project]\n     2→name = \"task-manager\"\n     3→version = \"0.3.1\"\n     4→description = \"A simple task management tool\"\n     5→\n     6→[project.author]\n     7→name = \"Test Project\"\n     8→email = \"test@example.com\"\n     9→\n    10→[build]\n    11→python_requires = \">=3.9\"\n    12→\n\n<system-reminder>\nWhenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.\n</system-reminder>\n",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.0,
+        "tools_before": [],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    },
+    {
+      "id": "toolu_01Bu8LFNK1Znt4GrePLeWCJp",
+      "turn_index": 4,
+      "timestamp": "2026-03-16T03:56:32.345Z",
+      "tool_name": "Write",
+      "operation_type": "NEW",
+      "input": {
+        "file_path": "/workspace/VERSION.txt",
+        "command": null,
+        "arguments": {
+          "file_path": "/workspace/VERSION.txt",
+          "content": "0.3.1"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "File created successfully at: /workspace/VERSION.txt",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.333,
+        "tools_before": [
+          "Read"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    },
+    {
+      "id": "toolu_01XrfNZiSVzPPJh9FmRKRbdw",
+      "turn_index": 6,
+      "timestamp": "2026-03-16T03:56:33.656Z",
+      "tool_name": "Read",
+      "operation_type": "READ",
+      "input": {
+        "file_path": "/workspace/VERSION.txt",
+        "command": null,
+        "arguments": {
+          "file_path": "/workspace/VERSION.txt"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "     1→0.3.1\n\n<system-reminder>\nWhenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.\n</system-reminder>\n",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.667,
+        "tools_before": [
+          "Read",
+          "Write"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    }
+  ],
+  "outcome": null,
+  "annotations": [],
+  "metrics": {
+    "turn_count": 9,
+    "tool_call_count": 3,
+    "read_count": 2,
+    "modify_count": 0,
+    "create_count": 1,
+    "execute_count": 0,
+    "delegate_count": 0,
+    "read_ratio": 0.667,
+    "time_to_first_action": 2.245,
+    "idle_ratio": 0.0,
+    "total_input_tokens": 60,
+    "total_output_tokens": 444,
+    "total_cache_read_tokens": 193312,
+    "total_cache_creation_tokens": 3564,
+    "total_reasoning_tokens": null,
+    "total_tool_tokens": null,
+    "session_cost": null,
+    "subagent_count": 0,
+    "subagent_tool_calls": 0
+  }
+}

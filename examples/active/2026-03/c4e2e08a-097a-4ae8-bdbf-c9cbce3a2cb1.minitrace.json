@@ -1,0 +1,250 @@
+{
+  "id": "c4e2e08a-097a-4ae8-bdbf-c9cbce3a2cb1",
+  "schema_version": "minitrace-v0.1.0",
+  "profile": "organic",
+  "scenario_id": null,
+  "title": "Count the number of Python function definitions (l…",
+  "summary": null,
+  "classification": "internal",
+  "provenance": {
+    "source_format": "vibe-session-v1",
+    "source_path": "vibe/native-sessions/session_20260316_035608_c4e2e08a",
+    "converted_at": "2026-03-16T04:38:31Z",
+    "converter_version": "minitrace-vibe-adapter-0.1.0",
+    "original_session_id": "c4e2e08a-097a-4ae8-bdbf-c9cbce3a2cb1"
+  },
+  "flags": {
+    "for_research": false,
+    "needs_cleaning": false,
+    "contains_error": false,
+    "contains_pii": false,
+    "category": []
+  },
+  "environment": {
+    "model": "unknown",
+    "model_version": null,
+    "temperature": null,
+    "tools_enabled": [
+      "bash",
+      "write_file"
+    ],
+    "system_prompt": null,
+    "agent_framework": "vibe",
+    "agent_version": null,
+    "provider_hint": "mistral"
+  },
+  "operational_context": {
+    "working_directory": "/workspace",
+    "git_branch": null,
+    "git_ref": null,
+    "autonomy_level": null,
+    "sandbox": null,
+    "framework_config": null
+  },
+  "timing": {
+    "privacy_level": "full",
+    "duration_seconds": 2.729325,
+    "active_duration_seconds": 2.729325,
+    "started_at": "2026-03-16T03:56:08Z",
+    "ended_at": "2026-03-16T03:56:11Z",
+    "hour_of_day": 3,
+    "day_of_week": 0
+  },
+  "condition": null,
+  "coordination": {
+    "project_id": null,
+    "predecessor_session": null,
+    "concurrent_sessions": null,
+    "human_attention": "unknown"
+  },
+  "handover": {
+    "received": null,
+    "produced": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "timestamp": null,
+      "role": "user",
+      "source": "human",
+      "content": "Count the number of Python function definitions (lines starting with 'def ') in main.py. Write just the count as a plain integer to count.txt in the project root.",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 1,
+      "timestamp": null,
+      "role": "assistant",
+      "source": "model",
+      "content": "",
+      "tool_calls_in_turn": [
+        "v59FpfNO5"
+      ],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 2,
+      "timestamp": null,
+      "role": "user",
+      "source": "framework",
+      "content": "command: grep -c '^def ' main.py\nstdout: 11\n\nstderr: \nreturncode: 0",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 3,
+      "timestamp": null,
+      "role": "assistant",
+      "source": "model",
+      "content": "",
+      "tool_calls_in_turn": [
+        "6NbotrErt"
+      ],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 4,
+      "timestamp": null,
+      "role": "user",
+      "source": "framework",
+      "content": "path: /workspace/count.txt\nbytes_written: 2\nfile_existed: False\ncontent: 11",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 5,
+      "timestamp": null,
+      "role": "assistant",
+      "source": "model",
+      "content": "11",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    }
+  ],
+  "tool_calls": [
+    {
+      "id": "v59FpfNO5",
+      "turn_index": 1,
+      "timestamp": null,
+      "tool_name": "bash",
+      "operation_type": "EXECUTE",
+      "input": {
+        "file_path": null,
+        "command": "grep -c '^def ' main.py",
+        "arguments": {
+          "command": "grep -c '^def ' main.py"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "command: grep -c '^def ' main.py\nstdout: 11\n\nstderr: \nreturncode: 0",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.0,
+        "tools_before": [],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    },
+    {
+      "id": "6NbotrErt",
+      "turn_index": 3,
+      "timestamp": null,
+      "tool_name": "write_file",
+      "operation_type": "NEW",
+      "input": {
+        "file_path": "count.txt",
+        "command": null,
+        "arguments": {
+          "path": "count.txt",
+          "content": "11"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "path: /workspace/count.txt\nbytes_written: 2\nfile_existed: False\ncontent: 11",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.5,
+        "tools_before": [
+          "bash"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    }
+  ],
+  "outcome": null,
+  "annotations": [],
+  "metrics": {
+    "turn_count": 6,
+    "tool_call_count": 2,
+    "read_count": 0,
+    "modify_count": 0,
+    "create_count": 1,
+    "execute_count": 1,
+    "delegate_count": 0,
+    "read_ratio": 0.0,
+    "time_to_first_action": null,
+    "idle_ratio": 0.0,
+    "total_input_tokens": 20836,
+    "total_output_tokens": 40,
+    "total_cache_read_tokens": null,
+    "total_cache_creation_tokens": null,
+    "total_reasoning_tokens": null,
+    "total_tool_tokens": null,
+    "session_cost": 0.0084144,
+    "subagent_count": 0,
+    "subagent_tool_calls": 0
+  }
+}

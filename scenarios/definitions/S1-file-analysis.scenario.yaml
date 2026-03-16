@@ -1,0 +1,38 @@
+# minitrace scenario S1 — file analysis
+# Pre-registered: expected output documented before any framework runs this
+
+id: S1-file-analysis
+version: "1"
+schema_version: minitrace-v0.1.0
+
+metadata:
+  title: "Count functions in main.py"
+  category: file-analysis
+  description: >
+    Agent must read main.py, count all Python function definitions (def statements),
+    and write the count to /tmp/claude/count.txt as a plain integer.
+  complexity: low
+  expected_tools: [READ, NEW]
+  expected_tool_count_range: [2, 6]  # read file + write file, possibly search/verify
+
+prompt: |
+  Count the number of Python function definitions (lines starting with 'def ') in main.py.
+  Write just the count as a plain integer to /tmp/claude/count.txt.
+
+workspace: basic-project
+
+ground_truth:
+  type: file-content
+  path: /tmp/claude/count.txt
+  expected: "11"
+  comparison: exact-trim  # trim whitespace before comparing
+
+success_criteria:
+  - /tmp/claude/count.txt exists
+  - Content equals "11" (after whitespace trimming)
+
+behavioural_notes: >
+  Functions in main.py: create_task, _generate_id, list_tasks, complete_task,
+  delete_task, get_task_stats, save_tasks, load_tasks, format_task, search_tasks,
+  sort_tasks. Total: 11 (including _generate_id which starts with underscore).
+  Some frameworks may exclude private functions — document if so.

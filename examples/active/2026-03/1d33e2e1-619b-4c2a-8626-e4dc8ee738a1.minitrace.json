@@ -1,0 +1,276 @@
+{
+  "id": "1d33e2e1-619b-4c2a-8626-e4dc8ee738a1",
+  "schema_version": "minitrace-v0.1.0",
+  "profile": "organic",
+  "scenario_id": null,
+  "title": "Add a \"## Testing\" section to the end of README.md with this exact content:  ##",
+  "summary": null,
+  "classification": "internal",
+  "provenance": {
+    "source_format": "pi-agent-jsonl-v3",
+    "source_path": "pi/native-sessions/2026-03-16T03-56-36-271Z_1d33e2e1-619b-4c2a-8626-e4dc8ee738a1.jsonl",
+    "converted_at": "2026-03-16T04:37:39Z",
+    "converter_version": "minitrace-pi-adapter-0.1.0",
+    "original_session_id": "1d33e2e1-619b-4c2a-8626-e4dc8ee738a1"
+  },
+  "flags": {
+    "for_research": false,
+    "needs_cleaning": false,
+    "contains_error": false,
+    "contains_pii": false,
+    "category": []
+  },
+  "environment": {
+    "model": "qwen3.5:cloud",
+    "model_version": null,
+    "temperature": null,
+    "tools_enabled": [
+      "edit",
+      "read"
+    ],
+    "system_prompt": null,
+    "agent_framework": "pi",
+    "agent_version": null,
+    "provider_hint": "ollama",
+    "framework_config": {
+      "thinking_level": "medium",
+      "api": null
+    }
+  },
+  "operational_context": {
+    "working_directory": "/workspace",
+    "git_branch": null,
+    "git_ref": null,
+    "autonomy_level": null,
+    "sandbox": null,
+    "framework_config": null
+  },
+  "timing": {
+    "privacy_level": "full",
+    "duration_seconds": 4.192,
+    "active_duration_seconds": 4.192,
+    "started_at": "2026-03-16T03:56:36Z",
+    "ended_at": "2026-03-16T03:56:40Z",
+    "hour_of_day": 3,
+    "day_of_week": 0
+  },
+  "condition": null,
+  "coordination": {
+    "project_id": null,
+    "predecessor_session": null,
+    "concurrent_sessions": null,
+    "human_attention": "unknown"
+  },
+  "handover": {
+    "received": null,
+    "produced": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "timestamp": "2026-03-16T03:56:36.273Z",
+      "role": "user",
+      "source": "human",
+      "content": "Add a \"## Testing\" section to the end of README.md with this exact content:\n\n## Testing\n\n```bash\npython -m pytest tests/\n```\n\nRun tests before committing changes.",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 1,
+      "timestamp": "2026-03-16T03:56:37.595Z",
+      "role": "assistant",
+      "source": "model",
+      "content": null,
+      "tool_calls_in_turn": [
+        "call_sxk37kld"
+      ],
+      "thinking": "The user wants me to add a \"## Testing\" section to the end of README.md with specific content. Let me first read the README.md file to see its current contents, then add the new section at the end.\n",
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 1489,
+        "output_tokens": 75,
+        "cache_read_tokens": 0,
+        "cache_creation_tokens": 0,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 2,
+      "timestamp": "2026-03-16T03:56:37.606Z",
+      "role": "user",
+      "source": "framework",
+      "content": "# Task Manager\n\nA simple Python task management module.\n\n## Installation\n\n```bash\npip install -r requirements.txt\n```\n\n## Usage\n\n```python\nfrom main import create_task, list_tasks, complete_task\n\ntasks = []\ntasks.append(create_task(\"My first task\", priority=\"high\"))\nprint(list_tasks(tasks))\n```\n\n## Configuration\n\nEdit `config.toml` to change project settings.",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 3,
+      "timestamp": "2026-03-16T03:56:39.414Z",
+      "role": "assistant",
+      "source": "model",
+      "content": null,
+      "tool_calls_in_turn": [
+        "call_age74sse"
+      ],
+      "thinking": "The user wants me to add a \"## Testing\" section to the end of README.md with specific content. I need to append this section after the existing content.\n",
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 1614,
+        "output_tokens": 137,
+        "cache_read_tokens": 0,
+        "cache_creation_tokens": 0,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 4,
+      "timestamp": "2026-03-16T03:56:39.423Z",
+      "role": "user",
+      "source": "framework",
+      "content": "Successfully replaced text in /workspace/README.md.",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 5,
+      "timestamp": "2026-03-16T03:56:40.463Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "Done. I've added the \"## Testing\" section to the end of README.md with the specified content.",
+      "tool_calls_in_turn": [],
+      "thinking": "The edit was successful. I've added the \"## Testing\" section to the end of README.md with the exact content requested by the user.\n",
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 1738,
+        "output_tokens": 55,
+        "cache_read_tokens": 0,
+        "cache_creation_tokens": 0,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "id": "call_sxk37kld",
+      "turn_index": 1,
+      "timestamp": "2026-03-16T03:56:37.595Z",
+      "tool_name": "read",
+      "operation_type": "READ",
+      "input": {
+        "file_path": "/workspace/README.md",
+        "command": null,
+        "arguments": {
+          "path": "/workspace/README.md"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": null,
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.0,
+        "tools_before": [],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    },
+    {
+      "id": "call_age74sse",
+      "turn_index": 3,
+      "timestamp": "2026-03-16T03:56:39.414Z",
+      "tool_name": "edit",
+      "operation_type": "MODIFY",
+      "input": {
+        "file_path": "/workspace/README.md",
+        "command": null,
+        "arguments": {
+          "path": "/workspace/README.md",
+          "oldText": "## Configuration\n\nEdit `config.toml` to change project settings.",
+          "newText": "## Configuration\n\nEdit `config.toml` to change project settings.\n\n## Testing\n\n```bash\npython -m pytest tests/\n```\n\nRun tests before committing changes."
+        }
+      },
+      "output": {
+        "success": true,
+        "result": null,
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.5,
+        "tools_before": [
+          "read"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    }
+  ],
+  "outcome": null,
+  "annotations": [],
+  "metrics": {
+    "turn_count": 6,
+    "tool_call_count": 2,
+    "read_count": 1,
+    "modify_count": 1,
+    "create_count": 0,
+    "execute_count": 0,
+    "delegate_count": 0,
+    "read_ratio": 0.5,
+    "time_to_first_action": 1.595,
+    "idle_ratio": 0.0,
+    "total_input_tokens": 4841,
+    "total_output_tokens": 267,
+    "total_cache_read_tokens": null,
+    "total_cache_creation_tokens": null,
+    "total_reasoning_tokens": null,
+    "total_tool_tokens": null,
+    "session_cost": null,
+    "subagent_count": 0,
+    "subagent_tool_calls": 0
+  }
+}

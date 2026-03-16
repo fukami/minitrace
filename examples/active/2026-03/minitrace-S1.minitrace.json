@@ -1,0 +1,102 @@
+{
+  "id": "minitrace-S1",
+  "schema_version": "minitrace-v0.1.0",
+  "profile": "organic",
+  "scenario_id": null,
+  "title": "Count the number of Python function definitions (lines starting with 'def ') in",
+  "summary": null,
+  "classification": "internal",
+  "provenance": {
+    "source_format": "goose-sqlite-v7",
+    "source_path": null,
+    "converted_at": "2026-03-16T12:05:38Z",
+    "converter_version": "minitrace-goose-adapter-0.1.0",
+    "original_session_id": "minitrace-S1"
+  },
+  "flags": {
+    "for_research": false,
+    "needs_cleaning": true,
+    "contains_error": false,
+    "contains_pii": false,
+    "category": []
+  },
+  "environment": {
+    "model": "unknown",
+    "model_version": null,
+    "temperature": null,
+    "tools_enabled": [],
+    "system_prompt": null,
+    "agent_framework": "goose",
+    "agent_version": null,
+    "provider_hint": "unknown"
+  },
+  "operational_context": {
+    "working_directory": "/workspace",
+    "git_branch": null,
+    "git_ref": null,
+    "autonomy_level": null,
+    "sandbox": null,
+    "framework_config": null
+  },
+  "timing": {
+    "privacy_level": "full",
+    "duration_seconds": null,
+    "active_duration_seconds": null,
+    "started_at": "2026-03-16T11:56:52Z",
+    "ended_at": null,
+    "hour_of_day": 11,
+    "day_of_week": 0
+  },
+  "condition": null,
+  "coordination": {
+    "project_id": null,
+    "predecessor_session": null,
+    "concurrent_sessions": null,
+    "human_attention": "unknown"
+  },
+  "handover": {
+    "received": null,
+    "produced": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "timestamp": null,
+      "role": "user",
+      "source": "human",
+      "content": "Count the number of Python function definitions (lines starting with 'def ') in main.py. Write just the count as a plain integer to count.txt in the project root.",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    }
+  ],
+  "tool_calls": [],
+  "outcome": null,
+  "annotations": [],
+  "metrics": {
+    "turn_count": 1,
+    "tool_call_count": 0,
+    "read_count": 0,
+    "modify_count": 0,
+    "create_count": 0,
+    "execute_count": 0,
+    "delegate_count": 0,
+    "read_ratio": null,
+    "time_to_first_action": null,
+    "idle_ratio": null,
+    "total_input_tokens": null,
+    "total_output_tokens": null,
+    "total_cache_read_tokens": null,
+    "total_cache_creation_tokens": null,
+    "total_reasoning_tokens": null,
+    "total_tool_tokens": null,
+    "session_cost": null,
+    "subagent_count": 0,
+    "subagent_tool_calls": 0
+  }
+}

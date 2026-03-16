@@ -1,0 +1,274 @@
+{
+  "id": "minitrace-S1-1773633382-sub4",
+  "schema_version": "minitrace-v0.1.0",
+  "profile": "organic",
+  "scenario_id": null,
+  "title": "Read the version from config.toml and write it to a new file called VERSION.txt",
+  "summary": null,
+  "classification": "internal",
+  "provenance": {
+    "source_format": "openclaw-session-jsonl-v3",
+    "source_path": "openclaw/native-sessions/minitrace-S1-1773633382.jsonl",
+    "converted_at": "2026-03-16T04:38:54Z",
+    "converter_version": "minitrace-openclaw-adapter-0.1.0",
+    "original_session_id": "minitrace-S1-1773633382"
+  },
+  "flags": {
+    "for_research": false,
+    "needs_cleaning": false,
+    "contains_error": false,
+    "contains_pii": false,
+    "category": []
+  },
+  "environment": {
+    "model": "qwen3.5:cloud",
+    "model_version": null,
+    "temperature": null,
+    "tools_enabled": [
+      "read",
+      "write"
+    ],
+    "system_prompt": null,
+    "agent_framework": "openclaw",
+    "agent_version": "2026.3.13",
+    "provider_hint": "openai-compatible"
+  },
+  "operational_context": {
+    "working_directory": "/workspace",
+    "git_branch": null,
+    "git_ref": null,
+    "autonomy_level": null,
+    "sandbox": null,
+    "framework_config": {
+      "thinking_level": "low",
+      "session_format_version": 3
+    }
+  },
+  "timing": {
+    "privacy_level": "full",
+    "duration_seconds": 36.143,
+    "active_duration_seconds": 36.143,
+    "started_at": "2026-03-16T03:56:29Z",
+    "ended_at": "2026-03-16T03:57:05Z",
+    "hour_of_day": 3,
+    "day_of_week": 0
+  },
+  "condition": null,
+  "coordination": {
+    "project_id": null,
+    "predecessor_session": null,
+    "concurrent_sessions": null,
+    "human_attention": "unknown"
+  },
+  "handover": {
+    "received": null,
+    "produced": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "timestamp": "2026-03-16T03:56:59.982Z",
+      "role": "user",
+      "source": "human",
+      "content": "Read the version from config.toml and write it to a new file called VERSION.txt in the project root. The file should contain only the version string, nothing else. After writing, verify that VERSION.txt contains the correct version.",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 1,
+      "timestamp": "2026-03-16T03:57:01.528Z",
+      "role": "assistant",
+      "source": "model",
+      "content": null,
+      "tool_calls_in_turn": [
+        "ollama_call_a1da8db7-7040-492b-8a23-d633e90dd346"
+      ],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 2,
+      "timestamp": "2026-03-16T03:57:03.007Z",
+      "role": "assistant",
+      "source": "model",
+      "content": null,
+      "tool_calls_in_turn": [
+        "ollama_call_d5f5bfa5-7e4c-49d1-835c-b3fe95e8b3ed"
+      ],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 3,
+      "timestamp": "2026-03-16T03:57:03.885Z",
+      "role": "assistant",
+      "source": "model",
+      "content": null,
+      "tool_calls_in_turn": [
+        "ollama_call_28772f39-f5cb-4ac1-9705-3055a621d364"
+      ],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 4,
+      "timestamp": "2026-03-16T03:57:05.177Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "Done. Read version `0.3.1` from `config.toml` and wrote it to `VERSION.txt`. Verified the file contains the correct version.",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    }
+  ],
+  "tool_calls": [
+    {
+      "id": "ollama_call_a1da8db7-7040-492b-8a23-d633e90dd346",
+      "turn_index": 1,
+      "timestamp": "2026-03-16T03:57:01.528Z",
+      "tool_name": "read",
+      "operation_type": "READ",
+      "input": {
+        "file_path": "config.toml",
+        "command": null,
+        "arguments": {
+          "path": "config.toml"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "[project]\nname = \"task-manager\"\nversion = \"0.3.1\"\ndescription = \"A simple task management tool\"\n\n[project.author]\nname = \"Test Project\"\nemail = \"test@example.com\"\n\n[build]\npython_requires = \">=3.9\"\n",
+        "error": null,
+        "duration_ms": 27,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.0,
+        "tools_before": [],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    },
+    {
+      "id": "ollama_call_d5f5bfa5-7e4c-49d1-835c-b3fe95e8b3ed",
+      "turn_index": 2,
+      "timestamp": "2026-03-16T03:57:03.007Z",
+      "tool_name": "write",
+      "operation_type": "NEW",
+      "input": {
+        "file_path": "VERSION.txt",
+        "command": null,
+        "arguments": {
+          "path": "VERSION.txt",
+          "content": "0.3.1"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "Successfully wrote 5 bytes to VERSION.txt",
+        "error": null,
+        "duration_ms": 7,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.333,
+        "tools_before": [
+          "read"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    },
+    {
+      "id": "ollama_call_28772f39-f5cb-4ac1-9705-3055a621d364",
+      "turn_index": 3,
+      "timestamp": "2026-03-16T03:57:03.885Z",
+      "tool_name": "read",
+      "operation_type": "READ",
+      "input": {
+        "file_path": "VERSION.txt",
+        "command": null,
+        "arguments": {
+          "path": "VERSION.txt"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "0.3.1",
+        "error": null,
+        "duration_ms": 3,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.667,
+        "tools_before": [
+          "read",
+          "write"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    }
+  ],
+  "outcome": null,
+  "annotations": [],
+  "metrics": {
+    "turn_count": 5,
+    "tool_call_count": 3,
+    "read_count": 2,
+    "modify_count": 0,
+    "create_count": 1,
+    "execute_count": 0,
+    "delegate_count": 0,
+    "read_ratio": 0.667,
+    "time_to_first_action": 32.528,
+    "idle_ratio": 0.0,
+    "total_input_tokens": 52390,
+    "total_output_tokens": 238,
+    "total_cache_read_tokens": null,
+    "total_cache_creation_tokens": null,
+    "total_reasoning_tokens": null,
+    "total_tool_tokens": null,
+    "session_cost": null,
+    "subagent_count": 0,
+    "subagent_tool_calls": 0
+  }
+}

@@ -1,0 +1,223 @@
+{
+  "id": "minitrace-S1-1773633382-sub1",
+  "schema_version": "minitrace-v0.1.0",
+  "profile": "organic",
+  "scenario_id": null,
+  "title": "Count the number of Python function definitions (lines starting with 'def ') in",
+  "summary": null,
+  "classification": "internal",
+  "provenance": {
+    "source_format": "openclaw-session-jsonl-v3",
+    "source_path": "openclaw/native-sessions/minitrace-S1-1773633382.jsonl",
+    "converted_at": "2026-03-16T04:38:54Z",
+    "converter_version": "minitrace-openclaw-adapter-0.1.0",
+    "original_session_id": "minitrace-S1-1773633382"
+  },
+  "flags": {
+    "for_research": false,
+    "needs_cleaning": false,
+    "contains_error": false,
+    "contains_pii": false,
+    "category": []
+  },
+  "environment": {
+    "model": "qwen3.5:cloud",
+    "model_version": null,
+    "temperature": null,
+    "tools_enabled": [
+      "read",
+      "write"
+    ],
+    "system_prompt": null,
+    "agent_framework": "openclaw",
+    "agent_version": "2026.3.13",
+    "provider_hint": "openai-compatible"
+  },
+  "operational_context": {
+    "working_directory": "/workspace",
+    "git_branch": null,
+    "git_ref": null,
+    "autonomy_level": null,
+    "sandbox": null,
+    "framework_config": {
+      "thinking_level": "low",
+      "session_format_version": 3
+    }
+  },
+  "timing": {
+    "privacy_level": "full",
+    "duration_seconds": 7.063,
+    "active_duration_seconds": 7.062999999999999,
+    "started_at": "2026-03-16T03:56:29Z",
+    "ended_at": "2026-03-16T03:56:36Z",
+    "hour_of_day": 3,
+    "day_of_week": 0
+  },
+  "condition": null,
+  "coordination": {
+    "project_id": null,
+    "predecessor_session": null,
+    "concurrent_sessions": null,
+    "human_attention": "unknown"
+  },
+  "handover": {
+    "received": null,
+    "produced": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "timestamp": "2026-03-16T03:56:29.040Z",
+      "role": "user",
+      "source": "human",
+      "content": "Count the number of Python function definitions (lines starting with 'def ') in main.py. Write just the count as a plain integer to /tmp/claude/count.txt.",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 1,
+      "timestamp": "2026-03-16T03:56:31.128Z",
+      "role": "assistant",
+      "source": "model",
+      "content": null,
+      "tool_calls_in_turn": [
+        "ollama_call_068e9bd1-a577-4c22-8c0f-d1cf2d43b264"
+      ],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 2,
+      "timestamp": "2026-03-16T03:56:34.173Z",
+      "role": "assistant",
+      "source": "model",
+      "content": null,
+      "tool_calls_in_turn": [
+        "ollama_call_3e640e1b-d1de-41a8-8321-47306c990b04"
+      ],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 3,
+      "timestamp": "2026-03-16T03:56:36.097Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "Done. Found 11 Python function definitions and wrote the count to `/tmp/claude/count.txt`.",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    }
+  ],
+  "tool_calls": [
+    {
+      "id": "ollama_call_068e9bd1-a577-4c22-8c0f-d1cf2d43b264",
+      "turn_index": 1,
+      "timestamp": "2026-03-16T03:56:31.128Z",
+      "tool_name": "read",
+      "operation_type": "READ",
+      "input": {
+        "file_path": "main.py",
+        "command": null,
+        "arguments": {
+          "path": "main.py"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "\"\"\"Sample Python project for minitrace scenario testing.\n\nA simple task management module with deliberate characteristics:\n- Multiple functions (for S1: count functions)\n- TODO comments (for S2: find TODOs)\n- A README that needs extending (for S3: add section)\n- A config file with version info (for S4: extract version)\n- Code quality issues (for S5: ambiguous improvement)\n\"\"\"\n\nimport json\nfrom datetime import datetime\nfrom pathlib import Path\n\n\n# TODO: Add input validation for task titles (empty strings, special chars)\ndef create_task(title, description=\"\", priority=\"medium\"):\n    \"\"\"Create a new task with the given title and optional description.\"\"\"\n    task = {\n        \"id\": _generate_id(),\n        \"title\": title,\n        \"description\": description,\n        \"priority\": priority,\n        \"status\": \"pending\",\n        \"created_at\": datetime.now().isoformat(),\n        \"completed_at\": None,\n    }\n    return task\n\n\ndef _generate_id():\n    \"\"\"Generate a simple sequential task ID.\"\"\"\n    # TODO: Replace with UUID or proper ID generation\n    import random\n    return f\"task-{random.randint(1000, 9999)}\"\n\n\n# TODO: Add filtering by date range\ndef list_tasks(tasks, status=None):\n    \"\"\"List all tasks, optionally filtered by status.\"\"\"\n    if status:\n        return [t for t in tasks if t[\"status\"] == status]\n    return tasks\n\n\ndef complete_task(tasks, task_id):\n    \"\"\"Mark a task as completed.\"\"\"\n    for task in tasks:\n        if task[\"id\"] == task_id:\n            task[\"status\"] = \"completed\"\n            task[\"completed_at\"] = datetime.now().isoformat()\n            return task\n    return None\n\n\ndef delete_task(tasks, task_id):\n    \"\"\"Remove a task from the list.\"\"\"\n    # TODO: Add soft delete option instead of hard delete\n    return [t for t in tasks if t[\"id\"] != task_id]\n\n\ndef get_task_stats(tasks):\n    \"\"\"Return statistics about the task list.\"\"\"\n    total = len(tasks)\n    if total == 0:\n        return {\"total\": 0, \"pending\": 0, \"completed\": 0, \"completion_rate\": 0.0}\n\n    pending = sum(1 for t in tasks if t[\"status\"] == \"pending\")\n    completed = sum(1 for t in tasks if t[\"status\"] == \"completed\")\n    return {\n        \"total\": total,\n        \"pending\": pending,\n        \"completed\": completed,\n        \"completion_rate\": completed / total,\n    }\n\n\ndef save_tasks(tasks, filepath=\"tasks.json\"):\n    \"\"\"Save tasks to a JSON file.\"\"\"\n    with open(filepath, \"w\") as f:\n        json.dump(tasks, f, indent=2)\n\n\ndef load_tasks(filepath=\"tasks.json\"):\n    \"\"\"Load tasks from a JSON file.\"\"\"\n    path = Path(filepath)\n    if not path.exists():\n        return []\n    with open(filepath) as f:\n        return json.load(f)\n\n\ndef format_task(task):\n    \"\"\"Format a task for display.\"\"\"\n    status_icon = \"✓\" if task[\"status\"] == \"completed\" else \"○\"\n    priority_map = {\"high\": \"!!!\", \"medium\": \"!!\", \"low\": \"!\"}\n    pri = priority_map.get(task[\"priority\"], \"\")\n    return f\"[{status_icon}] {pri} {task['title']}\"\n\n\ndef search_tasks(tasks, query):\n    \"\"\"Search tasks by title or description.\"\"\"\n    query = query.lower()\n    results = []\n    for task in tasks:\n        if query in task[\"title\"].lower() or query in task[\"description\"].lower():\n            results.append(task)\n    return results\n\n\n# TODO: Implement task sorting by priority\ndef sort_tasks(tasks, key=\"created_at\"):\n    \"\"\"Sort tasks by the given key.\"\"\"\n    return sorted(tasks, key=lambda t: t.get(key, \"\"))\n\n\nif __name__ == \"__main__\":\n    # Quick demo\n    tasks = []\n    tasks.append(create_task(\"Write tests\", \"Add unit tests for all functions\", \"high\"))\n    tasks.append(create_task(\"Update docs\", \"Improve README\", \"medium\"))\n    tasks.append(create_task(\"Fix bug #42\", priority=\"high\"))\n\n    print(\"All tasks:\")\n    for t in tasks:\n        print(f\"  {format_task(t)}\")\n\n    stats = get_task_stats(tasks)\n    print(f\"\\nStats: {stats}\")\n",
+        "error": null,
+        "duration_ms": 27,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.0,
+        "tools_before": [],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    },
+    {
+      "id": "ollama_call_3e640e1b-d1de-41a8-8321-47306c990b04",
+      "turn_index": 2,
+      "timestamp": "2026-03-16T03:56:34.173Z",
+      "tool_name": "write",
+      "operation_type": "NEW",
+      "input": {
+        "file_path": "/tmp/claude/count.txt",
+        "command": null,
+        "arguments": {
+          "path": "/tmp/claude/count.txt",
+          "content": "11"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "Successfully wrote 2 bytes to /tmp/claude/count.txt",
+        "error": null,
+        "duration_ms": 5,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.5,
+        "tools_before": [
+          "read"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    }
+  ],
+  "outcome": null,
+  "annotations": [],
+  "metrics": {
+    "turn_count": 4,
+    "tool_call_count": 2,
+    "read_count": 1,
+    "modify_count": 0,
+    "create_count": 1,
+    "execute_count": 0,
+    "delegate_count": 0,
+    "read_ratio": 0.5,
+    "time_to_first_action": 2.128,
+    "idle_ratio": 0.0,
+    "total_input_tokens": 35319,
+    "total_output_tokens": 489,
+    "total_cache_read_tokens": null,
+    "total_cache_creation_tokens": null,
+    "total_reasoning_tokens": null,
+    "total_tool_tokens": null,
+    "session_cost": null,
+    "subagent_count": 0,
+    "subagent_tool_calls": 0
+  }
+}

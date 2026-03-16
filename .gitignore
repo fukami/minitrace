@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+output/
+*.minitrace.json
+!examples/**/*.minitrace.json

@@ -1,0 +1,247 @@
+{
+  "id": "ses_30b361723ffe1wkF0fxqzpQt6d",
+  "schema_version": "minitrace-v0.1.0",
+  "profile": "organic",
+  "scenario_id": null,
+  "title": "README.md testing section addition with pytest command",
+  "summary": null,
+  "classification": "internal",
+  "provenance": {
+    "source_format": "opencode-sqlite-v1",
+    "source_path": "opencode/native-sessions/opencode.db",
+    "converted_at": "2026-03-16T04:38:29Z",
+    "converter_version": "minitrace-opencode-adapter-0.1.0",
+    "original_session_id": "ses_30b361723ffe1wkF0fxqzpQt6d"
+  },
+  "flags": {
+    "for_research": false,
+    "needs_cleaning": false,
+    "contains_error": false,
+    "contains_pii": false,
+    "category": []
+  },
+  "environment": {
+    "model": "qwen3.5:cloud",
+    "model_version": null,
+    "temperature": null,
+    "tools_enabled": [
+      "edit",
+      "read"
+    ],
+    "system_prompt": null,
+    "agent_framework": "opencode",
+    "agent_version": null,
+    "provider_hint": "ollama",
+    "framework_config": {
+      "summary_additions": 8,
+      "summary_deletions": 0,
+      "summary_files": 1
+    }
+  },
+  "operational_context": {
+    "working_directory": "/workspace",
+    "git_branch": null,
+    "git_ref": null,
+    "autonomy_level": null,
+    "sandbox": null,
+    "framework_config": null
+  },
+  "timing": {
+    "privacy_level": "full",
+    "duration_seconds": 4.777,
+    "active_duration_seconds": 4.776999999999999,
+    "started_at": "2026-03-16T03:56:39Z",
+    "ended_at": "2026-03-16T03:56:43Z",
+    "hour_of_day": 3,
+    "day_of_week": 0
+  },
+  "condition": null,
+  "coordination": {
+    "project_id": null,
+    "predecessor_session": null,
+    "concurrent_sessions": null,
+    "human_attention": "unknown"
+  },
+  "handover": {
+    "received": null,
+    "produced": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "timestamp": "2026-03-16T03:56:39Z",
+      "role": "user",
+      "source": "human",
+      "content": "\"Add a \\\"## Testing\\\" section to the end of README.md with this exact content:\n\n## Testing\n\n```bash\npython -m pytest tests/\n```\n\nRun tests before committing changes.\"",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 1,
+      "timestamp": "2026-03-16T03:56:39Z",
+      "role": "assistant",
+      "source": "model",
+      "content": null,
+      "tool_calls_in_turn": [
+        "call_yrqkixs2"
+      ],
+      "thinking": "The user wants me to add a Testing section to the end of README.md. Let me first read the README.md file to see its current content, then add the requested section at the end.",
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 10861,
+        "output_tokens": 70,
+        "cache_read_tokens": 0,
+        "cache_creation_tokens": 0,
+        "reasoning_tokens": 0,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 2,
+      "timestamp": "2026-03-16T03:56:40Z",
+      "role": "assistant",
+      "source": "model",
+      "content": null,
+      "tool_calls_in_turn": [
+        "call_wdikyz5n"
+      ],
+      "thinking": "The user wants me to add a \"## Testing\" section to the end of README.md with specific content. I've read the file and can see it ends at line 23. I'll append the new section after the \"## Configuration\" section.",
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 11092,
+        "output_tokens": 157,
+        "cache_read_tokens": 0,
+        "cache_creation_tokens": 0,
+        "reasoning_tokens": 0,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 3,
+      "timestamp": "2026-03-16T03:56:43Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "Done.",
+      "tool_calls_in_turn": [],
+      "thinking": "The edit was successful. I added the \"## Testing\" section to the end of README.md with the exact content requested.",
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 11211,
+        "output_tokens": 31,
+        "cache_read_tokens": 0,
+        "cache_creation_tokens": 0,
+        "reasoning_tokens": 0,
+        "tool_tokens": null
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "id": "call_yrqkixs2",
+      "turn_index": 1,
+      "timestamp": "2026-03-16T03:56:39Z",
+      "tool_name": "read",
+      "operation_type": "READ",
+      "input": {
+        "file_path": null,
+        "command": null,
+        "arguments": {
+          "filePath": "/workspace/README.md"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "<path>/workspace/README.md</path>\n<type>file</type>\n<content>1: # Task Manager\n2: \n3: A simple Python task management module.\n4: \n5: ## Installation\n6: \n7: ```bash\n8: pip install -r requirements.txt\n9: ```\n10: \n11: ## Usage\n12: \n13: ```python\n14: from main import create_task, list_tasks, complete_task\n15: \n16: tasks = []\n17: tasks.append(create_task(\"My first task\", priority=\"high\"))\n18: print(list_tasks(tasks))\n19: ```\n20: \n21: ## Configuration\n22: \n23: Edit `config.toml` to change project settings.\n\n(End of file - total 23 lines)\n</content>",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.0,
+        "tools_before": [],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    },
+    {
+      "id": "call_wdikyz5n",
+      "turn_index": 2,
+      "timestamp": "2026-03-16T03:56:40Z",
+      "tool_name": "edit",
+      "operation_type": "MODIFY",
+      "input": {
+        "file_path": null,
+        "command": null,
+        "arguments": {
+          "filePath": "/workspace/README.md",
+          "oldString": "## Configuration\n\nEdit `config.toml` to change project settings.",
+          "newString": "## Configuration\n\nEdit `config.toml` to change project settings.\n\n## Testing\n\n```bash\npython -m pytest tests/\n```\n\nRun tests before committing changes."
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "Edit applied successfully.",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.5,
+        "tools_before": [
+          "read"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    }
+  ],
+  "outcome": null,
+  "annotations": [],
+  "metrics": {
+    "turn_count": 4,
+    "tool_call_count": 2,
+    "read_count": 1,
+    "modify_count": 1,
+    "create_count": 0,
+    "execute_count": 0,
+    "delegate_count": 0,
+    "read_ratio": 0.5,
+    "time_to_first_action": 0.0,
+    "idle_ratio": 0.0,
+    "total_input_tokens": 33164,
+    "total_output_tokens": 258,
+    "total_cache_read_tokens": null,
+    "total_cache_creation_tokens": null,
+    "total_reasoning_tokens": null,
+    "total_tool_tokens": null,
+    "session_cost": null,
+    "subagent_count": 0,
+    "subagent_tool_calls": 0
+  }
+}

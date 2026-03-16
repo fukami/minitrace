@@ -1,0 +1,259 @@
+{
+  "id": "minitrace-S3",
+  "schema_version": "minitrace-v0.1.0",
+  "profile": "organic",
+  "scenario_id": null,
+  "title": "Add a \"## Testing\" section to the end of README.md with this exact content:  ##",
+  "summary": null,
+  "classification": "internal",
+  "provenance": {
+    "source_format": "goose-sqlite-v7",
+    "source_path": null,
+    "converted_at": "2026-03-16T12:05:38Z",
+    "converter_version": "minitrace-goose-adapter-0.1.0",
+    "original_session_id": "minitrace-S3"
+  },
+  "flags": {
+    "for_research": false,
+    "needs_cleaning": true,
+    "contains_error": false,
+    "contains_pii": false,
+    "category": []
+  },
+  "environment": {
+    "model": "unknown",
+    "model_version": null,
+    "temperature": null,
+    "tools_enabled": [
+      "edit",
+      "shell"
+    ],
+    "system_prompt": null,
+    "agent_framework": "goose",
+    "agent_version": null,
+    "provider_hint": "unknown"
+  },
+  "operational_context": {
+    "working_directory": "/workspace",
+    "git_branch": null,
+    "git_ref": null,
+    "autonomy_level": null,
+    "sandbox": null,
+    "framework_config": {
+      "extensions_used": [
+        "developer"
+      ]
+    }
+  },
+  "timing": {
+    "privacy_level": "full",
+    "duration_seconds": null,
+    "active_duration_seconds": null,
+    "started_at": "2026-03-16T12:02:05Z",
+    "ended_at": null,
+    "hour_of_day": 12,
+    "day_of_week": 0
+  },
+  "condition": null,
+  "coordination": {
+    "project_id": null,
+    "predecessor_session": null,
+    "concurrent_sessions": null,
+    "human_attention": "unknown"
+  },
+  "handover": {
+    "received": null,
+    "produced": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "timestamp": null,
+      "role": "user",
+      "source": "human",
+      "content": "Add a \"## Testing\" section to the end of README.md with this exact content:\n\n## Testing\n\n```bash\npython -m pytest tests/\n```\n\nRun tests before committing changes.",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 1,
+      "timestamp": null,
+      "role": "assistant",
+      "source": "model",
+      "content": "",
+      "tool_calls_in_turn": [
+        "call_b6812888997249ebb7d6c48b"
+      ],
+      "thinking": "The\n user wants me to\n add a \"##\n Testing\" section to\n the end of README\n.md with specific content\n. Let me first\n check if\n README.md exists and\n see\n its current content.\nThe user wants me to add a \"## Testing\" section to the end of README.md with specific content. Let me first check if README.md exists and see its current content.",
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 2,
+      "timestamp": null,
+      "role": "user",
+      "source": "framework",
+      "content": "",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 3,
+      "timestamp": null,
+      "role": "assistant",
+      "source": "model",
+      "content": "",
+      "tool_calls_in_turn": [
+        "call_68069f7a8f2f40f49545a33e"
+      ],
+      "thinking": "I\n need to append\n the Testing section to\n the end\n of README.md.\n I'll use the\n edit function to add\n the content\n after the last line\n.\nI need to append the Testing section to the end of README.md. I'll use the edit function to add the content after the last line.",
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 4,
+      "timestamp": null,
+      "role": "user",
+      "source": "framework",
+      "content": "",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 5,
+      "timestamp": null,
+      "role": "assistant",
+      "source": "model",
+      "content": "Done! I've added the \"## Testing\" section to the end of README.md with the specified content.",
+      "tool_calls_in_turn": [],
+      "thinking": "Done\n.\n I've added the\n \"## Testing\"\n section to\n the end of README\n.md with the exact\n content requested.\n",
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    }
+  ],
+  "tool_calls": [
+    {
+      "id": "call_b6812888997249ebb7d6c48b",
+      "turn_index": 1,
+      "timestamp": null,
+      "tool_name": "shell",
+      "operation_type": "EXECUTE",
+      "input": {
+        "file_path": null,
+        "command": "cat README.md",
+        "arguments": {
+          "command": "cat README.md"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "# Task Manager\n\nA simple Python task management module.\n\n## Installation\n\n```bash\npip install -r requirements.txt\n```\n\n## Usage\n\n```python\nfrom main import create_task, list_tasks, complete_task\n\ntasks = []\ntasks.append(create_task(\"My first task\", priority=\"high\"))\nprint(list_tasks(tasks))\n```\n\n## Configuration\n\nEdit `config.toml` to change project settings.",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.0,
+        "tools_before": [],
+        "time_since_last_user": null
+      },
+      "framework_metadata": {
+        "goose_extension": "developer"
+      },
+      "spawned_agent": null
+    },
+    {
+      "id": "call_68069f7a8f2f40f49545a33e",
+      "turn_index": 3,
+      "timestamp": null,
+      "tool_name": "edit",
+      "operation_type": "MODIFY",
+      "input": {
+        "file_path": "README.md",
+        "command": null,
+        "arguments": {
+          "path": "README.md",
+          "before": "## Configuration\n\nEdit `config.toml` to change project settings.",
+          "after": "## Configuration\n\nEdit `config.toml` to change project settings.\n\n## Testing\n\n```bash\npython -m pytest tests/\n```\n\nRun tests before committing changes."
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "Edited README.md (3 lines -> 11 lines)",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.5,
+        "tools_before": [
+          "shell"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": {
+        "goose_extension": "developer"
+      },
+      "spawned_agent": null
+    }
+  ],
+  "outcome": null,
+  "annotations": [],
+  "metrics": {
+    "turn_count": 6,
+    "tool_call_count": 2,
+    "read_count": 0,
+    "modify_count": 1,
+    "create_count": 0,
+    "execute_count": 1,
+    "delegate_count": 0,
+    "read_ratio": 0.0,
+    "time_to_first_action": null,
+    "idle_ratio": null,
+    "total_input_tokens": null,
+    "total_output_tokens": null,
+    "total_cache_read_tokens": null,
+    "total_cache_creation_tokens": null,
+    "total_reasoning_tokens": null,
+    "total_tool_tokens": null,
+    "session_cost": null,
+    "subagent_count": 0,
+    "subagent_tool_calls": 0
+  }
+}

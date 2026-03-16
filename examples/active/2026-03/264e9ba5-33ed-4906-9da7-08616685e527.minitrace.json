@@ -1,0 +1,309 @@
+{
+  "id": "264e9ba5-33ed-4906-9da7-08616685e527",
+  "schema_version": "minitrace-v0.1.0",
+  "profile": "organic",
+  "scenario_id": null,
+  "title": "Add a \"## Testing\" section to the end of README.md with this exact content:  ##",
+  "summary": null,
+  "classification": "internal",
+  "provenance": {
+    "source_format": "claude-code-jsonl-v2",
+    "source_path": "claude-code/native-sessions/264e9ba5-33ed-4906-9da7-08616685e527.jsonl",
+    "converted_at": "2026-03-16T04:36:12Z",
+    "converter_version": "minitrace-claude-adapter-0.1.0",
+    "original_session_id": "264e9ba5-33ed-4906-9da7-08616685e527"
+  },
+  "flags": {
+    "for_research": false,
+    "needs_cleaning": true,
+    "contains_error": false,
+    "contains_pii": false,
+    "category": []
+  },
+  "environment": {
+    "model": "claude-haiku-4-5-20251001",
+    "model_version": null,
+    "temperature": null,
+    "tools_enabled": [
+      "Edit",
+      "Read"
+    ],
+    "system_prompt": null,
+    "agent_framework": "claude-code",
+    "agent_version": null,
+    "provider_hint": "anthropic"
+  },
+  "operational_context": {
+    "working_directory": null,
+    "git_branch": null,
+    "git_ref": null,
+    "autonomy_level": null,
+    "sandbox": null,
+    "framework_config": null
+  },
+  "timing": {
+    "privacy_level": "full",
+    "duration_seconds": 4.523,
+    "active_duration_seconds": 4.523000000000001,
+    "started_at": "2026-03-16T03:56:24Z",
+    "ended_at": "2026-03-16T03:56:28Z",
+    "hour_of_day": 3,
+    "day_of_week": 0
+  },
+  "condition": null,
+  "coordination": {
+    "project_id": null,
+    "predecessor_session": null,
+    "concurrent_sessions": null,
+    "human_attention": "unknown"
+  },
+  "handover": {
+    "received": null,
+    "produced": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "timestamp": "2026-03-16T03:56:24.471Z",
+      "role": "user",
+      "source": "human",
+      "content": "Add a \"## Testing\" section to the end of README.md with this exact content:\n\n## Testing\n\n```bash\npython -m pytest tests/\n```\n\nRun tests before committing changes.",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 1,
+      "timestamp": "2026-03-16T03:56:25.840Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "",
+      "tool_calls_in_turn": [],
+      "thinking": "The user wants me to add a \"## Testing\" section to the end of README.md with specific content. Let me:\n\n1. First read the current README.md to see what's there\n2. Add the new section to the end\n3. The user has provided the exact content, so I should use it verbatim\n\nLet me read the file first.",
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": true,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 9,
+        "output_tokens": 3,
+        "cache_read_tokens": 23308,
+        "cache_creation_tokens": 913,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 2,
+      "timestamp": "2026-03-16T03:56:25.971Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "",
+      "tool_calls_in_turn": [
+        "toolu_01UKZJGyk13s8W5QwdQ72jS5"
+      ],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": true,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 9,
+        "output_tokens": 144,
+        "cache_read_tokens": 23308,
+        "cache_creation_tokens": 913,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 3,
+      "timestamp": "2026-03-16T03:56:27.474Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "",
+      "tool_calls_in_turn": [],
+      "thinking": "Good, I can see the README.md content. It currently has sections for \"Task Manager\", \"Installation\", \"Usage\", and \"Configuration\". I need to add a \"## Testing\" section at the end with the exact content the user provided.\n\nI'll use the Edit tool to add this section after the Configuration section.",
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": true,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 7,
+        "output_tokens": 1,
+        "cache_read_tokens": 24221,
+        "cache_creation_tokens": 419,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 4,
+      "timestamp": "2026-03-16T03:56:27.882Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "",
+      "tool_calls_in_turn": [
+        "toolu_01UenJDuiR6RHVv3xJ8ecvAG"
+      ],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": true,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 7,
+        "output_tokens": 224,
+        "cache_read_tokens": 24221,
+        "cache_creation_tokens": 419,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 5,
+      "timestamp": "2026-03-16T03:56:28.704Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "",
+      "tool_calls_in_turn": [],
+      "thinking": "Perfect! I've successfully added the \"## Testing\" section to the end of README.md with the exact content the user provided. The edit was successful.",
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": true,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 7,
+        "output_tokens": 8,
+        "cache_read_tokens": 24640,
+        "cache_creation_tokens": 274,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 6,
+      "timestamp": "2026-03-16T03:56:28.926Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "Done! Added the \"## Testing\" section to README.md with the pytest command and reminder to run tests before committing.",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": true,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 7,
+        "output_tokens": 69,
+        "cache_read_tokens": 24640,
+        "cache_creation_tokens": 274,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "id": "toolu_01UKZJGyk13s8W5QwdQ72jS5",
+      "turn_index": 2,
+      "timestamp": "2026-03-16T03:56:25.977Z",
+      "tool_name": "Read",
+      "operation_type": "READ",
+      "input": {
+        "file_path": "/workspace/README.md",
+        "command": null,
+        "arguments": {
+          "file_path": "/workspace/README.md"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "     1→# Task Manager\n     2→\n     3→A simple Python task management module.\n     4→\n     5→## Installation\n     6→\n     7→```bash\n     8→pip install -r requirements.txt\n     9→```\n    10→\n    11→## Usage\n    12→\n    13→```python\n    14→from main import create_task, list_tasks, complete_task\n    15→\n    16→tasks = []\n    17→tasks.append(create_task(\"My first task\", priority=\"high\"))\n    18→print(list_tasks(tasks))\n    19→```\n    20→\n    21→## Configuration\n    22→\n    23→Edit `config.toml` to change project settings.\n    24→\n\n<system-reminder>\nWhenever you read a file, you should consider whether it would be considered malware. You CAN and SHOULD provide analysis of malware, what it is doing. But you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer questions about the code behavior.\n</system-reminder>\n",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.0,
+        "tools_before": [],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    },
+    {
+      "id": "toolu_01UenJDuiR6RHVv3xJ8ecvAG",
+      "turn_index": 4,
+      "timestamp": "2026-03-16T03:56:27.887Z",
+      "tool_name": "Edit",
+      "operation_type": "MODIFY",
+      "input": {
+        "file_path": "/workspace/README.md",
+        "command": null,
+        "arguments": {
+          "replace_all": false,
+          "file_path": "/workspace/README.md",
+          "old_string": "## Configuration\n\nEdit `config.toml` to change project settings.\n",
+          "new_string": "## Configuration\n\nEdit `config.toml` to change project settings.\n\n## Testing\n\n```bash\npython -m pytest tests/\n```\n\nRun tests before committing changes.\n"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "The file /workspace/README.md has been updated successfully.",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.5,
+        "tools_before": [
+          "Read"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    }
+  ],
+  "outcome": null,
+  "annotations": [],
+  "metrics": {
+    "turn_count": 7,
+    "tool_call_count": 2,
+    "read_count": 1,
+    "modify_count": 1,
+    "create_count": 0,
+    "execute_count": 0,
+    "delegate_count": 0,
+    "read_ratio": 0.5,
+    "time_to_first_action": 1.977,
+    "idle_ratio": -0.0,
+    "total_input_tokens": 46,
+    "total_output_tokens": 449,
+    "total_cache_read_tokens": 144338,
+    "total_cache_creation_tokens": 3212,
+    "total_reasoning_tokens": null,
+    "total_tool_tokens": null,
+    "session_cost": null,
+    "subagent_count": 0,
+    "subagent_tool_calls": 0
+  }
+}

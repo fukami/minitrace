@@ -1,0 +1,275 @@
+{
+  "id": "ab42017a-a66a-4f4f-97ec-9d3b9ce635d8",
+  "schema_version": "minitrace-v0.1.0",
+  "profile": "organic",
+  "scenario_id": null,
+  "title": "Count the number of Python function definitions (lines starting with 'def ') in",
+  "summary": null,
+  "classification": "internal",
+  "provenance": {
+    "source_format": "pi-agent-jsonl-v3",
+    "source_path": "pi/native-sessions/2026-03-16T03-56-20-601Z_ab42017a-a66a-4f4f-97ec-9d3b9ce635d8.jsonl",
+    "converted_at": "2026-03-16T04:37:39Z",
+    "converter_version": "minitrace-pi-adapter-0.1.0",
+    "original_session_id": "ab42017a-a66a-4f4f-97ec-9d3b9ce635d8"
+  },
+  "flags": {
+    "for_research": false,
+    "needs_cleaning": false,
+    "contains_error": false,
+    "contains_pii": false,
+    "category": []
+  },
+  "environment": {
+    "model": "qwen3.5:cloud",
+    "model_version": null,
+    "temperature": null,
+    "tools_enabled": [
+      "read",
+      "write"
+    ],
+    "system_prompt": null,
+    "agent_framework": "pi",
+    "agent_version": null,
+    "provider_hint": "ollama",
+    "framework_config": {
+      "thinking_level": "medium",
+      "api": null
+    }
+  },
+  "operational_context": {
+    "working_directory": "/workspace",
+    "git_branch": null,
+    "git_ref": null,
+    "autonomy_level": null,
+    "sandbox": null,
+    "framework_config": null
+  },
+  "timing": {
+    "privacy_level": "full",
+    "duration_seconds": 4.864,
+    "active_duration_seconds": 4.864,
+    "started_at": "2026-03-16T03:56:20Z",
+    "ended_at": "2026-03-16T03:56:25Z",
+    "hour_of_day": 3,
+    "day_of_week": 0
+  },
+  "condition": null,
+  "coordination": {
+    "project_id": null,
+    "predecessor_session": null,
+    "concurrent_sessions": null,
+    "human_attention": "unknown"
+  },
+  "handover": {
+    "received": null,
+    "produced": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "timestamp": "2026-03-16T03:56:20.603Z",
+      "role": "user",
+      "source": "human",
+      "content": "Count the number of Python function definitions (lines starting with 'def ') in main.py. Write just the count as a plain integer to count.txt in the project root.",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 1,
+      "timestamp": "2026-03-16T03:56:21.932Z",
+      "role": "assistant",
+      "source": "model",
+      "content": null,
+      "tool_calls_in_turn": [
+        "call_8lmzl4dk"
+      ],
+      "thinking": "The user wants me to:\n1. Count the number of Python function definitions (lines starting with 'def ') in main.py\n2. Write just the count as a plain integer to count.txt in the project root\n\nLet me first read main.py to see its contents and count the function definitions.\n",
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 1483,
+        "output_tokens": 90,
+        "cache_read_tokens": 0,
+        "cache_creation_tokens": 0,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 2,
+      "timestamp": "2026-03-16T03:56:21.940Z",
+      "role": "user",
+      "source": "framework",
+      "content": "\"\"\"Sample Python project for minitrace scenario testing.\n\nA simple task management module with deliberate characteristics:\n- Multiple functions (for S1: count functions)\n- Improvement notes as comments (for S2: find improvement notes)\n- A README that needs extending (for S3: add section)\n- A config file with version info (for S4: extract version)\n- Code quality issues (for S5: ambiguous improvement)\n\"\"\"\n\nimport json\nfrom datetime import datetime\nfrom pathlib import Path\n\n\n# IMPROVE: Add input validation for task titles (empty strings, special chars)\ndef create_task(title, description=\"\", priority=\"medium\"):\n    \"\"\"Create a new task with the given title and optional description.\"\"\"\n    task = {\n        \"id\": _generate_id(),\n        \"title\": title,\n        \"description\": description,\n        \"priority\": priority,\n        \"status\": \"pending\",\n        \"created_at\": datetime.now().isoformat(),\n        \"completed_at\": None,\n    }\n    return task\n\n\ndef _generate_id():\n    \"\"\"Generate a simple sequential task ID.\"\"\"\n    # IMPROVE: Replace with UUID or proper ID generation\n    import random\n    return f\"task-{random.randint(1000, 9999)}\"\n\n\n# IMPROVE: Add filtering by date range\ndef list_tasks(tasks, status=None):\n    \"\"\"List all tasks, optionally filtered by status.\"\"\"\n    if status:\n        return [t for t in tasks if t[\"status\"] == status]\n    return tasks\n\n\ndef complete_task(tasks, task_id):\n    \"\"\"Mark a task as completed.\"\"\"\n    for task in tasks:\n        if task[\"id\"] == task_id:\n            task[\"status\"] = \"completed\"\n            task[\"completed_at\"] = datetime.now().isoformat()\n            return task\n    return None\n\n\ndef delete_task(tasks, task_id):\n    \"\"\"Remove a task from the list.\"\"\"\n    # IMPROVE: Add soft delete option instead of hard delete\n    return [t for t in tasks if t[\"id\"] != task_id]\n\n\ndef get_task_stats(tasks):\n    \"\"\"Return statistics about the task list.\"\"\"\n    total = len(tasks)\n    if total == 0:\n        return {\"total\": 0, \"pending\": 0, \"completed\": 0, \"completion_rate\": 0.0}\n\n    pending = sum(1 for t in tasks if t[\"status\"] == \"pending\")\n    completed = sum(1 for t in tasks if t[\"status\"] == \"completed\")\n    return {\n        \"total\": total,\n        \"pending\": pending,\n        \"completed\": completed,\n        \"completion_rate\": completed / total,\n    }\n\n\ndef save_tasks(tasks, filepath=\"tasks.json\"):\n    \"\"\"Save tasks to a JSON file.\"\"\"\n    with open(filepath, \"w\") as f:\n        json.dump(tasks, f, indent=2)\n\n\ndef load_tasks(filepath=\"tasks.json\"):\n    \"\"\"Load tasks from a JSON file.\"\"\"\n    path = Path(filepath)\n    if not path.exists():\n        return []\n    with open(filepath) as f:\n        return json.load(f)\n\n\ndef format_task(task):\n    \"\"\"Format a task for display.\"\"\"\n    status_icon = \"+\" if task[\"status\"] == \"completed\" else \"o\"\n    priority_map = {\"high\": \"!!!\", \"medium\": \"!!\", \"low\": \"!\"}\n    pri = priority_map.get(task[\"priority\"], \"\")\n    return f\"[{status_icon}] {pri} {task['title']}\"\n\n\ndef search_tasks(tasks, query):\n    \"\"\"Search tasks by title or description.\"\"\"\n    query = query.lower()\n    results = []\n    for task in tasks:\n        if query in task[\"title\"].lower() or query in task[\"description\"].lower():\n            results.append(task)\n    return results\n\n\n# IMPROVE: Implement task sorting by priority\ndef sort_tasks(tasks, key=\"created_at\"):\n    \"\"\"Sort tasks by the given key.\"\"\"\n    return sorted(tasks, key=lambda t: t.get(key, \"\"))\n\n\nif __name__ == \"__main__\":\n    # Quick demo\n    tasks = []\n    tasks.append(create_task(\"Write tests\", \"Add unit tests for all functions\", \"high\"))\n    tasks.append(create_task(\"Update docs\", \"Improve README\", \"medium\"))\n    tasks.append(create_task(\"Fix bug #42\", priority=\"high\"))\n\n    print(\"All tasks:\")\n    for t in tasks:\n        print(f\"  {format_task(t)}\")\n\n    stats = get_task_stats(tasks)\n    print(f\"\\nStats: {stats}\")",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 3,
+      "timestamp": "2026-03-16T03:56:23.901Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "I can see 11 function definitions in main.py. Let me write the count to count.txt.",
+      "tool_calls_in_turn": [
+        "call_z2aj76mg"
+      ],
+      "thinking": "I need to count the lines starting with 'def ' in main.py. Looking at the file content, I can see the following function definitions:\n\n1. def create_task(title, description=\"\", priority=\"medium\"):\n2. def _generate_id():\n3. def list_tasks(tasks, status=None):\n4. def complete_task(tasks, task_id):\n5. def delete_task(tasks, task_id):\n6. def get_task_stats(tasks):\n7. def save_tasks(tasks, filepath=\"tasks.json\"):\n8. def load_tasks(filepath=\"tasks.json\"):\n9. def format_task(task):\n10. def search_tasks(tasks, query):\n11. def sort_tasks(tasks, key=\"created_at\"):\n\nThat's 11 function definitions. I'll write this count to count.txt.\n",
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 2541,
+        "output_tokens": 233,
+        "cache_read_tokens": 0,
+        "cache_creation_tokens": 0,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 4,
+      "timestamp": "2026-03-16T03:56:23.903Z",
+      "role": "user",
+      "source": "framework",
+      "content": "Successfully wrote 2 bytes to /workspace/count.txt",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 5,
+      "timestamp": "2026-03-16T03:56:25.465Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "Done. Found 11 function definitions in main.py and wrote the count to count.txt.",
+      "tool_calls_in_turn": [],
+      "thinking": "The task is complete. I counted 11 Python function definitions (lines starting with 'def ') in main.py and wrote the count to count.txt.\n\nThe functions are:\n1. create_task\n2. _generate_id\n3. list_tasks\n4. complete_task\n5. delete_task\n6. get_task_stats\n7. save_tasks\n8. load_tasks\n9. format_task\n10. search_tasks\n11. sort_tasks\n",
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 2626,
+        "output_tokens": 118,
+        "cache_read_tokens": 0,
+        "cache_creation_tokens": 0,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "id": "call_8lmzl4dk",
+      "turn_index": 1,
+      "timestamp": "2026-03-16T03:56:21.932Z",
+      "tool_name": "read",
+      "operation_type": "READ",
+      "input": {
+        "file_path": "/workspace/main.py",
+        "command": null,
+        "arguments": {
+          "path": "/workspace/main.py"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": null,
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.0,
+        "tools_before": [],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    },
+    {
+      "id": "call_z2aj76mg",
+      "turn_index": 3,
+      "timestamp": "2026-03-16T03:56:23.901Z",
+      "tool_name": "write",
+      "operation_type": "NEW",
+      "input": {
+        "file_path": "/workspace/count.txt",
+        "command": null,
+        "arguments": {
+          "path": "/workspace/count.txt",
+          "content": "11"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": null,
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.5,
+        "tools_before": [
+          "read"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    }
+  ],
+  "outcome": null,
+  "annotations": [],
+  "metrics": {
+    "turn_count": 6,
+    "tool_call_count": 2,
+    "read_count": 1,
+    "modify_count": 0,
+    "create_count": 1,
+    "execute_count": 0,
+    "delegate_count": 0,
+    "read_ratio": 0.5,
+    "time_to_first_action": 1.932,
+    "idle_ratio": 0.0,
+    "total_input_tokens": 6650,
+    "total_output_tokens": 441,
+    "total_cache_read_tokens": null,
+    "total_cache_creation_tokens": null,
+    "total_reasoning_tokens": null,
+    "total_tool_tokens": null,
+    "session_cost": null,
+    "subagent_count": 0,
+    "subagent_tool_calls": 0
+  }
+}

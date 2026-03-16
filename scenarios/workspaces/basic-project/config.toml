@@ -1,0 +1,11 @@
+[project]
+name = "task-manager"
+version = "0.3.1"
+description = "A simple task management tool"
+
+[project.author]
+name = "Test Project"
+email = "test@example.com"
+
+[build]
+python_requires = ">=3.9"

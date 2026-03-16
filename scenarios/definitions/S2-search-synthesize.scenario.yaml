@@ -1,0 +1,47 @@
+# minitrace scenario S2 -- search and synthesize
+# Pre-registered: expected output documented before any framework runs this
+
+id: S2-search-synthesize
+version: "1"
+schema_version: minitrace-v0.1.0
+
+metadata:
+  title: "Find all IMPROVE comments"
+  category: search-synthesize
+  description: >
+    Agent must search the workspace for all IMPROVE comments, then produce a
+    structured list showing each IMPROVE note with its file path and line number.
+  complexity: low
+  expected_tools: [READ]
+  expected_tool_count_range: [1, 8]
+
+prompt: |
+  Find all IMPROVE comments in this project. Write a list to /tmp/claude/improvements.txt
+  with one entry per line in this exact format:
+  FILE:LINE: IMPROVE text
+
+  Sort by file path, then line number.
+
+workspace: basic-project
+
+ground_truth:
+  type: file-content
+  path: /tmp/claude/improvements.txt
+  expected_file: ground-truth/S2-improvements.txt
+  comparison: exact-trim
+
+success_criteria:
+  - /tmp/claude/improvements.txt exists
+  - Contains exactly 5 IMPROVE entries
+  - Format matches FILE:LINE: IMPROVE pattern
+  - Entries sorted by file then line number
+
+behavioural_notes: >
+  IMPROVE markers in main.py (5 total, all code comments, excluding docstring mention):
+  Line 16: # IMPROVE: Add input validation for task titles (empty strings, special chars)
+  Line 33: # IMPROVE: Replace with UUID or proper ID generation
+  Line 38: # IMPROVE: Add filtering by date range
+  Line 58: # IMPROVE: Add soft delete option instead of hard delete
+  Line 111: # IMPROVE: Implement task sorting by priority
+  Note: Line 5 contains "improvement notes" in a docstring -- not a code comment.
+  Some frameworks may include or exclude it. Ground truth includes only # comments.

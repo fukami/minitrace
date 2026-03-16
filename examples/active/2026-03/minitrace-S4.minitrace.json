@@ -1,0 +1,326 @@
+{
+  "id": "minitrace-S4",
+  "schema_version": "minitrace-v0.1.0",
+  "profile": "organic",
+  "scenario_id": null,
+  "title": "Read the version from config.toml and write it to a new file called VERSION.txt",
+  "summary": null,
+  "classification": "internal",
+  "provenance": {
+    "source_format": "goose-sqlite-v7",
+    "source_path": null,
+    "converted_at": "2026-03-16T12:05:38Z",
+    "converter_version": "minitrace-goose-adapter-0.1.0",
+    "original_session_id": "minitrace-S4"
+  },
+  "flags": {
+    "for_research": false,
+    "needs_cleaning": true,
+    "contains_error": false,
+    "contains_pii": false,
+    "category": []
+  },
+  "environment": {
+    "model": "unknown",
+    "model_version": null,
+    "temperature": null,
+    "tools_enabled": [
+      "write",
+      "shell"
+    ],
+    "system_prompt": null,
+    "agent_framework": "goose",
+    "agent_version": null,
+    "provider_hint": "unknown"
+  },
+  "operational_context": {
+    "working_directory": "/workspace",
+    "git_branch": null,
+    "git_ref": null,
+    "autonomy_level": null,
+    "sandbox": null,
+    "framework_config": {
+      "extensions_used": [
+        "developer"
+      ]
+    }
+  },
+  "timing": {
+    "privacy_level": "full",
+    "duration_seconds": null,
+    "active_duration_seconds": null,
+    "started_at": "2026-03-16T12:02:13Z",
+    "ended_at": null,
+    "hour_of_day": 12,
+    "day_of_week": 0
+  },
+  "condition": null,
+  "coordination": {
+    "project_id": null,
+    "predecessor_session": null,
+    "concurrent_sessions": null,
+    "human_attention": "unknown"
+  },
+  "handover": {
+    "received": null,
+    "produced": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "timestamp": null,
+      "role": "user",
+      "source": "human",
+      "content": "Read the version from config.toml and write it to a new file called VERSION.txt in the project root. The file should contain only the version string, nothing else. After writing, verify that VERSION.txt contains the correct version.",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 1,
+      "timestamp": null,
+      "role": "assistant",
+      "source": "model",
+      "content": "",
+      "tool_calls_in_turn": [
+        "call_b5c9b49363374bbfb2f21318"
+      ],
+      "thinking": "I\n need to read\n the version from config\n.toml\n and write it to\n VERSION.txt. Let\n me first check if\n config.toml exists\n and read its contents\n to\n find the version.\nI need to read the version from config.toml and write it to VERSION.txt. Let me first check if config.toml exists and read its contents to find the version.",
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 2,
+      "timestamp": null,
+      "role": "user",
+      "source": "framework",
+      "content": "",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 3,
+      "timestamp": null,
+      "role": "assistant",
+      "source": "model",
+      "content": "I found the version `0.3.1` in config.toml. Now I'll write it to VERSION.txt and verify it.\n\n",
+      "tool_calls_in_turn": [
+        "call_d183c97fbcf44545984723e8"
+      ],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 4,
+      "timestamp": null,
+      "role": "user",
+      "source": "framework",
+      "content": "",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 5,
+      "timestamp": null,
+      "role": "assistant",
+      "source": "model",
+      "content": "",
+      "tool_calls_in_turn": [
+        "call_3706ad1a61ec4d0bb9acb187"
+      ],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 6,
+      "timestamp": null,
+      "role": "user",
+      "source": "framework",
+      "content": "",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 7,
+      "timestamp": null,
+      "role": "assistant",
+      "source": "model",
+      "content": "Done. I've:\n1. Read the version `0.3.1` from config.toml\n2. Written it to VERSION.txt in the project root\n3. Verified that VERSION.txt contains exactly `0.3.1`",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    }
+  ],
+  "tool_calls": [
+    {
+      "id": "call_b5c9b49363374bbfb2f21318",
+      "turn_index": 1,
+      "timestamp": null,
+      "tool_name": "shell",
+      "operation_type": "EXECUTE",
+      "input": {
+        "file_path": null,
+        "command": "cat config.toml",
+        "arguments": {
+          "command": "cat config.toml"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "[project]\nname = \"task-manager\"\nversion = \"0.3.1\"\ndescription = \"A simple task management tool\"\n\n[project.author]\nname = \"Test Project\"\nemail = \"test@example.com\"\n\n[build]\npython_requires = \">=3.9\"",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.0,
+        "tools_before": [],
+        "time_since_last_user": null
+      },
+      "framework_metadata": {
+        "goose_extension": "developer"
+      },
+      "spawned_agent": null
+    },
+    {
+      "id": "call_d183c97fbcf44545984723e8",
+      "turn_index": 3,
+      "timestamp": null,
+      "tool_name": "write",
+      "operation_type": "NEW",
+      "input": {
+        "file_path": "/workspace/VERSION.txt",
+        "command": null,
+        "arguments": {
+          "path": "/workspace/VERSION.txt",
+          "content": "0.3.1"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "Created /workspace/VERSION.txt (1 lines)",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.333,
+        "tools_before": [
+          "shell"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": {
+        "goose_extension": "developer"
+      },
+      "spawned_agent": null
+    },
+    {
+      "id": "call_3706ad1a61ec4d0bb9acb187",
+      "turn_index": 5,
+      "timestamp": null,
+      "tool_name": "shell",
+      "operation_type": "EXECUTE",
+      "input": {
+        "file_path": null,
+        "command": "cat VERSION.txt",
+        "arguments": {
+          "command": "cat VERSION.txt"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "0.3.1",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.667,
+        "tools_before": [
+          "shell",
+          "write"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": {
+        "goose_extension": "developer"
+      },
+      "spawned_agent": null
+    }
+  ],
+  "outcome": null,
+  "annotations": [],
+  "metrics": {
+    "turn_count": 8,
+    "tool_call_count": 3,
+    "read_count": 0,
+    "modify_count": 0,
+    "create_count": 1,
+    "execute_count": 2,
+    "delegate_count": 0,
+    "read_ratio": 0.0,
+    "time_to_first_action": null,
+    "idle_ratio": null,
+    "total_input_tokens": null,
+    "total_output_tokens": null,
+    "total_cache_read_tokens": null,
+    "total_cache_creation_tokens": null,
+    "total_reasoning_tokens": null,
+    "total_tool_tokens": null,
+    "session_cost": null,
+    "subagent_count": 0,
+    "subagent_tool_calls": 0
+  }
+}

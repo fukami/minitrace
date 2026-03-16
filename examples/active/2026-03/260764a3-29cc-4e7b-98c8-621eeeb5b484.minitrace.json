@@ -1,0 +1,276 @@
+{
+  "id": "260764a3-29cc-4e7b-98c8-621eeeb5b484",
+  "schema_version": "minitrace-v0.1.0",
+  "profile": "organic",
+  "scenario_id": null,
+  "title": "Read the version from config.toml and write it to a new file called VERSION.txt",
+  "summary": null,
+  "classification": "internal",
+  "provenance": {
+    "source_format": "gemini-cli-session-v1",
+    "source_path": "gemini-cli/native-sessions/session-2026-03-16T04-17-260764a3.json",
+    "converted_at": "2026-03-16T04:38:31Z",
+    "converter_version": "minitrace-gemini-adapter-0.1.0",
+    "original_session_id": "260764a3-29cc-4e7b-98c8-621eeeb5b484"
+  },
+  "flags": {
+    "for_research": false,
+    "needs_cleaning": false,
+    "contains_error": false,
+    "contains_pii": false,
+    "category": []
+  },
+  "environment": {
+    "model": "gemini-3-flash-preview",
+    "model_version": null,
+    "temperature": null,
+    "tools_enabled": [
+      "read_file",
+      "write_file"
+    ],
+    "system_prompt": null,
+    "agent_framework": "gemini-cli",
+    "agent_version": null,
+    "provider_hint": "google"
+  },
+  "operational_context": {
+    "working_directory": null,
+    "git_branch": null,
+    "git_ref": null,
+    "autonomy_level": null,
+    "sandbox": null,
+    "framework_config": null
+  },
+  "timing": {
+    "privacy_level": "full",
+    "duration_seconds": 5.805,
+    "active_duration_seconds": 5.805000000000001,
+    "started_at": "2026-03-16T04:17:28Z",
+    "ended_at": "2026-03-16T04:17:33Z",
+    "hour_of_day": 4,
+    "day_of_week": 0
+  },
+  "condition": null,
+  "coordination": {
+    "project_id": null,
+    "predecessor_session": null,
+    "concurrent_sessions": null,
+    "human_attention": "unknown"
+  },
+  "handover": {
+    "received": null,
+    "produced": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "timestamp": "2026-03-16T04:17:28.053Z",
+      "role": "user",
+      "source": "human",
+      "content": "Read the version from config.toml and write it to a new file called VERSION.txt in the project root. The file should contain only the version string, nothing else. After writing, verify that VERSION.txt contains the correct version.",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 1,
+      "timestamp": "2026-03-16T04:17:30.144Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "I will read `config.toml` to extract the version and then write it to `VERSION.txt`.",
+      "tool_calls_in_turn": [
+        "wlh0tvdm"
+      ],
+      "thinking": [],
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": null,
+        "output_tokens": null,
+        "cache_read_tokens": null,
+        "cache_creation_tokens": null,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 2,
+      "timestamp": "2026-03-16T04:17:31.831Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "I will write the version string `0.3.1` to `VERSION.txt` and verify its content.",
+      "tool_calls_in_turn": [
+        "tsu3fntn",
+        "n8u2w8t2"
+      ],
+      "thinking": [],
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": null,
+        "output_tokens": null,
+        "cache_read_tokens": null,
+        "cache_creation_tokens": null,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 3,
+      "timestamp": "2026-03-16T04:17:33.858Z",
+      "role": "assistant",
+      "source": "model",
+      "content": "The version `0.3.1` has been successfully extracted from `config.toml` and written to `VERSION.txt`.",
+      "tool_calls_in_turn": [],
+      "thinking": [],
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": null,
+        "output_tokens": null,
+        "cache_read_tokens": null,
+        "cache_creation_tokens": null,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "id": "wlh0tvdm",
+      "turn_index": 1,
+      "timestamp": "2026-03-16T04:17:30.144Z",
+      "tool_name": "read_file",
+      "operation_type": "READ",
+      "input": {
+        "file_path": "config.toml",
+        "command": null,
+        "arguments": {
+          "file_path": "config.toml"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "[project]\nname = \"task-manager\"\nversion = \"0.3.1\"\ndescription = \"A simple task management tool\"\n\n[project.author]\nname = \"Test Project\"\nemail = \"test@example.com\"\n\n[build]\npython_requires = \">=3.9\"\n",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.0,
+        "tools_before": [],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    },
+    {
+      "id": "tsu3fntn",
+      "turn_index": 2,
+      "timestamp": "2026-03-16T04:17:31.831Z",
+      "tool_name": "write_file",
+      "operation_type": "NEW",
+      "input": {
+        "file_path": "VERSION.txt",
+        "command": null,
+        "arguments": {
+          "file_path": "VERSION.txt",
+          "content": "0.3.1"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "Successfully created and wrote to new file: /workspace/VERSION.txt. Here is the updated code:\n0.3.1",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.333,
+        "tools_before": [
+          "read_file"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    },
+    {
+      "id": "n8u2w8t2",
+      "turn_index": 2,
+      "timestamp": "2026-03-16T04:17:31.831Z",
+      "tool_name": "read_file",
+      "operation_type": "READ",
+      "input": {
+        "file_path": "VERSION.txt",
+        "command": null,
+        "arguments": {
+          "file_path": "VERSION.txt"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "0.3.1",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.667,
+        "tools_before": [
+          "read_file",
+          "write_file"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    }
+  ],
+  "outcome": null,
+  "annotations": [],
+  "metrics": {
+    "turn_count": 4,
+    "tool_call_count": 3,
+    "read_count": 2,
+    "modify_count": 0,
+    "create_count": 1,
+    "execute_count": 0,
+    "delegate_count": 0,
+    "read_ratio": 0.667,
+    "time_to_first_action": 2.144,
+    "idle_ratio": -0.0,
+    "total_input_tokens": null,
+    "total_output_tokens": null,
+    "total_cache_read_tokens": null,
+    "total_cache_creation_tokens": null,
+    "total_reasoning_tokens": null,
+    "total_tool_tokens": null,
+    "session_cost": null,
+    "subagent_count": 0,
+    "subagent_tool_calls": 0
+  }
+}

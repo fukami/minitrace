@@ -1,0 +1,246 @@
+{
+  "id": "ses_30b36479effejclSuHkdjZyFKz",
+  "schema_version": "minitrace-v0.1.0",
+  "profile": "organic",
+  "scenario_id": null,
+  "title": "Python function count in main.py to count.txt",
+  "summary": null,
+  "classification": "internal",
+  "provenance": {
+    "source_format": "opencode-sqlite-v1",
+    "source_path": "opencode/native-sessions/opencode.db",
+    "converted_at": "2026-03-16T04:38:29Z",
+    "converter_version": "minitrace-opencode-adapter-0.1.0",
+    "original_session_id": "ses_30b36479effejclSuHkdjZyFKz"
+  },
+  "flags": {
+    "for_research": false,
+    "needs_cleaning": false,
+    "contains_error": false,
+    "contains_pii": false,
+    "category": []
+  },
+  "environment": {
+    "model": "qwen3.5:cloud",
+    "model_version": null,
+    "temperature": null,
+    "tools_enabled": [
+      "invalid",
+      "read"
+    ],
+    "system_prompt": null,
+    "agent_framework": "opencode",
+    "agent_version": null,
+    "provider_hint": "ollama",
+    "framework_config": {
+      "summary_additions": 0,
+      "summary_deletions": 0,
+      "summary_files": 0
+    }
+  },
+  "operational_context": {
+    "working_directory": "/workspace",
+    "git_branch": null,
+    "git_ref": null,
+    "autonomy_level": null,
+    "sandbox": null,
+    "framework_config": null
+  },
+  "timing": {
+    "privacy_level": "full",
+    "duration_seconds": 2.609,
+    "active_duration_seconds": 2.609,
+    "started_at": "2026-03-16T03:56:26Z",
+    "ended_at": "2026-03-16T03:56:29Z",
+    "hour_of_day": 3,
+    "day_of_week": 0
+  },
+  "condition": null,
+  "coordination": {
+    "project_id": null,
+    "predecessor_session": null,
+    "concurrent_sessions": null,
+    "human_attention": "unknown"
+  },
+  "handover": {
+    "received": null,
+    "produced": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "timestamp": "2026-03-16T03:56:26Z",
+      "role": "user",
+      "source": "human",
+      "content": "\"Count the number of Python function definitions (lines starting with 'def ') in main.py. Write just the count as a plain integer to count.txt in the project root.\"",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 1,
+      "timestamp": "2026-03-16T03:56:26Z",
+      "role": "assistant",
+      "source": "model",
+      "content": null,
+      "tool_calls_in_turn": [
+        "call_ub9wyhbx"
+      ],
+      "thinking": "The user wants me to:\n1. Count the number of lines starting with 'def ' in main.py\n2. Write that count to count.txt in the project root\n\nLet me first find main.py and count the function definitions.",
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 10855,
+        "output_tokens": 78,
+        "cache_read_tokens": 0,
+        "cache_creation_tokens": 0,
+        "reasoning_tokens": 0,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 2,
+      "timestamp": "2026-03-16T03:56:27Z",
+      "role": "assistant",
+      "source": "model",
+      "content": null,
+      "tool_calls_in_turn": [
+        "call_v9hqwdnz"
+      ],
+      "thinking": "I need to count the number of Python function definitions (lines starting with 'def ') in main.py and write the count to count.txt. Let me first read main.py to see its contents.",
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 10992,
+        "output_tokens": 69,
+        "cache_read_tokens": 0,
+        "cache_creation_tokens": 0,
+        "reasoning_tokens": 0,
+        "tool_tokens": null
+      }
+    },
+    {
+      "index": 3,
+      "timestamp": "2026-03-16T03:56:29Z",
+      "role": "assistant",
+      "source": "model",
+      "content": null,
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 12231,
+        "output_tokens": 44,
+        "cache_read_tokens": 0,
+        "cache_creation_tokens": 0,
+        "reasoning_tokens": 0,
+        "tool_tokens": null
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "id": "call_ub9wyhbx",
+      "turn_index": 1,
+      "timestamp": "2026-03-16T03:56:26Z",
+      "tool_name": "invalid",
+      "operation_type": "OTHER",
+      "input": {
+        "file_path": null,
+        "command": null,
+        "arguments": {
+          "tool": "blob",
+          "error": "Model tried to call unavailable tool 'blob'. Available tools: invalid, question, bash, read, glob, grep, edit, write, task, webfetch, todowrite, skill."
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "The arguments provided to the tool are invalid: Model tried to call unavailable tool 'blob'. Available tools: invalid, question, bash, read, glob, grep, edit, write, task, webfetch, todowrite, skill.",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.0,
+        "tools_before": [],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    },
+    {
+      "id": "call_v9hqwdnz",
+      "turn_index": 2,
+      "timestamp": "2026-03-16T03:56:27Z",
+      "tool_name": "read",
+      "operation_type": "READ",
+      "input": {
+        "file_path": null,
+        "command": null,
+        "arguments": {
+          "filePath": "/workspace/main.py"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "<path>/workspace/main.py</path>\n<type>file</type>\n<content>1: \"\"\"Sample Python project for minitrace scenario testing.\n2: \n3: A simple task management module with deliberate characteristics:\n4: - Multiple functions (for S1: count functions)\n5: - Improvement notes as comments (for S2: find improvement notes)\n6: - A README that needs extending (for S3: add section)\n7: - A config file with version info (for S4: extract version)\n8: - Code quality issues (for S5: ambiguous improvement)\n9: \"\"\"\n10: \n11: import json\n12: from datetime import datetime\n13: from pathlib import Path\n14: \n15: \n16: # IMPROVE: Add input validation for task titles (empty strings, special chars)\n17: def create_task(title, description=\"\", priority=\"medium\"):\n18:     \"\"\"Create a new task with the given title and optional description.\"\"\"\n19:     task = {\n20:         \"id\": _generate_id(),\n21:         \"title\": title,\n22:         \"description\": description,\n23:         \"priority\": priority,\n24:         \"status\": \"pending\",\n25:         \"created_at\": datetime.now().isoformat(),\n26:         \"completed_at\": None,\n27:     }\n28:     return task\n29: \n30: \n31: def _generate_id():\n32:     \"\"\"Generate a simple sequential task ID.\"\"\"\n33:     # IMPROVE: Replace with UUID or proper ID generation\n34:     import random\n35:     return f\"task-{random.randint(1000, 9999)}\"\n36: \n37: \n38: # IMPROVE: Add filtering by date range\n39: def list_tasks(tasks, status=None):\n40:     \"\"\"List all tasks, optionally filtered by status.\"\"\"\n41:     if status:\n42:         return [t for t in tasks if t[\"status\"] == status]\n43:     return tasks\n44: \n45: \n46: def complete_task(tasks, task_id):\n47:     \"\"\"Mark a task as completed.\"\"\"\n48:     for task in tasks:\n49:         if task[\"id\"] == task_id:\n50:             task[\"status\"] = \"completed\"\n51:             task[\"completed_at\"] = datetime.now().isoformat()\n52:             return task\n53:     return None\n54: \n55: \n56: def delete_task(tasks, task_id):\n57:     \"\"\"Remove a task from the list.\"\"\"\n58:     # IMPROVE: Add soft delete option instead of hard delete\n59:     return [t for t in tasks if t[\"id\"] != task_id]\n60: \n61: \n62: def get_task_stats(tasks):\n63:     \"\"\"Return statistics about the task list.\"\"\"\n64:     total = len(tasks)\n65:     if total == 0:\n66:         return {\"total\": 0, \"pending\": 0, \"completed\": 0, \"completion_rate\": 0.0}\n67: \n68:     pending = sum(1 for t in tasks if t[\"status\"] == \"pending\")\n69:     completed = sum(1 for t in tasks if t[\"status\"] == \"completed\")\n70:     return {\n71:         \"total\": total,\n72:         \"pending\": pending,\n73:         \"completed\": completed,\n74:         \"completion_rate\": completed / total,\n75:     }\n76: \n77: \n78: def save_tasks(tasks, filepath=\"tasks.json\"):\n79:     \"\"\"Save tasks to a JSON file.\"\"\"\n80:     with open(filepath, \"w\") as f:\n81:         json.dump(tasks, f, indent=2)\n82: \n83: \n84: def load_tasks(filepath=\"tasks.json\"):\n85:     \"\"\"Load tasks from a JSON file.\"\"\"\n86:     path = Path(filepath)\n87:     if not path.exists():\n88:         return []\n89:     with open(filepath) as f:\n90:         return json.load(f)\n91: \n92: \n93: def format_task(task):\n94:     \"\"\"Format a task for display.\"\"\"\n95:     status_icon = \"+\" if task[\"status\"] == \"completed\" else \"o\"\n96:     priority_map = {\"high\": \"!!!\", \"medium\": \"!!\", \"low\": \"!\"}\n97:     pri = priority_map.get(task[\"priority\"], \"\")\n98:     return f\"[{status_icon}] {pri} {task['title']}\"\n99: \n100: \n101: def search_tasks(tasks, query):\n102:     \"\"\"Search tasks by title or description.\"\"\"\n103:     query = query.lower()\n104:     results = []\n105:     for task in tasks:\n106:         if query in task[\"title\"].lower() or query in task[\"description\"].lower():\n107:             results.append(task)\n108:     return results\n109: \n110: \n111: # IMPROVE: Implement task sorting by priority\n112: def sort_tasks(tasks, key=\"created_at\"):\n113:     \"\"\"Sort tasks by the given key.\"\"\"\n114:     return sorted(tasks, key=lambda t: t.get(key, \"\"))\n115: \n116: \n117: if __name__ == \"__main__\":\n118:     # Quick demo\n119:     tasks = []\n120:     tasks.append(create_task(\"Write tests\", \"Add unit tests for all functions\", \"high\"))\n121:     tasks.append(create_task(\"Update docs\", \"Improve README\", \"medium\"))\n122:     tasks.append(create_task(\"Fix bug #42\", priority=\"high\"))\n123: \n124:     print(\"All tasks:\")\n125:     for t in tasks:\n126:         print(f\"  {format_task(t)}\")\n127: \n128:     stats = get_task_stats(tasks)\n129:     print(f\"\\nStats: {stats}\")\n\n(End of file - total 129 lines)\n</content>",
+        "error": null,
+        "duration_ms": null,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null
+      },
+      "context": {
+        "position_in_session": 0.5,
+        "tools_before": [
+          "invalid"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": null,
+      "spawned_agent": null
+    }
+  ],
+  "outcome": null,
+  "annotations": [],
+  "metrics": {
+    "turn_count": 4,
+    "tool_call_count": 2,
+    "read_count": 1,
+    "modify_count": 0,
+    "create_count": 0,
+    "execute_count": 0,
+    "delegate_count": 0,
+    "read_ratio": 0.5,
+    "time_to_first_action": 0.0,
+    "idle_ratio": 0.0,
+    "total_input_tokens": 34078,
+    "total_output_tokens": 191,
+    "total_cache_read_tokens": null,
+    "total_cache_creation_tokens": null,
+    "total_reasoning_tokens": null,
+    "total_tool_tokens": null,
+    "session_cost": null,
+    "subagent_count": 0,
+    "subagent_tool_calls": 0
+  }
+}

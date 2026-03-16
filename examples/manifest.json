@@ -1,0 +1,29 @@
+{
+  "version": "minitrace-manifest-v2",
+  "generated_at": "2026-03-16T12:35:29Z",
+  "periods": [
+    {
+      "period": "2026-03",
+      "path": "active/2026-03/manifest.json",
+      "session_count": 44
+    }
+  ],
+  "statistics": {
+    "total_sessions": 44,
+    "by_profile": {
+      "organic": 44
+    },
+    "by_quality": {
+      "B": 39,
+      "A": 5
+    },
+    "by_classification": {
+      "internal": 43,
+      "confidential": 1
+    },
+    "date_range": {
+      "earliest": "2026-03-16T03:56:08Z",
+      "latest": "2026-03-16T12:02:22Z"
+    }
+  }
+}
