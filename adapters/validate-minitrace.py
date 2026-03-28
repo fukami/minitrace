@@ -23,13 +23,21 @@ import sys
 from pathlib import Path
 
 
-EXPECTED_SCHEMA = "minitrace-v0.1.0"
+VALID_SCHEMAS = {"minitrace-v0.1.0", "minitrace-v0.2.0"}
 
 VALID_PROFILES = {"controlled", "organic"}
 VALID_CLASSIFICATIONS = {"public", "internal", "confidential", "customer-confidential"}
 VALID_OPERATION_TYPES = {"READ", "MODIFY", "NEW", "EXECUTE", "DELEGATE", "OTHER"}
 VALID_ROLES = {"user", "assistant", "system"}
-VALID_SOURCES = {"human", "framework", "model", None}
+VALID_SOURCES = {"human", "framework", "model", "system", None}
+VALID_CONTENT_TYPES = {"text", "multimodal_text", "code", "reasoning"}
+VALID_INPUT_CHANNELS = {"user_input", "system_prompt", "framework_control", "framework_content",
+                        "framework_inject",  # deprecated v0.1.0 value, accepted for backward compat
+                        "tool_output", "retrieval"}
+VALID_CONTENT_ORIGINS = {"local_file", "local_exec", "web", "mcp_server", "database",
+                         "sub_agent", "model_echo", "user_provided"}
+VALID_PLATFORM_TYPES = {"agent", "web", "api"}
+VALID_QUALITY_TIERS = {"A", "B", "C", "D"}
 VALID_PRIVACY_LEVELS = {"full", "anonymous", "minimal"}
 VALID_HUMAN_ATTENTION = {"focused", "divided", "unknown"}
 VALID_SCOPE_TYPES = {"session", "turn", "tool_call", "handover"}
@@ -94,7 +102,7 @@ def validate_tool_call(result, tc, idx, session_profile):
     prefix = f"tool_calls[{idx}]"
 
     check_type(result, f"{prefix}.id", tc.get("id"), str, nullable=False)
-    check_type(result, f"{prefix}.turn_index", tc.get("turn_index"), int)
+    check_type(result, f"{prefix}.emitting_turn_index", tc.get("emitting_turn_index"), int)
     check_type(result, f"{prefix}.timestamp", tc.get("timestamp"), str)
     check_type(result, f"{prefix}.tool_name", tc.get("tool_name"), str, nullable=False)
     check_enum(result, f"{prefix}.operation_type", tc.get("operation_type"),
@@ -112,6 +120,7 @@ def validate_tool_call(result, tc, idx, session_profile):
         if isinstance(out, dict):
             check_type(result, f"{prefix}.output.success", out.get("success"), bool)
             check_type(result, f"{prefix}.output.truncated", out.get("truncated"), bool)
+            check_type(result, f"{prefix}.output.redacted", out.get("redacted"), bool)
             # full_hash format check
             fh = out.get("full_hash")
             if fh is not None and isinstance(fh, str):
@@ -150,6 +159,9 @@ def validate_turn(result, turn, idx):
     check_type(result, f"{prefix}.timestamp", turn.get("timestamp"), str)
     check_enum(result, f"{prefix}.role", turn.get("role"), VALID_ROLES, nullable=False)
     check_enum(result, f"{prefix}.source", turn.get("source"), VALID_SOURCES)
+    check_type(result, f"{prefix}.model", turn.get("model"), str)
+    check_enum(result, f"{prefix}.content_type", turn.get("content_type"), VALID_CONTENT_TYPES)
+    check_enum(result, f"{prefix}.input_channel", turn.get("input_channel"), VALID_INPUT_CHANNELS)
     check_type(result, f"{prefix}.content", turn.get("content"), str)
 
     tcit = turn.get("tool_calls_in_turn")
@@ -186,8 +198,8 @@ def validate_session(data, file_path):
 
     # Schema version
     sv = data.get("schema_version")
-    if sv and sv != EXPECTED_SCHEMA:
-        result.error("schema_version", f"expected '{EXPECTED_SCHEMA}', got '{sv}'")
+    if sv and sv not in VALID_SCHEMAS:
+        result.error("schema_version", f"expected one of {VALID_SCHEMAS}, got '{sv}'")
 
     # Profile
     profile = data.get("profile")
@@ -196,6 +208,9 @@ def validate_session(data, file_path):
     # Classification
     check_enum(result, "classification", data.get("classification"),
                VALID_CLASSIFICATIONS)
+
+    # Quality tier (19i: already in spec, now validated)
+    check_enum(result, "quality", data.get("quality"), VALID_QUALITY_TIERS)
 
     # Provenance
     prov = data.get("provenance")
@@ -220,6 +235,8 @@ def validate_session(data, file_path):
         result.error("environment", "required block missing")
     elif isinstance(env, dict):
         check_required(result, "environment", env, "model")
+        check_enum(result, "environment.platform_type", env.get("platform_type"),
+                   VALID_PLATFORM_TYPES)
 
     # Timing
     timing = data.get("timing")
@@ -310,6 +327,12 @@ def validate_session(data, file_path):
         if other_count < 0:
             result.error("metrics",
                          f"operation type counts ({op_sum}) exceed tool_call_count ({tc_count})")
+
+        # v0.2.0 cross-turn metrics (nullable ints)
+        for f in ["model_switches", "unique_models", "median_response_tokens", "max_response_tokens"]:
+            v = metrics.get(f)
+            if v is not None:
+                check_type(result, f"metrics.{f}", v, int)
 
     # Controlled profile extra requirements
     if profile == "controlled":

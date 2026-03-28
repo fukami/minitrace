@@ -1,7 +1,7 @@
 # minitrace v0.5 Candidates — Cross-Framework Format Gap Analysis
 
 **Date:** 2026-03-15 (updated 2026-03-16)
-**Source:** Format discovery across 9 frameworks (Claude Code, Codex, Goose, Pi, OpenCode, Droid, Gemini CLI, Vibe, OpenClaw)
+**Source:** Format discovery across 9 agent frameworks (Claude Code, Codex, Goose, Pi, OpenCode, Droid, Gemini CLI, Vibe, OpenClaw). Web platform adapters (ChatGPT, claude.ai) added in v0.2.0 but not yet included in this gap analysis.
 
 ## Confirmed gaps (data loss without spec change)
 
@@ -73,7 +73,7 @@ Same prompt ("Improve the code quality"), tool calls and edits by framework:
 
 **Test:** Run S5 with proxy capture (Layer 3) to compare system prompts injected by each framework.
 
-### Additional observations from Gemini CLI, Vibe, OpenClaw (2026-03-16)
+### Additional observations from Gemini CLI, Vibe, OpenClaw
 
 **Gemini CLI** (gemini-3-flash-preview): Highest avg tool calls (9.4/scenario). Inline tool results (call + result in same message object) is unique. On S5, created test files alongside edits (16 tool calls).
 

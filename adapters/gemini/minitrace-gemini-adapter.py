@@ -231,6 +231,7 @@ def convert_session(session_data, source_path=None, verbose=False):
     session["provenance"]["source_path"] = str(source_path) if source_path else None
 
     session["environment"]["model"] = model_name or "gemini-3-flash-preview"
+    session["environment"]["platform_type"] = "agent"
     session["environment"]["provider_hint"] = "google"
     session["environment"]["agent_framework"] = "gemini-cli"
     session["environment"]["tools_enabled"] = sorted(set(

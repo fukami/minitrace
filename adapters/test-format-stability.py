@@ -139,28 +139,70 @@ def compare_schemas(reference, current):
         warnings.append(f"NEW field: {f}")
 
     # Type changes on common fields
+    ref_total = sum(reference["record_types"].values())
     for f in ref_fields & cur_fields:
         ref_types_f = set(reference["fields"][f]["types"])
         cur_types_f = set(current["fields"][f]["types"])
         if ref_types_f != cur_types_f:
-            warnings.append(
-                f"TYPE change: {f}: {sorted(ref_types_f)} → {sorted(cur_types_f)}"
-            )
+            ref_info = reference["fields"][f]
+            if ref_info["count"] > ref_total * 0.2:
+                issues.append(
+                    f"TYPE change on common field: {f}: "
+                    f"{sorted(ref_types_f)} -> {sorted(cur_types_f)} "
+                    f"(appeared {ref_info['count']}x)"
+                )
+            else:
+                warnings.append(
+                    f"TYPE change: {f}: {sorted(ref_types_f)} -> {sorted(cur_types_f)}"
+                )
 
     return issues, warnings
 
 
-def load_jsonl(path):
-    """Load JSONL file into list of records."""
+def load_records(path):
+    """Load records from JSONL or single JSON file.
+
+    JSONL: one JSON object per line (Claude Code, Codex, Droid, Goose, Pi, Vibe).
+    JSON: single object with nested structure (Gemini CLI).
+
+    For single JSON objects, wraps in a list so schema extraction works uniformly.
+    For objects with a 'messages' array, also extracts messages as separate records
+    to capture the nested schema.
+    """
+    path = Path(path)
     records = []
+
     with open(path, "r", encoding="utf-8", errors="replace") as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                try:
-                    records.append(json.loads(line))
-                except json.JSONDecodeError:
-                    pass
+        content = f.read().strip()
+
+    if not content:
+        return records
+
+    # Try single JSON first (handles both .json and .jsonl with single record)
+    if content.startswith("{") or content.startswith("["):
+        try:
+            data = json.loads(content)
+            if isinstance(data, list):
+                return data
+            if isinstance(data, dict):
+                records.append(data)
+                # Extract nested messages as separate records for deeper schema
+                if "messages" in data and isinstance(data["messages"], list):
+                    for msg in data["messages"]:
+                        if isinstance(msg, dict):
+                            records.append(msg)
+                return records
+        except json.JSONDecodeError:
+            pass
+
+    # Fall back to JSONL (line-delimited)
+    for line in content.split("\n"):
+        line = line.strip()
+        if line:
+            try:
+                records.append(json.loads(line))
+            except json.JSONDecodeError:
+                pass
     return records
 
 
@@ -175,8 +217,12 @@ def test_all():
             continue
 
         framework = adapter_dir.name
-        for ref_file in sorted(ref_dir.glob("*.jsonl")):
-            records = load_jsonl(ref_file)
+        for ref_file in sorted(
+            list(ref_dir.glob("*.jsonl")) + list(ref_dir.glob("*.json"))
+        ):
+            if ".schema." in ref_file.name:
+                continue
+            records = load_records(ref_file)
             if not records:
                 continue
 
@@ -234,14 +280,14 @@ def main():
         sys.exit(0 if success else 1)
 
     if args.extract:
-        records = load_jsonl(args.extract)
+        records = load_records(args.extract)
         schema = extract_schema(records)
         print(json.dumps(schema, indent=2))
         print(f"\n# {len(schema['record_types'])} record types, "
               f"{schema['field_count']} fields", file=sys.stderr)
 
     elif args.check and args.reference:
-        records = load_jsonl(args.check)
+        records = load_records(args.check)
         current = extract_schema(records)
 
         with open(args.reference) as f:
@@ -261,7 +307,7 @@ def main():
             print(f"\nPASS ({len(warnings)} warnings)")
 
     elif args.self_test:
-        records = load_jsonl(args.self_test)
+        records = load_records(args.self_test)
         schema = extract_schema(records)
         if not schema["record_types"]:
             print(f"FAIL: no records in {args.self_test}")

@@ -139,6 +139,9 @@ if $DRY_RUN; then
 fi
 
 # Execute framework-specific command
+# All frameworks run from the workspace directory.
+# claude-code and codex also accept -C for explicit cwd.
+cd "$WORK_DIR"
 case $FRAMEWORK in
     claude-code)
         OLLAMA_HOST="$EFFECTIVE_HOST" claude -p "$PROMPT" \

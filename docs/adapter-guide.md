@@ -87,7 +87,7 @@ Criteria definitions:
 - `has_conversation_content`: the adapter can extract turn-level messages with role and content.
 - `has_tool_call_io`: the adapter can extract tool call arguments and results (not just names).
 
-Quality tier is a manifest-only field derived at archive time from session metadata. It is not stored in the session JSON itself. The session record contains the raw signals (`turn_count`, `tool_call_count`, `flags.for_research`, etc.) from which tier is computed.
+Quality tier is a session-level field (`quality: "A" | "B" | "C" | "D"`) computed by the adapter during conversion. Adapters SHOULD populate this field based on the criteria above. The manifest also records quality for per-period summaries.
 
 Quality tiers are defined relative to tool-use behavioral research (the primary minitrace use case). Other research questions may have different quality requirements. For example, conversational pattern analysis needs turn content but not tool I/O, making a "B" session fully usable. Your adapter can define additional quality dimensions in annotations.
 

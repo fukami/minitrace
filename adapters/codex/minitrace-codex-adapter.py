@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-minitrace Codex adapter — converts Codex session data to minitrace v0.1.0 format.
+minitrace Codex adapter — converts Codex session data to minitrace v0.2.0 format.
 
 Usage:
     # Convert a single exec JSONL (from `codex exec --json`)
@@ -71,7 +71,7 @@ from minitrace_common import (
     assign_quality_tier,
 )
 
-ADAPTER_VERSION = "minitrace-codex-adapter-0.1.0"
+ADAPTER_VERSION = "minitrace-codex-adapter-0.2.0"
 SOURCE_FORMAT_EXEC = "codex-exec-jsonl-v1"
 SOURCE_FORMAT_SESSION = "codex-session-jsonl-v1"
 
@@ -147,7 +147,7 @@ def classify_function(func_name, arguments=None):
                 cmd = arguments
         return classify_operation_from_command(cmd)
 
-    # Non-exec_command functions (future-proofing)
+    # Non-exec_command functions
     mapping = {
         "read_file": "READ",
         "write_file": "NEW",
@@ -156,6 +156,121 @@ def classify_function(func_name, arguments=None):
         "apply_diff": "MODIFY",
     }
     return mapping.get(func_name, "OTHER")
+
+
+def extract_file_path_from_command(cmd):
+    """Extract the primary file path from a shell command string.
+
+    Best-effort extraction for common patterns. For multi-file commands
+    (e.g., cat file1 file2), returns only the first file argument.
+    Returns None when extraction is unreliable.
+    """
+    if not cmd:
+        return None
+
+    cmd_stripped = cmd.strip()
+    if not cmd_stripped:
+        return None
+
+    # Output redirection: "... > file" or "... >> file"
+    redir = re.search(r'>{1,2}\s*(\S+)\s*$', cmd_stripped)
+    if redir:
+        return redir.group(1)
+
+    # tee target: "... | tee [-a] file"
+    tee = re.search(r'\|\s*tee\s+(?:-a\s+)?(\S+)', cmd_stripped)
+    if tee:
+        return tee.group(1)
+
+    # Single-target commands: cat, head, tail, less, more, wc, file, stat
+    # Skip flags: -x (short), --long, -n 10 (short with space-separated value)
+    m = re.match(
+        r'^(?:cat|head|tail|less|more|wc|file|stat)\s+'
+        r'(?:-\S+\s+(?:\d+\s+)?)*'   # skip flags (including -n 10 style)
+        r'(\S+)',
+        cmd_stripped,
+    )
+    if m and not m.group(1).startswith('-'):
+        return m.group(1)
+
+    # touch, mkdir: first non-flag argument
+    m = re.match(r'^(?:touch|mkdir)\s+(?:-\S+\s+)*(\S+)', cmd_stripped)
+    if m:
+        return m.group(1)
+
+    # cp/mv: destination (last argument)
+    m = re.match(r'^(?:cp|mv)\s+(?:-\S+\s+)*(\S+)\s+(\S+)', cmd_stripped)
+    if m:
+        return m.group(2)
+
+    # sed -i: target file (last argument)
+    m = re.match(r'^sed\s+-i[^\s]*\s+.*\s+(\S+)\s*$', cmd_stripped)
+    if m:
+        return m.group(1)
+
+    # chmod/chown: target file (last non-flag argument)
+    m = re.match(r'^(?:chmod|chown)\s+(?:-\S+\s+)*\S+\s+(\S+)', cmd_stripped)
+    if m:
+        return m.group(1)
+
+    return None
+
+
+def classify_content_origin(func_name):
+    """Classify ToolCall.output.content_origin for a Codex tool call.
+
+    Codex routes all tool use through exec_command (shell execution).
+    The output of every tool call is shell stdout/stderr, so the
+    structural content_origin is always 'local_exec'.
+
+    This is the spec's footnote [1] limitation: shell-mediated tool use
+    collapses content_origin to a single value. A `curl` command returns
+    'local_exec', not 'web'; a `cat` command returns 'local_exec', not
+    'local_file'. Researchers querying content_origin='web' will miss
+    Codex sessions where web content was fetched via shell.
+
+    Future Codex versions may add non-shell tools (read_file, write_file,
+    apply_patch appear in the function mapping). These would get distinct
+    content_origin values if they appear.
+    """
+    if func_name == "exec_command":
+        return "local_exec"
+
+    # Non-exec_command functions (not yet observed in production data)
+    mapping = {
+        "read_file": "local_file",
+        "write_file": "model_echo",
+        "edit_file": "model_echo",
+        "apply_patch": "model_echo",
+        "apply_diff": "model_echo",
+    }
+    return mapping.get(func_name)
+
+
+def classify_input_channel(record_type, payload):
+    """Classify Turn.input_channel for a Codex JSONL record.
+
+    Only classifies turns that the adapter actually emits:
+    - event_msg/user_message turns → 'user_input'
+    - event_msg/agent_message turns → None (assistant)
+
+    Framework injection exists in the JSONL (response_item/message with
+    role=developer or role=user containing <INSTRUCTIONS>/<environment_context>)
+    but the adapter correctly discards these as duplicate/framework-internal
+    content. tool_output is delivered via response_item/function_call_output,
+    which is attached to tool calls, not emitted as turns.
+
+    As a result, 'framework_inject' and 'tool_output' are not classifiable
+    on emitted turns. This is a coverage gap inherent to Codex's message
+    architecture, not a classifier limitation.
+    """
+    if record_type == "event_msg":
+        evt_type = payload.get("type", "") if isinstance(payload, dict) else ""
+        if evt_type == "user_message":
+            return "user_input"
+        if evt_type == "agent_message":
+            return None  # assistant turns don't have an input channel
+    return None
 
 
 # --- Session JSONL Parser (rich format from ~/.codex/sessions/) ---
@@ -254,6 +369,7 @@ def parse_session_jsonl(records):
                     role="user",
                     source="human",
                     content=content,
+                    input_channel=classify_input_channel(rtype, payload),
                 ))
                 turn_index += 1
 
@@ -270,7 +386,7 @@ def parse_session_jsonl(records):
                 for tc in tool_calls:
                     if tc["id"] in pending_turn_tc_ids:
                         tc_ids.append(tc["id"])
-                        tc["turn_index"] = turn_index
+                        tc["emitting_turn_index"] = turn_index
                 pending_turn_tc_ids.clear()
 
                 turns.append(build_turn(
@@ -281,6 +397,7 @@ def parse_session_jsonl(records):
                     content=content,
                     tool_calls_in_turn=tc_ids,
                     thinking=thinking,
+                    input_channel=classify_input_channel(rtype, payload),
                 ))
                 turn_index += 1
                 current_thinking = []
@@ -402,9 +519,10 @@ def parse_session_jsonl(records):
                     tool_name=func_name,
                     operation_type=operation_type,
                     command=cmd if func_name == "exec_command" else None,
-                    file_path=None,
+                    file_path=extract_file_path_from_command(cmd) if func_name == "exec_command" else None,
                     arguments=args,
                     framework_metadata=fm,
+                    content_origin=classify_content_origin(func_name),
                 )
                 tool_calls.append(tc)
                 pending_function_calls[call_id] = tc
@@ -463,7 +581,7 @@ def parse_session_jsonl(records):
         last_turn = len(turns) - 1 if turns else 0
         for tc in tool_calls:
             if tc["id"] in pending_turn_tc_ids:
-                tc["turn_index"] = last_turn
+                tc["emitting_turn_index"] = last_turn
         pending_turn_tc_ids.clear()
 
     return turns, tool_calls, metadata, annotations, all_timestamps, token_totals
@@ -553,6 +671,7 @@ def parse_exec_jsonl(records):
                     tool_name="exec_command",
                     operation_type=operation_type,
                     command=cmd,
+                    file_path=extract_file_path_from_command(cmd),
                     arguments={"cmd": cmd},
                     success=exit_code == 0 if exit_code is not None else status == "completed",
                     result=output,
@@ -562,6 +681,7 @@ def parse_exec_jsonl(records):
                         "exit_code": exit_code,
                         "status": status,
                     },
+                    content_origin=classify_content_origin("exec_command"),
                 )
                 tool_calls.append(tc)
                 tc_index += 1
@@ -571,7 +691,7 @@ def parse_exec_jsonl(records):
                 thinking = "\n".join(current_thinking) if current_thinking else None
 
                 tc_ids = [tc["id"] for tc in tool_calls
-                          if tc.get("turn_index") == turn_index]
+                          if tc.get("emitting_turn_index") == turn_index]
 
                 turns.append(build_turn(
                     index=turn_index,
@@ -593,17 +713,21 @@ def parse_exec_jsonl(records):
 def find_session_files(source_dir):
     """Find all Codex session JSONL files under source_dir.
 
+    Searches sessions/ subdirectory first (canonical ~/.codex/ layout).
+    Falls back to searching the entire source_dir tree.
+
     Returns list of Path objects.
     """
     source = Path(source_dir)
     sessions_dir = source / "sessions"
 
-    files = []
     if sessions_dir.is_dir():
-        for jsonl in sessions_dir.rglob("*.jsonl"):
-            files.append(jsonl)
+        files = list(sessions_dir.rglob("*.jsonl"))
+        if files:
+            return sorted(files)
 
-    return sorted(files)
+    # Fallback: search entire source_dir tree
+    return sorted(source.rglob("*.jsonl"))
 
 
 def detect_format(records):
@@ -672,8 +796,9 @@ def convert_session(records, session_id, source_path=None):
     )
 
     # Environment
-    session["environment"]["model"] = metadata.get("model") or "unknown"
+    session["environment"]["model"] = metadata.get("model") or None
     session["environment"]["agent_version"] = metadata.get("cli_version")
+    session["environment"]["platform_type"] = "agent"
     session["environment"]["system_prompt"] = metadata.get("system_prompt")
     session["environment"]["tools_enabled"] = list(set(
         tc["tool_name"] for tc in tool_calls
@@ -729,6 +854,7 @@ def convert_session(records, session_id, source_path=None):
         session["provenance"]["source_path"] = str(source_path)
 
     # Title, timing, data
+    session["quality"] = quality
     session["title"] = extract_title(turns)
     session["timing"] = timing
     session["turns"] = turns

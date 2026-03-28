@@ -214,8 +214,9 @@ def convert_session(session_dir, verbose=False):
 
     # Extract model from meta environment or stats
     env = meta.get("environment", {})
-    model_name = env.get("model") or meta.get("model") or "unknown"
+    model_name = env.get("model") or meta.get("model") or None
     session["environment"]["model"] = model_name
+    session["environment"]["platform_type"] = "agent"
     session["environment"]["provider_hint"] = "mistral"
     session["environment"]["agent_framework"] = "vibe"
     session["environment"]["agent_version"] = env.get("version") or meta.get("version")

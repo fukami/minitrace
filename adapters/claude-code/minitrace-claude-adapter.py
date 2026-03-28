@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-minitrace Claude Code adapter — converts Claude Code JSONL transcripts to minitrace v0.1.0 format.
+minitrace Claude Code adapter — converts Claude Code JSONL transcripts to minitrace v0.2.0 format.
 
 Usage:
     python3 minitrace-claude-adapter.py --source-dir ~/.claude/projects/
@@ -56,9 +56,11 @@ from minitrace_common import (
     write_session,
     write_manifests,
     assign_quality_tier,
+    canary_check,
+    check_file_safety,
 )
 
-ADAPTER_VERSION = "minitrace-claude-adapter-0.1.0"
+ADAPTER_VERSION = "minitrace-claude-adapter-0.2.0"
 SOURCE_FORMAT_V2 = "claude-code-jsonl-v2"
 SOURCE_FORMAT_V1 = "claude-code-dir-v1"
 
@@ -99,7 +101,7 @@ def classify_source(record):
     """Classify Turn.source from a JSONL record."""
     rtype = record.get("type", "")
     if rtype == "system":
-        return "framework"
+        return "system"
     if rtype == "user":
         content = record.get("message", {}).get("content", "")
         if isinstance(content, list):
@@ -113,6 +115,107 @@ def classify_source(record):
     if rtype == "assistant":
         return "model"
     return None
+
+
+# --- v0.2.0 Input Provenance ---
+
+def classify_input_channel(record):
+    """Classify Turn.input_channel from a JSONL record.
+
+    Determines the delivery channel through which content entered the context.
+    Claude Code has rich markers that allow fine-grained classification.
+
+    v0.2.0: framework_inject split into framework_control (behavioral steering)
+    and framework_content (substantive data from operator-controlled sources).
+
+    Note: CLAUDE.md and memory file loading happens outside the JSONL transcript
+    (assembled into API context by the harness). No framework_content cases exist
+    in Claude Code JSONL — all framework injections visible in the transcript are
+    behavioral steering (framework_control).
+    """
+    rtype = record.get("type", "")
+
+    if rtype == "system":
+        # System messages are the initial system prompt
+        return "system_prompt"
+
+    if rtype == "user":
+        content = record.get("message", {}).get("content", "")
+
+        # Tool results delivered as user messages
+        if isinstance(content, list):
+            for block in content:
+                if isinstance(block, dict) and block.get("type") == "tool_result":
+                    return "tool_output"
+
+        if isinstance(content, str):
+            # framework_control: behavioral steering injected by the framework
+            # system-reminder injections (hooks, context loading, session start)
+            if "<system-reminder>" in content:
+                return "framework_control"
+            # Command/skill expansions
+            if "<command-name>" in content:
+                return "framework_control"
+            # Available-deferred-tools injections
+            if "<available-deferred-tools>" in content:
+                return "framework_control"
+
+        return "user_input"
+
+    if rtype == "assistant":
+        return None  # assistant turns don't have an input channel
+
+    return None
+
+
+def classify_content_origin(tool_name):
+    """Classify ToolCall.output.content_origin from a Claude Code tool name.
+
+    Maps tool names to what kind of content source they access.
+    MCP tools (prefixed with mcp__) are classified as mcp_server.
+    """
+    # MCP tools: any tool name starting with mcp__ comes from an MCP server
+    if tool_name.startswith("mcp__"):
+        return "mcp_server"
+
+    mapping = {
+        # Local filesystem reads
+        "Read": "local_file",
+        "Glob": "local_file",
+        "Grep": "local_file",
+
+        # Local file modifications (output is confirmation/diff)
+        "Edit": "local_file",
+        "Write": "local_file",
+        "NotebookEdit": "local_file",
+
+        # Local command execution
+        "Bash": "local_exec",
+
+        # Web content
+        "WebFetch": "web",
+        "WebSearch": "web",
+
+        # Delegation to sub-models
+        "Agent": "sub_agent",
+        "Task": "sub_agent",
+        "TaskCreate": "sub_agent",
+        "TaskUpdate": "sub_agent",
+
+        # Reading task/agent results (model-generated)
+        "TaskGet": "sub_agent",
+        "TaskList": "sub_agent",
+        "TaskOutput": "sub_agent",
+        "TaskStop": "sub_agent",
+
+        # User interaction
+        "AskUserQuestion": "user_provided",
+
+        # Framework internals
+        "Skill": None,
+        "ToolSearch": None,
+    }
+    return mapping.get(tool_name)
 
 
 # --- Session Discovery ---
@@ -235,6 +338,7 @@ def convert_session(records, session_id, source_path=None):
                 role="system",
                 source="framework",
                 content=content,
+                input_channel=classify_input_channel(rec),
             ))
             turn_index += 1
             continue
@@ -282,6 +386,7 @@ def convert_session(records, session_id, source_path=None):
                 role="user",
                 source=source,
                 content=content if isinstance(content, str) else str(content),
+                input_channel=classify_input_channel(rec),
             ))
             turn_index += 1
             continue
@@ -346,6 +451,7 @@ def convert_session(records, session_id, source_path=None):
                             file_path=file_path,
                             command=command,
                             arguments=tool_input,
+                            content_origin=classify_content_origin(tool_name),
                         )
 
                         # Handle Agent/Task delegation
@@ -430,8 +536,9 @@ def convert_session(records, session_id, source_path=None):
     )
 
     # Environment
-    session["environment"]["model"] = session_meta["model"] or "unknown"
+    session["environment"]["model"] = session_meta["model"] or None
     session["environment"]["agent_version"] = session_meta.get("version")
+    session["environment"]["platform_type"] = "agent"
     session["environment"]["provider_hint"] = "anthropic"
     session["environment"]["tools_enabled"] = list(set(
         tc["tool_name"] for tc in tool_calls
@@ -448,6 +555,7 @@ def convert_session(records, session_id, source_path=None):
         session["provenance"]["source_path"] = str(source_path)
 
     # Fill session
+    session["quality"] = quality
     session["title"] = extract_title(turns)
     session["timing"] = timing
     session["turns"] = turns
@@ -489,8 +597,9 @@ def convert_dir_session(session_dir, session_id):
                 continue
             tuid = f.stem
             try:
+                check_file_safety(f)
                 content = f.read_text(encoding="utf-8", errors="replace")
-            except Exception:
+            except (ValueError, Exception):
                 continue
 
             tc = build_tool_call(
@@ -524,6 +633,7 @@ def convert_dir_session(session_dir, session_id):
         converter_version=ADAPTER_VERSION,
     )
 
+    session["environment"]["platform_type"] = "agent"
     session["environment"]["provider_hint"] = "anthropic"
     session["provenance"]["source_path"] = str(session_dir)
     session["flags"]["needs_cleaning"] = True
@@ -644,6 +754,7 @@ def main():
     # Convert sessions
     session_index = []
     quality_counts = defaultdict(int)
+    canary_warnings = []
     skipped = 0
     errors = 0
 
@@ -673,6 +784,10 @@ def main():
                     continue
 
             quality_counts[quality] += 1
+
+            # Post-conversion canary
+            ws = canary_check(session, verbose=args.verbose)
+            canary_warnings.extend(ws)
 
             if not args.dry_run:
                 file_path, file_size, period, _ = write_session(
@@ -743,6 +858,10 @@ def main():
 
                     quality_counts[quality] += 1
                     sa_converted += 1
+
+                    # Post-conversion canary (subagent)
+                    ws = canary_check(session, verbose=args.verbose)
+                    canary_warnings.extend(ws)
 
                     if not args.dry_run:
                         file_path, file_size, period, _ = write_session(
@@ -849,6 +968,17 @@ def main():
           f"C={quality_counts.get('C',0)} D={quality_counts.get('D',0)}")
     if not args.dry_run:
         print(f"Output: {args.output_dir}")
+
+    # Canary summary
+    if canary_warnings:
+        by_code = defaultdict(int)
+        for w in canary_warnings:
+            code = w.split("]")[0].lstrip("[") if "]" in w else "?"
+            by_code[code] += 1
+        print(f"\n--- Canary ---")
+        print(f"Warnings: {len(canary_warnings)} across {len(by_code)} check(s)")
+        for code, count in sorted(by_code.items()):
+            print(f"  {code}: {count}")
 
 
 if __name__ == "__main__":

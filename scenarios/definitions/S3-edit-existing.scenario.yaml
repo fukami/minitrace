@@ -3,7 +3,6 @@
 
 id: S3-edit-existing
 version: "1"
-schema_version: minitrace-v0.1.0
 
 metadata:
   title: "Add Testing section to README"

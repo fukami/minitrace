@@ -109,6 +109,77 @@ def classify_operation(tool_name):
     return mapping.get(tool_name, "OTHER")
 
 
+def classify_content_origin(tool_name, extension=None):
+    """Classify ToolCall.output.content_origin for a Goose tool.
+
+    Maps tool names to the source of the tool's output content.
+    Uses _meta.goose_extension when available for disambiguation.
+
+    Write/edit tool outputs are 'model_echo' because the tool returns a
+    framework-generated confirmation of model-authored content, not
+    file content itself. Read tool outputs are 'local_file' because
+    the returned content originates from the filesystem.
+
+    Goose has no framework_inject markers comparable to Claude Code's
+    <system-reminder> tags, so framework_inject is not classifiable
+    from the native format alone.
+    """
+    # Developer extension tools
+    read_tools = {"read", "read_file", "tree", "list_directory", "search_files", "grep"}
+    write_tools = {"write", "write_file", "edit", "edit_file", "text_editor"}
+    exec_tools = {"shell", "run_command"}
+
+    if tool_name in read_tools:
+        return "local_file"
+    if tool_name in write_tools:
+        return "model_echo"
+    if tool_name in exec_tools:
+        return "local_exec"
+
+    # Computercontroller extension (GUI interaction)
+    if tool_name in ("screenshot", "click", "type_text", "scroll"):
+        return "local_exec"
+
+    # Memory extension — approximation; recalled content may have mixed
+    # origins (user text, model output, etc.). Classified as 'model_echo'
+    # because the storage/retrieval is framework-managed.
+    if tool_name in ("remember", "recall"):
+        return "model_echo"
+
+    return None
+
+
+def classify_input_channel(role, content_blocks):
+    """Classify Turn.input_channel for a Goose message.
+
+    Determines the delivery channel through which content entered the
+    context window.
+
+    Goose's native format has no framework injection markers (no XML
+    tags, no hook system, no context auto-loading signals). The
+    'framework_inject' channel is therefore not classifiable from
+    Goose session data alone. This is a known coverage gap, not a
+    classification error.
+    """
+    if role == "system":
+        return "system_prompt"
+
+    if role == "user":
+        # User messages carrying tool responses are framework-delivered
+        has_tool_response = any(
+            isinstance(b, dict) and b.get("type") == "toolResponse"
+            for b in content_blocks
+        )
+        if has_tool_response:
+            return "tool_output"
+        return "user_input"
+
+    if role == "assistant":
+        return None  # assistant turns don't have an input channel
+
+    return None
+
+
 # --- Database Access ---
 
 DEFAULT_DB_PATHS = [
@@ -252,6 +323,8 @@ def convert_session(session_meta, messages):
                 if meta.get("goose_extension"):
                     fm["goose_extension"] = meta["goose_extension"]
 
+                extension = meta.get("goose_extension")
+
                 tc = build_tool_call(
                     tc_id=call_id,
                     turn_index=turn_index,
@@ -262,6 +335,7 @@ def convert_session(session_meta, messages):
                     command=command,
                     arguments=arguments,
                     framework_metadata=fm if fm else None,
+                    content_origin=classify_content_origin(tool_name, extension),
                 )
                 tool_calls.append(tc)
                 pending_tool_calls[call_id] = tc
@@ -355,6 +429,7 @@ def convert_session(session_meta, messages):
             tool_calls_in_turn=tc_ids_in_turn,
             thinking=thinking,
             usage=usage,
+            input_channel=classify_input_channel(role, content_blocks),
         )
         turns.append(turn)
         turn_index += 1
@@ -401,6 +476,7 @@ def convert_session(session_meta, messages):
     # Environment
     provider = session_meta.get("provider_name") or "unknown"
     session["environment"]["model"] = "unknown"
+    session["environment"]["platform_type"] = "agent"
     session["environment"]["provider_hint"] = (
         "openai-compatible" if provider == "ollama" else provider
     )

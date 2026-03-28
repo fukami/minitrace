@@ -1,6 +1,6 @@
 # Native Session Format Reference
 
-How each coding agent framework stores session data natively.
+How each supported framework stores session data natively.
 All formats discovered empirically through black-box inspection of framework outputs.
 
 ---
@@ -394,3 +394,29 @@ read, edit, write, exec, process, cron, sessions_list, sessions_history, session
 | Thinking | Content block | Separate records | Content block | Content block | Part type | Content block | Top-level field | N/A | N/A (thinking_level record) |
 | Token tracking | Per-turn | Per-event | Per-session | Per-message | Per-step | N/A | Per-message | In meta stats | Per-message |
 | Subagents | Yes (separate files) | No | No | No | No | No | No | Yes (task tool) | Yes (sessions_spawn) |
+
+---
+
+## 10. ChatGPT (Web Export)
+
+**Source:** Data export ZIP (Settings > Data controls > Export data)
+**Format:** ZIP containing `conversations.json` (JSON array of conversation objects)
+
+Tree-based conversation structure with branching support. Each node in `mapping` has an `id`, `parent`, `children`, and `message`. The `current_node` field identifies the active branch endpoint. The adapter linearizes to the selected branch.
+
+Model identification available via `metadata.model_slug`. Token counts not available in exports.
+
+Full format documentation is in the adapter source: `adapters/chatgpt/minitrace-chatgpt-adapter.py`.
+
+---
+
+## 11. claude.ai (Web Export)
+
+**Source:** Data export ZIP (Settings > Privacy > Export data)
+**Format:** ZIP containing `conversations.json`, `users.json`, `projects.json`, `memories.json`
+
+Linear conversation structure. Content blocks: `text`, `tool_use`, `tool_result`. Tool IDs are always null in exports -- pairing is positional (tool_use at position i, tool_result at i+1).
+
+Model identifier and token counts are not included in exports.
+
+Full format documentation is in the adapter source: `adapters/claude-ai/minitrace-claude-ai-adapter.py`.

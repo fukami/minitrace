@@ -3,7 +3,6 @@
 
 id: S1-file-analysis
 version: "1"
-schema_version: minitrace-v0.1.0
 
 metadata:
   title: "Count functions in main.py"

@@ -70,6 +70,73 @@ DEFAULT_DB_PATHS = [
 ]
 
 
+def classify_input_channel(role, part_types):
+    """Classify the input channel for a turn.
+
+    OpenCode stores messages with role='user' or role='assistant'.
+    User-role messages reliably represent human input (confirmed against
+    pipeline-verify and container-run datasets -- no framework-injected
+    user-role messages observed).
+
+    Args:
+        role: message role ('user' or 'assistant')
+        part_types: list of part.data.type values in this message
+
+    Returns:
+        'user_input', 'tool_output', or None.
+
+    Documented gaps:
+        - framework_inject: not classifiable. OpenCode may inject system
+          prompts but these are not stored in the message/part tables.
+        - tool_output: tool results are embedded as 'tool' parts within
+          assistant-role messages, not as separate role-typed messages.
+          We return None for assistant turns; the tool output is captured
+          in tool_call records, not as an input_channel on the turn.
+    """
+    if role == "user":
+        return "user_input"
+    # assistant turns contain model output (and embedded tool results)
+    return None
+
+
+def classify_content_origin(tool_name):
+    """Classify the content origin for a tool call result.
+
+    Maps OpenCode tool names to the provenance of their output content.
+
+    OpenCode's named 'fetch' tool provides a clean 'web' classification,
+    giving this adapter higher provenance fidelity than Codex for
+    web-fetched content. Codex routes web requests through shell (curl),
+    collapsing them to 'local_exec' per spec footnote [1]. OpenCode's
+    explicit tool naming avoids this loss.
+
+    Args:
+        tool_name: OpenCode tool name (read, write, edit, bash, etc.)
+
+    Returns:
+        'local_file', 'local_exec', 'model', 'web', or None.
+        Invalid/unknown tool names return None; framework error wrapping
+        (e.g. OpenCode's 'invalid' pseudo-tool for unavailable tool calls)
+        is not a content source.
+    """
+    mapping = {
+        "read": "local_file",
+        "read_file": "local_file",
+        "glob": "local_file",
+        "grep": "local_file",
+        "search": "local_file",
+        "list_files": "local_file",
+        "write": "model_echo",
+        "write_file": "model_echo",
+        "edit": "model_echo",
+        "edit_file": "model_echo",
+        "bash": "local_exec",
+        "shell": "local_exec",
+        "fetch": "web",
+    }
+    return mapping.get(tool_name)
+
+
 def classify_operation(tool_name, arguments=None):
     """Map OpenCode tool names to minitrace operation_type."""
     mapping = {
@@ -192,10 +259,13 @@ def convert_session(session_row, db_path, verbose=False):
         thinking_parts = []
         tc_ids_in_turn = []
         turn_usage = None
+        part_types = []
 
         for pd in parts:
             pdata = pd.get("_data", {})
             ptype = pdata.get("type", "")
+
+            part_types.append(ptype)
 
             if ptype == "text":
                 text_parts.append(pdata.get("text", ""))
@@ -226,6 +296,7 @@ def convert_session(session_row, db_path, verbose=False):
                     success=tc_status != "error",
                     result=tc_output if tc_status == "completed" else None,
                     error=tc_output if tc_status == "error" else None,
+                    content_origin=classify_content_origin(tc_name),
                 )
                 tool_calls.append(tc)
                 tc_ids_in_turn.append(tc_id)
@@ -273,6 +344,7 @@ def convert_session(session_row, db_path, verbose=False):
             tool_calls_in_turn=tc_ids_in_turn,
             thinking=thinking,
             usage=turn_usage,
+            input_channel=classify_input_channel(role, part_types),
         ))
         turn_index += 1
 
@@ -291,6 +363,7 @@ def convert_session(session_row, db_path, verbose=False):
     session["provenance"]["source_path"] = str(db_path)
 
     session["environment"]["model"] = model_info.get("model", "unknown")
+    session["environment"]["platform_type"] = "agent"
     session["environment"]["provider_hint"] = model_info.get("provider", "unknown")
     session["environment"]["agent_framework"] = "opencode"
     session["environment"]["tools_enabled"] = sorted(set(

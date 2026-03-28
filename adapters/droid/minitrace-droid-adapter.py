@@ -228,6 +228,7 @@ def convert_session(records, source_path=None, verbose=False):
 
     session["title"] = session_meta.get("title") or extract_title(turns)
     session["provenance"]["source_path"] = str(source_path) if source_path else None
+    session["environment"]["platform_type"] = "agent"
 
     # Extract model info from first assistant message
     for rec in records:

@@ -1,0 +1,247 @@
+{
+  "id": "1084cc20-0554-4104-b341-437ab30e091d",
+  "schema_version": "minitrace-v0.2.0",
+  "profile": "organic",
+  "scenario_id": null,
+  "quality": "B",
+  "title": "Latest ETSI news search",
+  "summary": null,
+  "classification": "confidential",
+  "provenance": {
+    "source_format": "claude-ai-export-v1",
+    "source_path": null,
+    "converted_at": "2026-03-28T14:26:41Z",
+    "converter_version": "minitrace-claude-ai-adapter-0.2.0",
+    "original_session_id": "1084cc20-0554-4104-b341-437ab30e091d"
+  },
+  "flags": {
+    "for_research": false,
+    "needs_cleaning": true,
+    "contains_error": false,
+    "contains_pii": true,
+    "category": []
+  },
+  "environment": {
+    "model": null,
+    "model_version": null,
+    "temperature": null,
+    "tools_enabled": [
+      "web_fetch",
+      "web_search"
+    ],
+    "system_prompt": null,
+    "agent_framework": "claude.ai",
+    "agent_version": null,
+    "platform_type": "web",
+    "provider_hint": "anthropic"
+  },
+  "operational_context": {
+    "working_directory": null,
+    "git_branch": null,
+    "git_ref": null,
+    "autonomy_level": null,
+    "sandbox": null,
+    "framework_config": null
+  },
+  "timing": {
+    "privacy_level": "full",
+    "duration_seconds": 21.863522,
+    "active_duration_seconds": 21.863522,
+    "started_at": "2026-03-28T08:37:03Z",
+    "ended_at": "2026-03-28T08:37:25Z",
+    "hour_of_day": 8,
+    "day_of_week": 5
+  },
+  "condition": null,
+  "coordination": {
+    "project_id": null,
+    "predecessor_session": null,
+    "concurrent_sessions": null,
+    "human_attention": "unknown"
+  },
+  "handover": {
+    "received": null,
+    "produced": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "timestamp": "2026-03-28T08:37:03Z",
+      "role": "user",
+      "source": "human",
+      "model": null,
+      "content_type": null,
+      "input_channel": "user_input",
+      "content": "Search for the latest ETSI news and fetch the first result",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null,
+      "framework_metadata": null
+    },
+    {
+      "index": 1,
+      "timestamp": "2026-03-28T08:37:25Z",
+      "role": "assistant",
+      "source": "model",
+      "model": null,
+      "content_type": null,
+      "input_channel": null,
+      "content": "The top result appears to be the ETSI Press Releases page. Let me fetch it for the latest content.\nThe ETSI press releases page returned a 403 (access restricted). Let me fetch the most relevant news result instead — the 10th Cybersecurity Standardisation Conference highlights, which is the most recent dated item (March 12, 2026).\nETSI's website is returning 403 errors for direct page fetches (likely due to bot protection). Here's a summary of what the search results revealed about the latest ETSI news:\n\n---\n\n**Most Recent ETSI News (2026)**\n\n**🔐 10th Cybersecurity Standardisation Conference** *(12 March 2026 — most recent)*\nCEN, CENELEC, and ETSI, together with ENISA, successfully co-hosted the 10th Cybersecurity Standardisation Conference on 12 March 2026 in Brussels. The hybrid event brought together policymakers, industry leaders, researchers, and cybersecurity experts to discuss the evolving European cybersecurity landscape. The conference was titled \"European Standardisation Supporting New Legislative Cybersecurity Landscape\" and explored the Cyber Resilience Act and the way forward for European standardisation.\n\n---\n\n**Other Recent Highlights:**\n\n- **AI Cybersecurity Standard** *(January 15, 2026)*: ETSI published ETSI EN 304 223, described as the first globally applicable European Standard for AI cybersecurity, establishing baseline requirements for AI models and systems.\n\n- **Continuous Auditing Framework** *(January 27, 2026)*: ETSI announced the publication of ETSI TS 104 008, a new Technical Specification introducing a framework for Continuous Auditing-Based Conformity Assessment (CABCA) to help organisations ensure AI systems remain compliant throughout their operational lifecycle.\n\n- **SNS4SNS Event** *(February 2026)*: The ETSI SNS4SNS Software & Standards for Smart Networks & Services event, held 2–5 February 2026, brought together policymakers, industry leaders, and open-source communities to shape the future of 6G.\n\nNote: ETSI's website blocked direct page fetches (HTTP 403), but the search snippets provide a solid picture of their latest activity. You can visit [etsi.org/newsroom](https://www.etsi.org/newsroom) directly for the full articles.",
+      "tool_calls_in_turn": [
+        "tc-1084cc20-0000",
+        "tc-1084cc20-0001",
+        "tc-1084cc20-0002"
+      ],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": true,
+        "stream_log": null
+      },
+      "usage": null,
+      "framework_metadata": null
+    }
+  ],
+  "tool_calls": [
+    {
+      "id": "tc-1084cc20-0000",
+      "emitting_turn_index": 1,
+      "timestamp": "2026-03-28T08:37:06Z",
+      "tool_name": "web_search",
+      "operation_type": "READ",
+      "input": {
+        "file_path": null,
+        "command": null,
+        "arguments": {
+          "query": "ETSI latest news 2026"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "ETSI is pleased to support the EuCNC &amp; 6G Summit on 2-5 June 2026, taking place at FYCMA Malaga, Spain. The 2026 EuCNC &amp; 6G Summit builds on two successful conferences in the area of telecommunications: EuCNC, in its 35th edition of a series, ...\n\nA call for contribution will be announced by the end of March 2026. Subscribe to the ETSI Events mailing list and/or the ETSI Security Events Mailing list to get the latest annoucements about this event! Important Milestones · End March: launch of the call for submissions (presentations, posters, demonstrations) 15 May: deadline of the call for submissions 10 July: Speaker confirmation Mid July: Online programme - Opening of registration ... ETSI is pleased to support the EuCNC & 6G Summit on 2-5 June 2026, taking place at FYCMA Malaga, Spain. The 2026 EuCNC & 6G Summit builds on two successful conferences in the area of telecommunications: EuCNC, in its 35th edition of a series, supported by the European Commission, and the 6G Summit, in its 8th edition, originated from the 6G Flagship programme in Finland, one of the very first in its area. Supported by the European Commission, the conference addresses various aspects of Beyond 5G/6G communications systems and networks.\n\nIt brings together cutting-edge research and world-renown industries and businesses, globally attracting in the last years close to 1000 delegates from more than 40 countries all over the world, to present and discuss the latest results, and an exhibition with more than 50 exhibitors, for demonstrating the technology developed in the area, namely within research projects from EU R&I programmes · The ETSI Software & Standards and Research teams as well as Software Development Groups (SDG) representatives will be present at the event, offering participants the opportunity to connect with experts supporting research and open-source communities. For more information, please visit the event website. February 27, 2026 Posted by Therese Christoffersen 2359 Hits ... ETSI’s Centre for Testing and Interoperability is organising the NG112 Plugtests™ 2026 event, in cooperation with the European Emergency Number Association (EENA) and the Sintesio Foundation, with the support of ETSI’s Technical Co\n\nETSI - Producing globally applicable standards for ICT-enabled systems, applications & services deployed across all sectors of industry and society. Made in Europe for global use.\n\nSave the Date! ETSI Security Conference 2026 - 19-22 October 2026 - Sophia Antipolis, France Join us for the 20th edition of the ETSI Security Conference, one of ETSI’s flagship events and a unique annual opportunity for the global security community to meet face to face, exchange with an experts' audience, and explore the most relevant topics in cybersecurity standardisation. This special anniversary edition will feature an intensive 4‑day programme bringing together speakers and attendees from government organisations, standards bodies, academia and a wide range of industry sectors. Programme Highlights The 2026 agenda will cover a broad spectrum of strategic and technical security topics, including: Global Cybersecurity Landscape Exploration of emerging trends, evolving threats and key regulatory initiatives shaping worldwide cybersecurity.\nJanuary 27, 2026 Posted by ETSI COMS TEAM 4879 Hits ... Today, ETSI announces the publication of ETSI TS 104 008, a new Technical Specification that introduces a framework for Continuous Auditing-Based Conformity Assessment (CABCA).\n\nSophia Antipolis, France, 6 February 2026 The ETSI SNS4SNS Software & Standards for Smart Networks & Services event , held from 2–5 February 2026, brought together policy makers, industry leaders, researchers, developers and open source communities to shape the future of 6G and smart networks and services. With a multidisciplinary approach, this year’s edition placed a strong emphasis on collaborative innovation, showcasing among others the strategic activities of ETSI’s five software development groups .\n\nThe ETSI SNS4SNS Software & Standards for Smart Networks & Services event (SNS4SNS), held from 2–5 February 2026, brought together policy makers, industry leaders, researchers, developers and open source communities to shape the future of 6G and smart networks and services. With a multidisciplinary approach, this year’s edition placed a strong emphasis on collaborative innovation, showcasing among others the strategic activities of ETSI’s five software development groups (SDGs). Read more ... January 27, 2026 Posted by ETSI COMS TEAM 4879 Hits ... Today, ETSI announces the publication of ETSI TS 104 008, a new Technical Specification that introduces a framework for Continuous Auditing-Based Conformity Assessment (CABCA). This framework helps organisations ensure their AI systems remain compliant with regulatory and technical requirements throughout their entire operational lifecycle.\n\nJanuary 15, 2026 Posted by ETSI COMS TEAM 13371 Hits ... Today ETSI announces the publication of its new standard, ETSI EN 304 223, that provides baseline cybersecurity requirements for AI models and systems. Building on the foundational work set out in its recent Technical Specification, it is a first globally applicable European Standard (EN) for AI cybersecurity. The EN has been extensively reviewed, and formally approved by National Standards Organisations voting, giving it a broader international scope and strengthening its authority across global markets. Read more ... December 22, 2025 Posted by ETSI COMS TEAM 7025 Hits ... Today, ETSI announced at its upcoming plenary session on Integrated Sensing And Communications (ISAC) the launch of four new Work Items. These initiatives represent an important step towards shaping the next phase of ISAC, laying the foundations for future networks that integrate advanced sensing functions with communications systems.\n13:30 End of ETSI AI and Data Conference 2026. Final lunch, grab a sandwich and go! The following demonstrations were available during the conference breaks: EUROCOMPLY: Automated Regulatory Compliance Validation for AI/ML Systems in ...\n\nThe ETSI AI and Data Conference - Bringing AI and data together took place face-to-face on 09-11 February 2026, in ETSI premises, Sophia Antipolis, France. Focusing exclusively on AI in the past, the scope of this 3rd edition was extended to intertwine AI and Data management technologies. Standardisation Requests in support of the EU AI Act and the EU Data Act, means that European Standardisation Organisations are actively contributing to EU policy. The event provided an overview of current priorities in the AI and Data ecosystems, with a detailed discussion on how ETSI is addressing those. Agentic AI was also covered in a dedicated session, and will be addressed from political, industrial, and wider perspectives. Attendees had the opportunity to learn about standardisation around AI and contribute actively, highlight potential gaps, share ideas for new projects. The event also featured 18 demonstrations and posters on the latest advances in the field of Artificial Intelligence (AI) an\n\n13:30 End of ETSI AI and Data Conference 2026. Final lunch, grab a sandwich and go! The following demonstrations were available during the conference breaks: EUROCOMPLY: Automated Regulatory Compliance Validation for AI/ML Systems in Telecommunications via Agentic AI Presented by Mazene Ameur, EURECOM · CERTAIN RegOps: Automated, continuous compliance for AI systems Presented by Dimitrios Christodoulou, Digital for Planet · AI Core-Next Generation Network Architecture - Demo part of ETSI ENI ISG PoC 24 project Presented by Xueli An, Huawei Technologies Duesseldorf GmbH · Advancing AI-assisted Invention for 3GPP Standards Presented by Harry Cronin, Iprova · AI-Driven Anomaly Detection for Maritime Autonomous Surface Ships (MASS) Presented by Francesco Kotopulos de Angelis and Kaleb Gebremeskel, CNIT · Data: the Foundation of Future AI Applications, Services, and Data Governance Presented by Hesham Moussa, Huawei Technologies Canada ·\n\nThis session will provide a holistic overview of new tools introduced by ETSI – especially the ETSI Technology Radar – and new activities recently initiated, including ETSI Technical Committee DATA (TC DATA), Technical Committee Quantum Technologies (TC QT) and others. The cross-relationship to the topics of AI and DATA will be discussed. Finally, the audience will learn about the latest AI and DATA planned activities in the pipelines of ETSI TC SAI and TC DATA. 09:00 ETSI Technology Radar and foresight into AI, new activities David Boswarthick, ETSI Strategy and Innovation · 09:20 What are the projects in ETSI TC SAI and ETSI TC DATA? SAI - what do we do and why? Scott Cadzow, ETSI TC SAI · DATA - what do we do and why? Diego Lopez, ETSI TC DATA ... 11:15 - 12:45 SESSION 8: Stakeholders Priorities and Views Chaired by Scott Cadzow, ETSI TC SAI Chair Technologies and solutions related to AI and DATA are a game changer for all involved stakeholders.\n\nNicolas Hauviller, Amadeus Research, AI Office Nicolas is Director Innovation within Amadeus’ AI Research department and a member of the Amadeus AI Office. He contributes to the company’s AI strategy, oversees research initiatives, and works to ensure that new AI capabilities are responsibly integrated into Amadeus products and services. One of his key missions is to track the latest technological and business trends in AI to assess how they can create value for the travel industry and for Amadeus in particular. He works closely with engineering and business teams to translate research insights into practical, scalable innovations that enhance the travel experience. Simon Hicks, ETSI board member and Finance Committee Chair - Member of the Programme Committee Employed by DSIT UK. Simon leads on technical issues in digital standards for the UK government based in DSIT.\nThe European Standardisation Organizations (ESOs) CEN, CENELEC, and ETSI, together with European Union Agency for Cybersecurity (ENISA), successfully co-hosted the 10th Cybersecurity Standardisation Conference on 12 March 2026 in Brussels.\n\nThe European Standardi\n[truncated]",
+        "error": null,
+        "duration_ms": 0,
+        "truncated": true,
+        "full_bytes": 24041,
+        "full_hash": "sha256:23c69d7ad534c06b27bec02a5ebe2c64d2286f9ff10f496aca1afc2508af6fe2",
+        "full_reference": null,
+        "redacted": null,
+        "content_origin": "web"
+      },
+      "context": {
+        "position_in_session": 0.0,
+        "tools_before": [],
+        "time_since_last_user": null
+      },
+      "framework_metadata": {
+        "message": "Searching the web"
+      },
+      "spawned_agent": null
+    },
+    {
+      "id": "tc-1084cc20-0001",
+      "emitting_turn_index": 1,
+      "timestamp": "2026-03-28T08:37:09Z",
+      "tool_name": "web_fetch",
+      "operation_type": "READ",
+      "input": {
+        "file_path": null,
+        "command": null,
+        "arguments": {
+          "url": "https://www.etsi.org/newsroom/press-releases"
+        }
+      },
+      "output": {
+        "success": false,
+        "result": "{\"error_type\": \"CLIENT_ERROR\", \"error_message\": \"There was an error while fetching: The page returned a 403 client error\"}",
+        "error": "{\"error_type\": \"CLIENT_ERROR\", \"error_message\": \"There was an error while fetching: The page returned a 403 client error\"}",
+        "duration_ms": 133,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null,
+        "redacted": null,
+        "content_origin": "web"
+      },
+      "context": {
+        "position_in_session": 0.333,
+        "tools_before": [
+          "web_search"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": {
+        "integration_name": "Web Fetch",
+        "message": "Fetching: https://www.etsi.org/newsroom/press-releases"
+      },
+      "spawned_agent": null
+    },
+    {
+      "id": "tc-1084cc20-0002",
+      "emitting_turn_index": 1,
+      "timestamp": "2026-03-28T08:37:13Z",
+      "tool_name": "web_fetch",
+      "operation_type": "READ",
+      "input": {
+        "file_path": null,
+        "command": null,
+        "arguments": {
+          "url": "https://www.etsi.org/newsroom/news/2650-cybersecurity-standardisation-conference-2026-highlights"
+        }
+      },
+      "output": {
+        "success": false,
+        "result": "{\"error_type\": \"CLIENT_ERROR\", \"error_message\": \"There was an error while fetching: The page returned a 403 client error\"}",
+        "error": "{\"error_type\": \"CLIENT_ERROR\", \"error_message\": \"There was an error while fetching: The page returned a 403 client error\"}",
+        "duration_ms": 428,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null,
+        "redacted": null,
+        "content_origin": "web"
+      },
+      "context": {
+        "position_in_session": 0.667,
+        "tools_before": [
+          "web_search",
+          "web_fetch"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": {
+        "integration_name": "Web Fetch",
+        "message": "Fetching: https://www.etsi.org/newsroom/news/2650-cybersecurity-standardisation-conference-2026-highlights"
+      },
+      "spawned_agent": null
+    }
+  ],
+  "outcome": null,
+  "annotations": [],
+  "metrics": {
+    "turn_count": 2,
+    "tool_call_count": 3,
+    "read_count": 3,
+    "modify_count": 0,
+    "create_count": 0,
+    "execute_count": 0,
+    "delegate_count": 0,
+    "read_ratio": 1.0,
+    "time_to_first_action": 3.0,
+    "idle_ratio": 0.0,
+    "total_input_tokens": null,
+    "total_output_tokens": null,
+    "total_cache_read_tokens": null,
+    "total_cache_creation_tokens": null,
+    "total_reasoning_tokens": null,
+    "total_tool_tokens": null,
+    "session_cost": null,
+    "subagent_count": 0,
+    "subagent_tool_calls": 0
+  }
+}

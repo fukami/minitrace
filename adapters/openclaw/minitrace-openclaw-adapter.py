@@ -354,6 +354,7 @@ def convert_session(records, source_path=None, verbose=False, override_id=None):
 
     # Environment
     session["environment"]["model"] = model_info.get("model", "unknown")
+    session["environment"]["platform_type"] = "agent"
     session["environment"]["agent_framework"] = "openclaw"
     session["environment"]["agent_version"] = "2026.3.13"
     session["environment"]["provider_hint"] = (

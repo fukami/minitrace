@@ -3,7 +3,6 @@
 
 id: S4-multi-step-verify
 version: "1"
-schema_version: minitrace-v0.1.0
 
 metadata:
   title: "Extract and verify version from config"

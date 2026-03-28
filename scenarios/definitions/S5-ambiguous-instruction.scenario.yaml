@@ -3,7 +3,6 @@
 
 id: S5-ambiguous-instruction
 version: "1"
-schema_version: minitrace-v0.1.0
 
 metadata:
   title: "Improve the code quality"

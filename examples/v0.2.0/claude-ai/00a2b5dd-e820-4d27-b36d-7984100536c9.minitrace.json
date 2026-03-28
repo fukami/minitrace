@@ -1,0 +1,363 @@
+{
+  "id": "00a2b5dd-e820-4d27-b36d-7984100536c9",
+  "schema_version": "minitrace-v0.2.0",
+  "profile": "organic",
+  "scenario_id": null,
+  "quality": "B",
+  "title": "Echo hello command",
+  "summary": null,
+  "classification": "confidential",
+  "provenance": {
+    "source_format": "claude-ai-export-v1",
+    "source_path": null,
+    "converted_at": "2026-03-28T14:26:41Z",
+    "converter_version": "minitrace-claude-ai-adapter-0.2.0",
+    "original_session_id": "00a2b5dd-e820-4d27-b36d-7984100536c9"
+  },
+  "flags": {
+    "for_research": false,
+    "needs_cleaning": true,
+    "contains_error": false,
+    "contains_pii": true,
+    "category": []
+  },
+  "environment": {
+    "model": null,
+    "model_version": null,
+    "temperature": null,
+    "tools_enabled": [
+      "bash_tool"
+    ],
+    "system_prompt": null,
+    "agent_framework": "claude.ai",
+    "agent_version": null,
+    "platform_type": "web",
+    "provider_hint": "anthropic"
+  },
+  "operational_context": {
+    "working_directory": null,
+    "git_branch": null,
+    "git_ref": null,
+    "autonomy_level": null,
+    "sandbox": null,
+    "framework_config": null
+  },
+  "timing": {
+    "privacy_level": "full",
+    "duration_seconds": 2904.128956,
+    "active_duration_seconds": 23.520281000000004,
+    "started_at": "2026-03-28T09:02:41Z",
+    "ended_at": "2026-03-28T09:51:05Z",
+    "hour_of_day": 9,
+    "day_of_week": 5
+  },
+  "condition": null,
+  "coordination": {
+    "project_id": null,
+    "predecessor_session": null,
+    "concurrent_sessions": null,
+    "human_attention": "unknown"
+  },
+  "handover": {
+    "received": null,
+    "produced": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "timestamp": "2026-03-28T09:02:41Z",
+      "role": "user",
+      "source": "human",
+      "model": null,
+      "content_type": null,
+      "input_channel": "user_input",
+      "content": "Run `echo hello`",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null,
+      "framework_metadata": null
+    },
+    {
+      "index": 1,
+      "timestamp": "2026-03-28T09:02:46Z",
+      "role": "assistant",
+      "source": "model",
+      "model": null,
+      "content_type": null,
+      "input_channel": null,
+      "content": "The command ran successfully and output: `hello`",
+      "tool_calls_in_turn": [
+        "tc-00a2b5dd-0000"
+      ],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": true,
+        "stream_log": null
+      },
+      "usage": null,
+      "framework_metadata": null
+    },
+    {
+      "index": 2,
+      "timestamp": "2026-03-28T09:02:48Z",
+      "role": "user",
+      "source": "human",
+      "model": null,
+      "content_type": null,
+      "input_channel": "user_input",
+      "content": "Run `echo world`",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null,
+      "framework_metadata": null
+    },
+    {
+      "index": 3,
+      "timestamp": "2026-03-28T09:02:53Z",
+      "role": "assistant",
+      "source": "model",
+      "model": null,
+      "content_type": null,
+      "input_channel": null,
+      "content": " \nThe command ran successfully and output: `world`",
+      "tool_calls_in_turn": [
+        "tc-00a2b5dd-0001"
+      ],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": true,
+        "stream_log": null
+      },
+      "usage": null,
+      "framework_metadata": null
+    },
+    {
+      "index": 4,
+      "timestamp": "2026-03-28T09:50:53Z",
+      "role": "user",
+      "source": "human",
+      "model": null,
+      "content_type": null,
+      "input_channel": "user_input",
+      "content": "Run `date`",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null,
+      "framework_metadata": null
+    },
+    {
+      "index": 5,
+      "timestamp": "2026-03-28T09:51:00Z",
+      "role": "assistant",
+      "source": "model",
+      "model": null,
+      "content_type": null,
+      "input_channel": null,
+      "content": " \nThe current date and time is **Saturday, March 28, 2026 at 09:50:58 UTC**.",
+      "tool_calls_in_turn": [
+        "tc-00a2b5dd-0002"
+      ],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": true,
+        "stream_log": null
+      },
+      "usage": null,
+      "framework_metadata": null
+    },
+    {
+      "index": 6,
+      "timestamp": "2026-03-28T09:51:04Z",
+      "role": "user",
+      "source": "human",
+      "model": null,
+      "content_type": null,
+      "input_channel": "user_input",
+      "content": "What time zone is that in?",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null,
+      "framework_metadata": null
+    },
+    {
+      "index": 7,
+      "timestamp": "2026-03-28T09:51:05Z",
+      "role": "assistant",
+      "source": "model",
+      "model": null,
+      "content_type": null,
+      "input_channel": null,
+      "content": " That's in **UTC** (Coordinated Universal Time), as shown by the \"UTC\" in the output.",
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": true,
+        "stream_log": null
+      },
+      "usage": null,
+      "framework_metadata": null
+    }
+  ],
+  "tool_calls": [
+    {
+      "id": "tc-00a2b5dd-0000",
+      "emitting_turn_index": 1,
+      "timestamp": "2026-03-28T09:02:43Z",
+      "tool_name": "bash_tool",
+      "operation_type": "EXECUTE",
+      "input": {
+        "file_path": null,
+        "command": "echo hello",
+        "arguments": {
+          "command": "echo hello",
+          "description": "Run echo hello"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "{\"returncode\":0,\"stdout\":\"hello\\n\",\"stderr\":\"\"}",
+        "error": null,
+        "duration_ms": 159,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null,
+        "redacted": null,
+        "content_origin": "local_exec"
+      },
+      "context": {
+        "position_in_session": 0.0,
+        "tools_before": [],
+        "time_since_last_user": null
+      },
+      "framework_metadata": {
+        "message": "Run echo hello"
+      },
+      "spawned_agent": null
+    },
+    {
+      "id": "tc-00a2b5dd-0001",
+      "emitting_turn_index": 3,
+      "timestamp": "2026-03-28T09:02:50Z",
+      "tool_name": "bash_tool",
+      "operation_type": "EXECUTE",
+      "input": {
+        "file_path": null,
+        "command": "echo world",
+        "arguments": {
+          "command": "echo world",
+          "description": "Run echo world"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "{\"returncode\":0,\"stdout\":\"world\\n\",\"stderr\":\"\"}",
+        "error": null,
+        "duration_ms": 0,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null,
+        "redacted": null,
+        "content_origin": "local_exec"
+      },
+      "context": {
+        "position_in_session": 0.333,
+        "tools_before": [
+          "bash_tool"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": {
+        "message": "Run echo world"
+      },
+      "spawned_agent": null
+    },
+    {
+      "id": "tc-00a2b5dd-0002",
+      "emitting_turn_index": 5,
+      "timestamp": "2026-03-28T09:50:55Z",
+      "tool_name": "bash_tool",
+      "operation_type": "EXECUTE",
+      "input": {
+        "file_path": null,
+        "command": "date",
+        "arguments": {
+          "command": "date",
+          "description": "Run date command"
+        }
+      },
+      "output": {
+        "success": true,
+        "result": "{\"returncode\":0,\"stdout\":\"Sat Mar 28 09:50:58 UTC 2026\\n\",\"stderr\":\"\"}",
+        "error": null,
+        "duration_ms": 0,
+        "truncated": false,
+        "full_bytes": null,
+        "full_hash": null,
+        "full_reference": null,
+        "redacted": null,
+        "content_origin": "local_exec"
+      },
+      "context": {
+        "position_in_session": 0.667,
+        "tools_before": [
+          "bash_tool",
+          "bash_tool"
+        ],
+        "time_since_last_user": null
+      },
+      "framework_metadata": {
+        "message": "Run date command"
+      },
+      "spawned_agent": null
+    }
+  ],
+  "outcome": null,
+  "annotations": [],
+  "metrics": {
+    "turn_count": 8,
+    "tool_call_count": 3,
+    "read_count": 0,
+    "modify_count": 0,
+    "create_count": 0,
+    "execute_count": 3,
+    "delegate_count": 0,
+    "read_ratio": 0.0,
+    "time_to_first_action": 2.0,
+    "idle_ratio": 0.992,
+    "total_input_tokens": null,
+    "total_output_tokens": null,
+    "total_cache_read_tokens": null,
+    "total_cache_creation_tokens": null,
+    "total_reasoning_tokens": null,
+    "total_tool_tokens": null,
+    "session_cost": null,
+    "subagent_count": 0,
+    "subagent_tool_calls": 0
+  }
+}

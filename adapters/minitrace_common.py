@@ -16,7 +16,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
-SCHEMA_VERSION = "minitrace-v0.1.0"
+SCHEMA_VERSION = "minitrace-v0.2.0"
 TRUNCATE_LIMIT = 10240  # 10 KB
 IDLE_THRESHOLD = 300  # 5 minutes, per spec default
 MAX_FILE_SIZE = 100 * 1024 * 1024  # 100 MB — reject files larger than this
@@ -310,7 +310,7 @@ def assign_quality_tier(turns, tool_calls):
 
     if has_conversation and has_tool_io and tc_count > 10 and len(turns) > 5:
         return "A"
-    elif has_conversation and (not has_tool_io or tc_count <= 10):
+    elif has_conversation:
         return "B"
     elif not has_conversation:
         return "C"
@@ -364,6 +364,7 @@ def build_session_skeleton(
         "schema_version": SCHEMA_VERSION,
         "profile": profile,
         "scenario_id": scenario_id,
+        "quality": None,
         "title": None,
         "summary": None,
         "classification": "internal",
@@ -382,13 +383,14 @@ def build_session_skeleton(
             "category": [],
         },
         "environment": {
-            "model": "unknown",
+            "model": None,
             "model_version": None,
             "temperature": None,
             "tools_enabled": [],
             "system_prompt": None,
             "agent_framework": agent_framework,
             "agent_version": None,
+            "platform_type": None,
             "provider_hint": "unknown",
         },
         "operational_context": {
@@ -432,6 +434,109 @@ def extract_title(turns, max_len=80):
         if t.get("role") == "user" and t.get("source") == "human" and t.get("content"):
             return t["content"][:max_len].replace("\n", " ").strip()
     return None
+
+
+# --- Post-Conversion Canary ---
+
+# Frameworks where tool calls are expected in non-trivial sessions.
+# Ghost sessions (no tool calls) are legitimate, but 50 turns with 0 tool calls
+# from Claude Code is suspicious.
+_TOOL_EXPECTED_FRAMEWORKS = {
+    "claude-code", "codex", "goose", "opencode", "droid",
+    "gemini-cli", "pi", "vibe", "openclaw",
+}
+
+
+def canary_check(session, verbose=False):
+    """Post-conversion sanity check. Detects silent parser breakage.
+
+    Returns a list of warning strings. Empty list = no issues detected.
+    Warnings are soft (never block conversion) but should be surfaced
+    to the operator so broken adapters don't produce garbage silently.
+
+    Checks:
+      1. Structural: non-zero turns, timestamps present, tool names not all default
+      2. Provenance (v0.2.0): input_channel and content_origin coverage
+      3. Framework expectations: tool calls expected for non-trivial sessions
+    """
+    warnings = []
+    metrics = session.get("metrics", {})
+    turns = session.get("turns", [])
+    tool_calls = session.get("tool_calls", [])
+    env = session.get("environment", {})
+    framework = env.get("agent_framework", "unknown")
+    turn_count = metrics.get("turn_count", len(turns))
+    tc_count = metrics.get("tool_call_count", len(tool_calls))
+    sid = session.get("id", "?")
+
+    # --- Structural checks ---
+
+    # S1: Session with no turns at all
+    if turn_count == 0:
+        warnings.append(f"[S1] {sid}: 0 turns (empty session)")
+
+    # S2: Tool calls expected but absent in non-trivial sessions
+    if (
+        framework in _TOOL_EXPECTED_FRAMEWORKS
+        and turn_count > 5
+        and tc_count == 0
+    ):
+        warnings.append(
+            f"[S2] {sid}: {turn_count} turns but 0 tool calls "
+            f"(framework={framework}, expected tool use)"
+        )
+
+    # S3: Tool calls with all-null timestamps
+    if tc_count > 0:
+        ts_count = sum(1 for tc in tool_calls if tc.get("timestamp"))
+        if ts_count == 0:
+            warnings.append(
+                f"[S3] {sid}: {tc_count} tool calls, all timestamps null"
+            )
+
+    # S4: Tool calls with all-"unknown" tool names
+    if tc_count > 0:
+        unknown_count = sum(
+            1 for tc in tool_calls
+            if tc.get("tool_name") in (None, "unknown", "")
+        )
+        if unknown_count == tc_count:
+            warnings.append(
+                f"[S4] {sid}: {tc_count} tool calls, all tool_name unknown/null"
+            )
+
+    # S5: Model is "unknown" in a non-empty session
+    if turn_count > 0 and env.get("model") in (None, "unknown"):
+        warnings.append(f"[S5] {sid}: model is unknown")
+
+    # --- v0.2.0 provenance checks ---
+
+    # P1: input_channel coverage (expect at least one non-null if turns > 3)
+    if turn_count > 3:
+        ic_count = sum(1 for t in turns if t.get("input_channel"))
+        if ic_count == 0:
+            warnings.append(
+                f"[P1] {sid}: {turn_count} turns, all input_channel null "
+                f"(v0.2.0 field not populated)"
+            )
+
+    # P2: content_origin coverage (expect at least one non-null if tool calls > 5)
+    if tc_count > 5:
+        co_count = sum(
+            1 for tc in tool_calls
+            if tc.get("output", {}).get("content_origin")
+        )
+        if co_count == 0:
+            warnings.append(
+                f"[P2] {sid}: {tc_count} tool calls, all content_origin null "
+                f"(v0.2.0 field not populated)"
+            )
+
+    if verbose and warnings:
+        for w in warnings:
+            print(f"  CANARY {w}", file=sys.stderr)
+
+    return warnings
 
 
 # --- Output ---
@@ -647,16 +752,28 @@ def build_tool_call(
     duration_ms=None,
     framework_metadata=None,
     spawned_agent=None,
+    content_origin=None,
+    redacted=None,
 ):
     """Build a tool call dict matching the minitrace ToolCall schema.
 
     Content truncation is applied to result automatically.
+
+    Args:
+        turn_index: passed as emitting_turn_index in the output. May be
+            None for shell-first frameworks where tool events are not
+            subordinate to assistant turns.
+        content_origin: v0.2.0. Where the tool output content originated.
+            Values: "local_file", "local_exec", "web", "mcp_server",
+            "database", "sub_agent", "model_echo", "user_provided", or None.
+        redacted: v0.2.0. True if tool result was policy-redacted by
+            the platform before export. None means unknown.
     """
     truncated_result, full_bytes, full_hash = truncate_content(result)
 
     return {
         "id": tc_id,
-        "turn_index": turn_index,
+        "emitting_turn_index": turn_index,
         "timestamp": timestamp,
         "tool_name": tool_name,
         "operation_type": operation_type,
@@ -674,6 +791,8 @@ def build_tool_call(
             "full_bytes": full_bytes,
             "full_hash": full_hash,
             "full_reference": None,
+            "redacted": redacted,
+            "content_origin": content_origin,
         },
         "context": {
             "position_in_session": None,  # filled by compute_tool_call_context
@@ -696,19 +815,39 @@ def build_turn(
     tool_calls_in_turn=None,
     thinking=None,
     usage=None,
+    input_channel=None,
+    framework_metadata=None,
+    model=None,
+    content_type=None,
 ):
-    """Build a turn dict matching the minitrace Turn schema."""
+    """Build a turn dict matching the minitrace Turn schema.
+
+    Args:
+        input_channel: v0.2.0. Through what channel did this turn's content arrive.
+            Values: "user_input", "system_prompt", "framework_control",
+            "framework_content", "tool_output", "retrieval", or None.
+            Legacy: "framework_inject" accepted by validators for backward
+            compatibility but deprecated. New adapters MUST NOT use it.
+        model: v0.2.0. Per-turn model identifier when known. null means
+            fall back to session-level environment.model.
+        content_type: v0.2.0. Content modality. Values: "text",
+            "multimodal_text", "code", "reasoning", or None.
+    """
     return {
         "index": index,
         "timestamp": timestamp,
         "role": role,
         "source": source,
+        "model": model,
+        "content_type": content_type,
+        "input_channel": input_channel,
         "content": content,
         "tool_calls_in_turn": tool_calls_in_turn or [],
         "thinking": thinking,
         "intent_markers": None,
         "streaming": {"was_streamed": False, "stream_log": None},
         "usage": usage,
+        "framework_metadata": framework_metadata,
     }
 
 

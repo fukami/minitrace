@@ -311,6 +311,7 @@ def convert_session(records, source_path=None, verbose=False):
     session["provenance"]["original_session_id"] = session_id
 
     session["environment"]["model"] = model_info.get("model", "unknown")
+    session["environment"]["platform_type"] = "agent"
     session["environment"]["provider_hint"] = model_info.get("provider", "unknown")
     session["environment"]["agent_framework"] = "pi"
     session["environment"]["tools_enabled"] = sorted(set(
