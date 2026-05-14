@@ -470,6 +470,7 @@ def convert_session(records, session_id, source_path=None):
                         tc_index += 1
 
             content_text = "\n".join(text_parts)
+            content_type = "reasoning" if thinking_text else ("text" if content_text else None)
 
             turns.append(build_turn(
                 index=turn_index,
@@ -481,6 +482,7 @@ def convert_session(records, session_id, source_path=None):
                 thinking=thinking_text,
                 usage=turn_usage,
                 model=model,
+                content_type=content_type,
             ))
             # Override streaming default for Claude Code (always streams)
             turns[-1]["streaming"] = {"was_streamed": True, "stream_log": None}
