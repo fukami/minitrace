@@ -398,6 +398,9 @@ def convert_session(records, session_id, source_path=None):
             model = msg.get("model")
             if model:
                 session_meta["model"] = model
+            version = rec.get("version")
+            if version:
+                session_meta["version"] = version
 
             usage = msg.get("usage", {})
 
