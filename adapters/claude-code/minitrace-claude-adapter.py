@@ -480,6 +480,7 @@ def convert_session(records, session_id, source_path=None):
                 tool_calls_in_turn=turn_tool_ids,
                 thinking=thinking_text,
                 usage=turn_usage,
+                model=model,
             ))
             # Override streaming default for Claude Code (always streams)
             turns[-1]["streaming"] = {"was_streamed": True, "stream_log": None}
