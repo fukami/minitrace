@@ -339,18 +339,20 @@ def parse_session_jsonl(records):
 
         # --- turn_context: per-turn configuration state ---
         if rtype == "turn_context":
-            metadata["model"] = payload.get("model") or metadata["model"]
             metadata["approval_policy"] = payload.get("approval_policy")
             sp = payload.get("sandbox_policy", {})
             metadata["sandbox_policy"] = sp.get("type") if isinstance(sp, dict) else sp
             metadata["personality"] = payload.get("personality")
             metadata["timezone"] = payload.get("timezone")
             cm = payload.get("collaboration_mode", {})
+            settings_model = None
             if isinstance(cm, dict):
                 metadata["collaboration_mode"] = cm.get("mode")
                 settings = cm.get("settings", {})
                 if isinstance(settings, dict):
                     metadata["reasoning_effort"] = settings.get("reasoning_effort")
+                    settings_model = settings.get("model")
+            metadata["model"] = payload.get("model") or settings_model or metadata["model"]
             continue
 
         # --- event_msg: framework events ---
@@ -381,6 +383,7 @@ def parse_session_jsonl(records):
                 # Agent's final message — create an assistant turn
                 content = payload.get("message", "")
                 thinking = "\n".join(current_thinking) if current_thinking else None
+                content_type = "text" if content else ("reasoning" if thinking else None)
                 # Assign pending tool calls to this assistant turn
                 tc_ids = []
                 for tc in tool_calls:
@@ -398,6 +401,8 @@ def parse_session_jsonl(records):
                     tool_calls_in_turn=tc_ids,
                     thinking=thinking,
                     input_channel=classify_input_channel(rtype, payload),
+                    model=metadata.get("model"),
+                    content_type=content_type,
                 ))
                 turn_index += 1
                 current_thinking = []
@@ -689,6 +694,7 @@ def parse_exec_jsonl(records):
             elif itype == "agent_message":
                 text = item.get("text", "")
                 thinking = "\n".join(current_thinking) if current_thinking else None
+                content_type = "text" if text else ("reasoning" if thinking else None)
 
                 tc_ids = [tc["id"] for tc in tool_calls
                           if tc.get("emitting_turn_index") == turn_index]
@@ -701,6 +707,7 @@ def parse_exec_jsonl(records):
                     content=text,
                     tool_calls_in_turn=tc_ids,
                     thinking=thinking,
+                    content_type=content_type,
                 ))
                 turn_index += 1
                 current_thinking = []
