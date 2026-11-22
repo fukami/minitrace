@@ -6,6 +6,11 @@ calls, annotations, lineage between traces, redactions, and provenance — so th
 sessions produced by different harnesses can be stored, compared, and analysed
 with one set of tools.
 
+> **Converted traces are not scrubbed.** Conversion replaces a configuration
+> value only when its key name looks like a secret (`token`, `apiKey`,
+> `Authorization`, ...). A secret inside a prompt, a tool call or a tool's output
+> is copied into the trace unchanged. Read a trace before you share it.
+
 This repository holds the **format specifications** and the **adapters** that
 convert native harness output into the format. If you want to *build or extend*
 minitrace (write an adapter, propose a spec change), read
