@@ -6,6 +6,11 @@ calls, annotations, lineage between traces, redactions, and provenance — so th
 sessions produced by different harnesses can be stored, compared, and analysed
 with one set of tools.
 
+Converting sessions from different harnesses into one shape lets you compare
+how they handle the same task, query a folder of traces as plain JSON (with jq
+or DuckDB, for example), and hand a session to someone else in a form their
+tools already read.
+
 > **Converted traces are not scrubbed.** Conversion replaces a configuration
 > value only when its key name looks like a secret (`token`, `apiKey`,
 > `Authorization`, ...). A secret inside a prompt, a tool call or a tool's output
@@ -40,7 +45,9 @@ tool.
 - **Convert a session.** An adapter under `adapters/<harness>/` maps a specific
   harness version's output to a trace. Each adapter is normally a DSL file (plus
   an optional Python preprocessor for native quirks; the exceptions are noted
-  below).
+  below). `adapters/verify_run.py` runs one adapter over one session and checks the
+  result (`AGENTS.md`, "How to build a new adapter", step 5); it does not yet
+  write the trace to a file, which is planned.
 - **Not every adapter is regression-gated.** The adapters with a `regression/`
   directory are frozen against captured inputs and checked on every sweep. The
   agentdojo, claude-ai, gemini-cli, mcpuniverse, minimcp, inspect-swe and otel-openinference
@@ -50,6 +57,19 @@ tool.
   are not part of this release. Where the validation evidence below cites one of
   them, or an adapter this release does not ship, that result comes from a corpus
   run that is not part of this repository, and the sweep does not re-check it.
+- **Bundle for distribution.** The envelope spec describes how to wrap one or
+  more traces with provenance and integrity material for redistribution.
+- **Bind a run to a scenario.** The scenario spec defines a portable scenario
+  format and a binding record that pins a run to the exact `(model, harness,
+  scenario)` it was produced for — the reproducibility surface for evaluation
+  and comparison.
+
+The empirical grounding of the specifications — which elements have been
+exercised by which adapters, with what evidence — is recorded in
+[`docs/minitrace-v0.3.0-validation-evidence.md`](docs/minitrace-v0.3.0-validation-evidence.md).
+
+## Adapter behaviour notes
+
 - **Configuration is redacted by key name.** vibe's configuration snapshot, droid's
   settings sidecar and claude-code's environment snapshots are carried into the trace
   with every value under a key whose last word (ignoring a trailing `value`, `header` and
@@ -70,16 +90,6 @@ tool.
   successful, because the spec (v0.2.0, unchanged in v0.3.0) expects a boolean. A call
   with no result is recorded as not successful; `framework_metadata.vibe_has_result:
   false` tells it apart from a recorded failure.
-- **Bundle for distribution.** The envelope spec describes how to wrap one or
-  more traces with provenance and integrity material for redistribution.
-- **Bind a run to a scenario.** The scenario spec defines a portable scenario
-  format and a binding record that pins a run to the exact `(model, harness,
-  scenario)` it was produced for — the reproducibility surface for evaluation
-  and comparison.
-
-The empirical grounding of the specifications — which elements have been
-exercised by which adapters, with what evidence — is recorded in
-[`docs/minitrace-v0.3.0-validation-evidence.md`](docs/minitrace-v0.3.0-validation-evidence.md).
 
 ## Running the checks
 

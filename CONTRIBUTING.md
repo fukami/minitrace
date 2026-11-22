@@ -47,4 +47,4 @@ minitrace was developed as part of research into human-AI coding interaction pat
 
 **Tools.** [DuckDB](https://duckdb.org/) for making JSON queryable with SQL. [Ollama](https://ollama.com/) for enabling same-model cross-framework comparison.
 
-**[Anthropic](https://www.anthropic.com/).** minitrace was developed inside miniraptor, an adversarial review framework running on Claude Code. The spec, adapters, failure taxonomy, and analysis tooling were written in human-AI collaboration sessions that are themselves minitrace-capturable.
+**[Anthropic](https://www.anthropic.com/).** minitrace was developed inside miniraptor, an adversarial review framework running on Claude Code. The spec, adapters and failure taxonomy were written in human-AI collaboration sessions that are themselves minitrace-capturable.
