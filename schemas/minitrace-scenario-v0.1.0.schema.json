@@ -1,0 +1,247 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minitrace.spec/scenario/v0.1.0/scenario.schema.json",
+  "title": "minitrace-scenario v0.1.0 schema",
+  "description": "Normative JSON Schema for the minitrace-scenario definition (minitrace-scenario-spec v0.1.0 §2–§9) and the binding record (§11.1). The root validates a *.scenario.yaml document parsed to its JSON data model. The binding record (run-binding.json) validates against #/$defs/BindingRecord. Structural rules enforced per §15: required-field presence; the interaction.mode discriminator and per-mode constraints (§5.4); the prompt/prompt_path XOR; the guard predicate vocabulary (§5.3); the ground_truth typed union with per-type required fields; the closed complexity and comparison enumerations; the closed top level (§2.1); and the at-least-one ground_truth rule (§7). Cross-item rules stated in the spec but not expressible structurally (turn-id uniqueness; else-predecessor-must-be-guarded §5.3) are left to a conformant loader.",
+  "type": "object",
+  "required": ["schema_version", "id", "version", "metadata", "interaction", "success_criteria"],
+  "properties": {
+    "schema_version": {"type": "string", "pattern": "^0\\.1\\.(0|[1-9][0-9]*)$"},
+    "id": {"type": "string", "minLength": 1},
+    "version": {"type": "string", "minLength": 1},
+    "metadata": {"$ref": "#/$defs/Metadata"},
+    "interaction": {"$ref": "#/$defs/Interaction"},
+    "workspace": {"type": "string", "minLength": 1},
+    "ground_truth": {"$ref": "#/$defs/GroundTruth"},
+    "success_criteria": {"type": "array", "items": {"type": "string"}},
+    "behavioural_notes": {"type": "string"},
+    "extensions": {"$ref": "#/$defs/Extensions"}
+  },
+  "additionalProperties": false,
+
+  "allOf": [
+    {
+      "description": "§7 at-least-one rule: ground_truth at scenario level, OR on at least one turn (multi-turn only). A single-turn scenario has no turns, so this forces scenario-level ground_truth.",
+      "anyOf": [
+        {"required": ["ground_truth"]},
+        {
+          "required": ["interaction"],
+          "properties": {
+            "interaction": {
+              "required": ["turns"],
+              "properties": {
+                "turns": {"type": "array", "contains": {"required": ["ground_truth"]}}
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "description": "§6: workspace is REQUIRED when scenario-level ground_truth.type is file-content or file-diff. (Turn-level filesystem ground truth carries the same obligation; that cross-level case is left to a conformant loader.)",
+      "if": {
+        "required": ["ground_truth"],
+        "properties": {"ground_truth": {"properties": {"type": {"enum": ["file-content", "file-diff"]}}, "required": ["type"]}}
+      },
+      "then": {"required": ["workspace"]}
+    }
+  ],
+
+  "$defs": {
+    "Sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "Extensions": {
+      "description": "Vendor-scoped (ext:<vendor>:<name>) or experimental (x-<name>) keys (§2.2).",
+      "type": "object",
+      "propertyNames": {"pattern": "^(x-.+|ext:[^:]+:.+)$"}
+    },
+
+    "Metadata": {
+      "type": "object",
+      "required": ["title", "category", "description", "complexity"],
+      "properties": {
+        "title": {"type": "string", "minLength": 1},
+        "category": {"type": "string", "minLength": 1},
+        "description": {"type": "string", "minLength": 1},
+        "complexity": {"type": "string", "enum": ["low", "medium", "high", "ambiguous"]},
+        "expected_tools": {"type": "array", "items": {"type": "string"}},
+        "expected_tool_count_range": {
+          "type": "array",
+          "items": {"type": "integer", "minimum": 0},
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "Interaction": {
+      "type": "object",
+      "required": ["mode"],
+      "properties": {
+        "mode": {"type": "string", "enum": ["single-turn", "multi-turn"]}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"mode": {"const": "single-turn"}}, "required": ["mode"]},
+          "then": {
+            "not": {"required": ["turns"]},
+            "properties": {
+              "prompt": {"type": "string", "minLength": 1},
+              "prompt_path": {"type": "string", "minLength": 1}
+            },
+            "oneOf": [
+              {"required": ["prompt"]},
+              {"required": ["prompt_path"]}
+            ]
+          }
+        },
+        {
+          "if": {"properties": {"mode": {"const": "multi-turn"}}, "required": ["mode"]},
+          "then": {
+            "not": {"anyOf": [{"required": ["prompt"]}, {"required": ["prompt_path"]}]},
+            "required": ["turns"],
+            "properties": {
+              "turns": {
+                "type": "array",
+                "minItems": 1,
+                "prefixItems": [
+                  {
+                    "description": "§5.3: the first turn is a Turn AND MUST NOT carry a `when` guard. (prefixItems suppresses `items` at index 0, so the Turn ref is repeated here.)",
+                    "allOf": [
+                      {"$ref": "#/$defs/Turn"},
+                      {"not": {"required": ["when"]}}
+                    ]
+                  }
+                ],
+                "items": {"$ref": "#/$defs/Turn"}
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": true
+    },
+
+    "Turn": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "prompt": {"type": "string", "minLength": 1},
+        "prompt_path": {"type": "string", "minLength": 1},
+        "when": {"$ref": "#/$defs/Guard"},
+        "ground_truth": {"$ref": "#/$defs/GroundTruth"}
+      },
+      "oneOf": [
+        {"required": ["prompt"]},
+        {"required": ["prompt_path"]}
+      ],
+      "additionalProperties": true
+    },
+
+    "Guard": {
+      "description": "§5.3 guard: exactly one predicate key from the closed v0.1.0 vocabulary.",
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 1,
+      "properties": {
+        "prev_response_matches": {"type": "string", "minLength": 1},
+        "prev_response_not_matches": {"type": "string", "minLength": 1},
+        "else": {"const": true}
+      },
+      "additionalProperties": false
+    },
+
+    "GroundTruth": {
+      "description": "§7 typed union discriminated by `type`. Same shape at scenario level and turn level.",
+      "type": "object",
+      "required": ["type"],
+      "oneOf": [
+        {
+          "description": "§7.1 file-content",
+          "properties": {
+            "type": {"const": "file-content"},
+            "path": {"type": "string", "minLength": 1},
+            "expected": {"type": "string"},
+            "expected_file": {"type": "string", "minLength": 1},
+            "comparison": {"type": "string", "enum": ["exact", "exact-trim"]}
+          },
+          "required": ["type", "path", "comparison"],
+          "oneOf": [
+            {"required": ["expected"]},
+            {"required": ["expected_file"]}
+          ],
+          "additionalProperties": true
+        },
+        {
+          "description": "§7.2 file-diff",
+          "properties": {
+            "type": {"const": "file-diff"},
+            "path": {"type": "string", "minLength": 1},
+            "expected_file": {"type": "string", "minLength": 1},
+            "comparison": {"const": "exact"}
+          },
+          "required": ["type", "path", "expected_file", "comparison"],
+          "additionalProperties": true
+        },
+        {
+          "description": "§7.3 behavioural",
+          "properties": {
+            "type": {"const": "behavioural"},
+            "comparison": {"const": "classification"},
+            "classification_criteria": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {"type": "string"}
+            }
+          },
+          "required": ["type", "comparison", "classification_criteria"],
+          "additionalProperties": true
+        }
+      ]
+    },
+
+    "BindingRecord": {
+      "description": "§11.1 binding record (conventionally run-binding.json). Sealed into the envelope as a checksummed sidecar under manifest bindings[] kind 'scenario-binding' (envelope §4.11).",
+      "type": "object",
+      "required": ["binding_version", "scenario", "model", "harness", "run_spec_hash"],
+      "properties": {
+        "binding_version": {"const": "0.1.0"},
+        "scenario": {
+          "type": "object",
+          "required": ["id", "version", "schema_version", "content_hash"],
+          "properties": {
+            "id": {"type": "string", "minLength": 1},
+            "version": {"type": "string", "minLength": 1},
+            "schema_version": {"type": "string", "minLength": 1},
+            "content_hash": {"$ref": "#/$defs/Sha256"}
+          },
+          "additionalProperties": true
+        },
+        "model": {
+          "type": "object",
+          "required": ["id", "digest"],
+          "properties": {
+            "id": {"type": "string", "minLength": 1},
+            "digest": {"oneOf": [{"$ref": "#/$defs/Sha256"}, {"type": "null"}]}
+          },
+          "additionalProperties": true
+        },
+        "harness": {
+          "type": "object",
+          "required": ["name", "version"],
+          "properties": {
+            "name": {"type": "string", "minLength": 1},
+            "version": {"type": "string", "minLength": 1}
+          },
+          "additionalProperties": true
+        },
+        "run_spec_hash": {"$ref": "#/$defs/Sha256"}
+      },
+      "additionalProperties": true
+    }
+  }
+}

@@ -1,0 +1,230 @@
+{
+  "record_types": {
+    "session": 1,
+    "message": 5,
+    "part": 18
+  },
+  "field_count": 23,
+  "fields": {
+    "data": {
+      "types": [
+        "str"
+      ],
+      "count": 23,
+      "sample_values": []
+    },
+    "directory": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "/workspace"
+      ]
+    },
+    "id": {
+      "types": [
+        "str"
+      ],
+      "count": 24,
+      "sample_values": [
+        "msg_cf4ca0146001mxIgbApbsprOCC",
+        "msg_cf4ca014b00189MpAOQ81Ey9JL",
+        "msg_cf4ca085f001rkvsMNCyz0dfK0",
+        "msg_cf4ca0f0c001fYwzf6ghdyzeOv",
+        "msg_cf4ca12bc0012nn6R7p2ddYbqw",
+        "prt_cf4ca0146002ZU5e51rKFivxNA",
+        "prt_cf4ca03c8001dMYSu92uR3CAe8",
+        "prt_cf4ca03c8002CAc2zPs0YM4zI5",
+        "prt_cf4ca07a4001Y4qUwxcXAzxTNT",
+        "prt_cf4ca084d001t3WxOZI6o11pw2"
+      ]
+    },
+    "message_id": {
+      "types": [
+        "str"
+      ],
+      "count": 18,
+      "sample_values": [
+        "msg_cf4ca0146001mxIgbApbsprOCC",
+        "msg_cf4ca014b00189MpAOQ81Ey9JL",
+        "msg_cf4ca085f001rkvsMNCyz0dfK0",
+        "msg_cf4ca0f0c001fYwzf6ghdyzeOv",
+        "msg_cf4ca12bc0012nn6R7p2ddYbqw"
+      ]
+    },
+    "parent_id": {
+      "types": [
+        "null"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "permission": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "project_id": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "global"
+      ]
+    },
+    "revert": {
+      "types": [
+        "null"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "session_id": {
+      "types": [
+        "str"
+      ],
+      "count": 23,
+      "sample_values": [
+        "ses_30b35fed1ffec4m6jQaLYBxNm4"
+      ]
+    },
+    "share_url": {
+      "types": [
+        "null"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "slug": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "crisp-squid"
+      ]
+    },
+    "summary_additions": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "1"
+      ]
+    },
+    "summary_deletions": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "0"
+      ]
+    },
+    "summary_diffs": {
+      "types": [
+        "null"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "summary_files": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "1"
+      ]
+    },
+    "time_archived": {
+      "types": [
+        "null"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "time_compacting": {
+      "types": [
+        "null"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "time_created": {
+      "types": [
+        "int"
+      ],
+      "count": 24,
+      "sample_values": [
+        "1773633405230",
+        "1773633405254",
+        "1773633405255",
+        "1773633405259",
+        "1773633405896",
+        "1773633405897",
+        "1773633406885",
+        "1773633407058",
+        "1773633407072",
+        "1773633407549"
+      ]
+    },
+    "time_updated": {
+      "types": [
+        "int"
+      ],
+      "count": 24,
+      "sample_values": [
+        "1773633405256",
+        "1773633405896",
+        "1773633406901",
+        "1773633407049",
+        "1773633407058",
+        "1773633407070",
+        "1773633407549",
+        "1773633408547",
+        "1773633408751",
+        "1773633408762"
+      ]
+    },
+    "title": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "type": {
+      "types": [
+        "str"
+      ],
+      "count": 24,
+      "sample_values": [
+        "message",
+        "part",
+        "session"
+      ]
+    },
+    "version": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "1.2.20"
+      ]
+    },
+    "workspace_id": {
+      "types": [
+        "null"
+      ],
+      "count": 1,
+      "sample_values": []
+    }
+  }
+}

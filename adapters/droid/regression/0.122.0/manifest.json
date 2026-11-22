@@ -1,0 +1,28 @@
+{
+  "freeze_semantics": "Content-hash freeze of the droid adapter's output over the conformance scenario at harness 0.122.0 (droid carries only a storage-FORMAT int in-band on session_start.version = 2; the harness RELEASE version 0.122.0 is capture provenance, recorded neither in the .jsonl nor the .settings.json sidecar). droid uses the preprocess path: preprocess_droid.py stitches the paired <name>.settings.json sidecar into a synthetic settings event and emits one container, which the DSL turns into one trace. verify.py re-runs preprocess+DSL on each input (cwd = this dir, input paths relative) and asserts trace_count, per-trace content_hash, and unmapped_path_count. droid traces carry no provenance.source_path, so the content_hash is checkout-independent (the input path does not enter the hash, unlike the container/SQLite opencode adapter). annotated_cells_fired is the structural fired-cell set (drift self-test asserts it equals the droid CELL_SIGNALS extractor exactly). First droid rung and the older end of droid's first release-delta baseline; the candidate is a fresh 0.178.0 capture. RE-FROZEN 2026-07-25: metrics.total_{input,output}_tokens were never mapped, leaving cell 26 dark. The drift ledger blamed absent data; this rung's own sidecar reports tokenUsage 51796/178, so the data was present from the first freeze. Now mapped from the sidecar's session-scoped tokenUsage (NOT inclusiveTokenUsage, which this rung does not carry anyway \u2014 see derive_token_totals in preprocess_droid.py); cell 26 fires and annotated_cells_fired gains 26. Adapter-semantics correction, not harness drift. THIRD RE-FREEZE CAUSE, recorded 2026-09-10: the telemetry-disclosure annotation's content.text was rewritten to drop an internal workstream reference. That string is emitted trace content, so it enters the JCS body and moved content_hash on every scenario of this rung. Recorded here because a later reader diffing hashes could not otherwise attribute the movement. RE-FREEZE CAUSE, recorded 2026-09-25: the turn-scoped provider-metadata annotations emitted scope.target_id as an integer (the turn index); the base schema requires a string, and a turn's identifier is its index. Now emitted as the index string (\"${state.last_assistant_turn_index}\"). Old vs new output differs only in those target_id values (int to equal string) and content_hash.",
+  "harness_version": "0.122.0",
+  "format_version": 2,
+  "capture_provenance": "Live container capture on the arm64 capture workstation (2026-07-23), NOT the archived corpus. The archived droid 0.122.0-vocabulary corpus (scenario-runs/2026-03-15-first-run) was captured with autonomyLevel:off, so its write scenarios failed at the first tool call and are degenerate for a clean parity baseline. Instead this rung was captured with the version-pinned frameworks/droid/ image (miniobserve/droid-capture:0.122.0, droid binary from downloads.factory.ai pinned via DROID_VERSION build-arg), routed to the arm64 capture workstation's ollama (qwen2.5:7b, generic-chat-completion custom model, --auto high so the write is not blocked). Scenario s1-config: 'Read the version from config.toml and write it to VERSION.txt, then verify' \u2014 the same read-config/write-version shape as opencode's and pi's s1-config, so the input basename is s1-config.jsonl for cross-adapter parity. The paired sidecar is s1-config.settings.json (preprocessor resolves it by suffix swap). Host droid (brew 0.122.0) untouched.",
+  "adapter_pin": "droid/format-v2 (droid.dsl.yaml, harness 0.122.0+ vocabulary)",
+  "converter_version": "minitrace-droid-dsl-0.1.0",
+  "frozen_at": "2026-07-23",
+  "scenarios": {
+    "s1-config-version": {
+      "input": "inputs/s1-config.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:5e7ef32bfc7d21c21a8c83bdc39cc0c8a0e965830614534d55a7dec99d5986e5"
+      ],
+      "unmapped_path_count": 3,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        7,
+        26
+      ]
+    }
+  }
+}

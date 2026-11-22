@@ -1,0 +1,396 @@
+# minitrace adapter DSL — goose (Block, Apache-2.0)
+#
+# Reads a JSON array of pre-processed containers produced by
+# preprocess_goose.py — one container per goose session row in the source
+# SQLite DB. Each container becomes one minitrace agent-session trace.
+# Multi-trace adapter: subagent parent and child sessions emit as separate
+# traces with `spawns` / `spawned-by` lineage edges between them.
+#
+# v0.1 scope:
+#   - One trace per goose session.
+#   - Per-message turn emission with event_kind dispatch.
+#   - Cross-message tool-call / tool-result matching (claude-code-style;
+#     toolRequest in assistant message, toolResponse in subsequent user
+#     message, joined by call id).
+#   - Reasoning capture: v7 `reasoning` blocks and v11 `thinking` blocks
+#     (with optional cryptographic signature) both coalesced into
+#     Turn.thinking by the preprocessor.
+#   - Tool-provider attribution: every tool_call carries goose_extension
+#     in framework_metadata (Tier-2 first-deployment).
+#   - Cross-session lineage: parent emits `spawns`, child emits
+#     `spawned-by`, when both are in the same input batch.
+#   - Per-session extension catalogue annotation (Tier-3 first-deployment).
+#   - Visibility flags from message metadata_json forwarded as annotation
+#     on turns where they're non-default.
+#
+# Deferred to later iterations (per scoping note out-of-scope table):
+#   - recipe_json / schedule_id workflow surface.
+#   - toolshim attribution (always-false in corpus).
+#   - MCP annotations.priority on inner toolResponse content.
+#   - Auto-detection of goose CLI version per session (anchor on
+#     schema_version-derived label).
+#
+# Pinned to goose schema_version 7 + 11 (verified-stable corpus + cohort
+# range, 2026-03 → 2026-05). Schema dispatch happens in the preprocessor;
+# this DSL is schema-agnostic.
+#
+# Conforms to minitrace-spec v0.3.0 + minitrace-adapter-dsl-spec v0.1.0.
+
+adapter:
+  name: goose
+  harness_version: "goose/schema-v7+v11"
+  dsl_version: "0.1.0"
+  source_format: goose-sqlite
+  converter_version: minitrace-goose-dsl-0.1.0
+  produces_schema: "0.3.0"
+
+input:
+  type: json
+  encoding: utf-8
+  container:
+    record_path: messages
+
+state:
+  next_turn_index: 0
+  last_assistant_turn_index: null
+  next_ann_id: 0
+  total_input_tokens: 0
+  total_output_tokens: 0
+  total_tokens: 0
+
+constants:
+  default_capture_mode: scrubbed
+
+# Tool-name → operation_type mapping. Ports v0.2.0 classify_operation table
+# and extends with v11-cohort-surfaced tools (orchestrator, summon, todo,
+# analyze, extensionmanager). Tools are emitted in canonical
+# `<extension>__<tool>` form by the preprocessor; this table matches
+# both bare and namespaced forms via key-presence lookup at runner level
+# (operation_types is a flat dict; the runner uses tool_name verbatim).
+operation_types:
+  # developer extension (built-in)
+  developer__read: READ
+  developer__tree: READ
+  developer__list_directory: READ
+  developer__search_files: READ
+  developer__grep: READ
+  developer__text_editor: MODIFY
+  developer__write: NEW
+  developer__edit: MODIFY
+  developer__shell: EXECUTE
+  # summon extension
+  summon__load: READ
+  # todo extension
+  todo__todo_write: MODIFY
+  todo__todo_read: READ
+  # analyze extension
+  analyze__analyze: READ
+  # extensionmanager extension
+  extensionmanager__read_resource: READ
+  # orchestrator extension (v11; subagent delegation surface)
+  orchestrator__start_agent: DELEGATE
+  orchestrator__send_message: DELEGATE
+  orchestrator__list_agents: READ
+  # apps / skills / tom (v11 platform extensions; not exercised in cohort)
+  default: OTHER
+
+sessions:
+
+  agent:
+    static:
+      schema_version: "0.3.0"
+      trace_type: "agent-session"
+      profile: "goose"
+      # Nothing here checks for personal data, so the flags assume it is present:
+      # unchecked, not clean. contains_pii forces classification >= confidential.
+      classification: "confidential"
+      flags.for_research: false
+      flags.needs_cleaning: true
+      flags.contains_error: false
+      flags.contains_pii: true
+    derived:
+      id: "$container.trace_id"
+      title: "$container.trace_title"
+      timing.started_at: "$container.created_at"
+      timing.ended_at: "$container.updated_at"
+      environment.agent_framework: "goose"
+      environment.agent_version: "$container.detected_goose_version"
+      environment.model: "$container.model_observed"
+      environment.provider: "$container.provider"
+      environment.reasoning_enabled: "$container.reasoning_flag"
+      environment.temperature: "$container.temperature"
+      environment.context_limit: "$container.context_limit"
+      environment.max_tokens: "$container.max_tokens"
+      operational_context.working_directory: "$container.working_dir"
+      operational_context.framework_config.session_type: "$container.session_type"
+      operational_context.framework_config.goose_mode: "$container.goose_mode"
+      operational_context.framework_config.thread_id: "$container.thread_id"
+      operational_context.framework_config.toolshim_enabled: "$container.toolshim_enabled"
+      operational_context.framework_config.extensions_enabled: "$container.extension_catalogue"
+      provenance.source_format: "$container.source_format_versioned"
+      provenance.source_session_id: "$container.session_id"
+      provenance.source_schema_version: "$container.schema_version"
+      coordination.parent_session: "$container.parent_trace_id"
+
+emit:
+
+  # ===== SESSION_INIT — fires once per container =====
+  # Synthetic record injected by preprocessor at messages[0]. Anchor for
+  # session-level annotations and lineage edges.
+
+  # Per-session extension catalogue annotation (Tier-3 first-deployment).
+  # Emitted unconditionally so the asymmetry between parent (rich list)
+  # and child (empty list) sessions surfaces as research signal.
+  - target: agent
+    name: agent_emit_extension_catalogue
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "goose-ann-extcat-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$container.created_at"
+          annotator: "goose-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Per-session extension catalogue from extension_data."
+          claim_type: "observation"
+          extensions_enabled: "$container.extension_catalogue"
+          taxonomy:
+            - "goose/${container.detected_goose_version}/session/extension_catalogue"
+
+  # Lineage: parent → child (`delegates-to`) for every in-batch child.
+  # Uses claude-code's lineage-edge convention; goose's orchestrator
+  # delegation is semantically the same as claude-code's subagent spawn.
+  - target: agent
+    name: agent_emit_delegates_to_lineage
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+    foreach_block: "$container.spawned_trace_ids_in_batch"
+    on_block:
+      - name: delegates_to_one_child
+        when:
+          has_any: true
+        do:
+          - emit_lineage:
+              type: "delegates-to"
+              target_trace_id: "$block"
+              target_content_hash: "${trace:${block}:content_hash}"
+              authored_by: "goose/${container.detected_goose_version}"
+              authored_at: "$container.created_at"
+
+  # Nested JSON (content, metadata, model config, extension data) that strict
+  # parsing refused and replaced by the default; emitted only when there was
+  # any.
+  - target: agent
+    name: agent_emit_nested_json_refused
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+        - { container_field: nested_json_refused, present: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "goose-ann-nestedjson-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$container.created_at"
+          annotator: "goose-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Nested JSON values refused by strict parsing (out-of-range number, NaN, nesting too deep) and replaced by the field's default; nested_json_refused counts them."
+          claim_type: "observation"
+          nested_json_refused: "$container.nested_json_refused"
+          taxonomy:
+            - "goose/${container.detected_goose_version}/session/nested_json_refused"
+
+  # Lineage: child → parent (`delegated-by`) when parent is in batch.
+  - target: agent
+    name: agent_emit_delegated_by_lineage
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+        - { container_field: parent_trace_id, present: true }
+    do:
+      - emit_lineage:
+          type: "delegated-by"
+          target_trace_id: "$container.parent_trace_id"
+          authored_by: "goose/${container.detected_goose_version}"
+          authored_at: "$container.created_at"
+
+  # ===== USER text turn (no tool responses) =====
+  - target: agent
+    name: agent_user_text_turn
+    when:
+      all_of:
+        - { field: event_kind, value: user_text }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "user"
+          source: "human"
+          content_type: "text"
+          content: "$record.content_text"
+          timestamp: "$record.timestamp"
+      - set:
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  # ===== USER tool-response — no turn; foreach attaches results =====
+  # Goose stores tool responses in user-role messages (per MCP convention).
+  # Each toolResponse block matches a prior assistant toolRequest by id.
+  - target: agent
+    name: agent_user_tool_response
+    when:
+      all_of:
+        - { field: event_kind, value: user_tool_response }
+    foreach_block: "$record.tool_responses"
+    on_block:
+      - name: attach_one_result
+        when:
+          all_of:
+            - { block_field: id, present: true }
+        do:
+          - attach_tool_result:
+              target_id: "$block.id"
+              output:
+                success: "$block.success"
+                result: "$block.result_text"
+                content_origin: "tool_output"
+                structured_payload_present: "$block.structured_content_present"
+
+  # Text in the same user message as tool responses. Who wrote it is not
+  # recorded, so source is null (spec v0.2.0 turn.source).
+  - target: agent
+    name: agent_user_tool_response_text
+    when:
+      all_of:
+        - { field: event_kind, value: user_tool_response }
+        - { field: accompanying_text, present: true }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "user"
+          source: null
+          content_type: "text"
+          content: "$record.accompanying_text"
+          timestamp: "$record.timestamp"
+      - set:
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  # ===== ASSISTANT text turn (no tools) =====
+  - target: agent
+    name: agent_assistant_text_turn
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_text }
+    do:
+      - accumulate:
+          state.total_tokens: "$record.tokens"
+          state.total_output_tokens: "$record.tokens"
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "assistant"
+          source: "model"
+          content_type: "text"
+          content: "$record.content_text"
+          thinking: "$record.thinking"
+          thinking_signature: "$record.thinking_signature"
+          timestamp: "$record.timestamp"
+      - set:
+          state.last_assistant_turn_index: "$state.next_turn_index"
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  # ===== ASSISTANT turn with tool calls =====
+  # Cross-message matching: this turn emits tool_calls; the matching
+  # toolResponses arrive in the next user message (claude-code-style).
+  - target: agent
+    name: agent_assistant_with_tools
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_with_tools }
+    do:
+      - accumulate:
+          state.total_tokens: "$record.tokens"
+          state.total_output_tokens: "$record.tokens"
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "assistant"
+          source: "model"
+          content_type: "text"
+          content: "$record.content_text"
+          thinking: "$record.thinking"
+          thinking_signature: "$record.thinking_signature"
+          timestamp: "$record.timestamp"
+      - set:
+          state.last_assistant_turn_index: "$state.next_turn_index"
+          state.next_turn_index: "$state.next_turn_index + 1"
+    foreach_block: "$record.tool_calls"
+    on_block:
+      - name: emit_one_tool_call
+        when:
+          all_of:
+            - { block_field: id, present: true }
+        do:
+          - emit_tool_call:
+              id: "$block.id"
+              tool_name: "$block.canonical_name"
+              tool_provider: "$block.goose_extension"
+              emitting_turn_index: "$state.last_assistant_turn_index"
+              input:
+                arguments: "$block.arguments"
+              invocation_source: "agent_choice"
+              framework_metadata:
+                goose_extension: "$block.goose_extension"
+                goose_raw_tool_name: "$block.raw_name"
+              taxonomy:
+                - "goose/${container.detected_goose_version}/tool/${block.goose_extension}"
+
+  # ===== SYSTEM turn (rare; not observed in corpus or cohort) =====
+  # Emit defensively as system role; surface in coverage if it appears.
+  - target: agent
+    name: agent_system_turn
+    when:
+      all_of:
+        - { field: event_kind, value: system }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "system"
+          source: "framework"
+          content_type: "text"
+          content: "$record.content_text"
+          timestamp: "$record.timestamp"
+      - set:
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+finalize:
+  computed:
+    # Session-scoped token totals off the goose `sessions` row. These are the
+    # fleet-standard metric names — the cell-26 predicate reads
+    # total_input_tokens / total_output_tokens, so routing the only reliable
+    # source to session_* alone left cell 26 dark on EVERY goose scenario even
+    # though the counts were present all along (see the cell-26 note in
+    # regression/drift-ledger.yaml).
+    #
+    # They also replace the previous $state accumulation, which set
+    # total_tokens and total_output_tokens from the SAME per-message
+    # $record.tokens field — conflating two different quantities, and sparse
+    # besides, since only assistant turns carry per-message tokens.
+    metrics.total_tokens: "$container.total_tokens"
+    metrics.total_input_tokens: "$container.input_tokens"
+    metrics.total_output_tokens: "$container.output_tokens"
+    # Retained under their original names so any existing consumer keeps
+    # working; same values, now no longer the only place they appear.
+    metrics.session_input_tokens: "$container.input_tokens"
+    metrics.session_output_tokens: "$container.output_tokens"
+    metrics.session_total_tokens: "$container.total_tokens"

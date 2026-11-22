@@ -1,0 +1,93 @@
+# Drift ledger — codex adapter
+#
+# Machine-readable record of Axis-C drifts the drift watch has surfaced and
+# triaged. A drift whose surface an entry covers downgrades from FATAL to an
+# acknowledged line; a drift no entry covers still gates (exit 1). Format and the
+# verdict/disposition taxonomies: adapters/DRIFT-LEDGER.md.
+#
+# codex carries its harness RELEASE version in-band on session_meta.cli_version
+# (rollout format) — unlike droid's storage-format int. The exec format
+# (codex exec --json) carries no version at all; a fresh exec capture depends on
+# --framework-meta for the version arm. Matching is exact on the record type
+# (the part before "::" in a new_unmapped/dropped_dependency item, or the bare
+# type for new_record_type).
+#
+# Changelog (format-evolution facts across frozen rungs — not ledger entries
+# unless a drift GATES):
+#
+#   0.114.0  (first rung; archived 2026-03-15 discovery rollout)
+#     Baseline. Rich rollout vocabulary: session_meta, turn_context,
+#     response_item{message,reasoning,function_call,function_call_output},
+#     event_msg{task_started,user_message,agent_reasoning,agent_message,
+#     token_count,task_complete}. unmapped surface = 7 advisory paths
+#     (per-turn usage.* deferred to session-level metrics; container
+#     source_format / cache-read / reasoning token totals not emitted).
+#
+#   0.132.0  (first IMAGE rung; live container capture, npm-stable)
+#     Rollout vocabulary as 0.114.0. unmapped surface = 7 advisory paths.
+#     No world_state record. Baseline for the image release-delta.
+#
+#   0.132.0 -> 0.145.0  (image delta; exit 0 WITH CX-0001 ledgered)
+#     One additive native RECORD TYPE, not read-required by the DSL:
+#       + world_state    per-turn workspace-state snapshot, emitted once after
+#                        turn_context. First seen at 0.143.0; present at 0.145.0,
+#                        absent at 0.132.0 and 0.114.0. The preprocessor ignores
+#                        unrecognised rollout record types, so the trace output is
+#                        unaffected (both rungs verify exit 0, unmapped unchanged
+#                        at 7). CORRECTION 2026-07-25: new_record_type is a FATAL
+#                        signal class — the first real drift_watch run gated on it
+#                        (the earlier "would be a non-gating WARNING" note here was
+#                        written before the watcher existed and was wrong). Now
+#                        triaged as entry CX-0001 (deferred_fix / fix_deferred).
+#     (0.114.0 stays an archived-only rung: no npm-stable 0.114.0, alphas only.)
+#
+#   ADAPTER 0.1.1 re-freeze (2026-07-25, same rung inputs, new output hashes):
+#     0.132.0+ --oss rollouts record function_call.name as an EMPTY string
+#     (March-era rollouts carried "exec_command"), so under adapter 0.1.0 every
+#     fresh-capture tool call classified operation_type=OTHER with null
+#     content_origin. 0.1.1 dispatches on argument shape (a cmd string = the
+#     shell) when the name is empty; codex_function keeps the raw empty name.
+#     Both image rungs re-frozen (content_hashes changed; 0.114.0 byte-identical,
+#     named functions unaffected). annotated_cells_fired added to all three
+#     manifests (drift_watch.py now exists — harness #6 watcher, 2026-07-25).
+
+# Version-coverage declaration (adapters/DRIFT-LEDGER.md "Coverage declaration").
+# supported = the tested rung versions; versions between rungs are
+# expected-compatible unless a ledger entry / changelog note says otherwise
+# (NB world_state appears at 0.143.0, tolerated). tested must equal the
+# regression/<version>/ rung dirs (fleet sweep asserts this). 0.114.0 is an
+# archived-only anchor (npm has only 0.114.0-alpha.*, no capture image);
+# 0.132.0/0.145.0 reproduce via capture/codex:<v>. The exec format carries no
+# in-band version at all — exec-source coverage rests on --framework-meta.
+coverage:
+  tested: ["0.114.0", "0.132.0", "0.145.0"]
+  policy: point-tested
+
+entries:
+  - id: CX-0001
+    introduced_at: { from: "0.132.0", to: "0.145.0" }
+    # codex's own release notes place the record at 0.143.0; the confirmed
+    # edge is the delta actually run (0.132.0 -> 0.145.0), per procedure.
+    signal: new_record_type
+    matches:
+      record_types: [world_state]
+    verdict: deferred_fix
+    disposition: fix_deferred
+    rationale: >
+      world_state (rollout record, new at ~0.143.0) carries payload.{full,state}
+      where state is an environment/config snapshot: a permissions hash,
+      realtime.active flag, plugins_instructions, skills.includeInstructions.
+      Payload-inspected on the frozen 0.145.0 s1-count capture. No new
+      trace-content kind — this is producer-config-snapshot material the DSL
+      already models via its turn_context-derived annotation. The preprocessor
+      currently ignores unrecognised rollout record types, so traces stay
+      schema-valid and hashes stable; the record's content is simply not
+      captured yet.
+    confirmed_by: payload-inspection
+    date: "2026-07-25"
+    followup: >
+      Fixing pass: fold world_state.payload.state into the
+      producer_config_snapshot annotation (or a second config-snapshot
+      annotation at the world_state timestamp), then re-freeze the 0.145.0
+      rung. Until then this entry keeps the delta green while the backlog
+      line stays visible.

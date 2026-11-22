@@ -1,0 +1,66 @@
+{
+  "freeze_semantics": "Content-hash freeze of the droid adapter's output over the conformance scenario at harness 0.178.0 (droid carries only a storage-FORMAT int in-band on session_start.version = 2, unchanged from 0.122.0; the harness RELEASE version 0.178.0 is capture provenance, recorded neither in the .jsonl nor the .settings.json sidecar). droid uses the preprocess path: preprocess_droid.py stitches the paired <name>.settings.json sidecar into a synthetic settings event and emits one container, which the DSL turns into one trace. verify.py re-runs preprocess+DSL on each input (cwd = this dir, input paths relative) and asserts trace_count, per-trace content_hash, and unmapped_path_count. droid traces carry no provenance.source_path, so the content_hash is checkout-independent. annotated_cells_fired is the structural fired-cell set (drift self-test asserts it equals the droid CELL_SIGNALS extractor exactly). Newer end of droid's first release-delta (0.122.0 -> 0.178.0); the delta is CLEAN (exit 0): format version held at 2, no new record type / unmapped / dropped dependency / dark cell. It surfaces 16 non-gating raw-surface WARNINGS (additive native fields; see drift-ledger.yaml changelog). RE-FROZEN 2026-07-25, two independent adapter-semantics corrections in one pass (both correcting a value that read as informative but was not; neither is harness drift). (1) s2-todo-grep only: tool_call output.success was derived from result presence ($block.has_result), so the scenario's genuine errored Execute emitted success:true alongside error_present:true. success is now outcome-derived (preprocess_droid.py computes it as 'a result arrived AND is_error is falsy'; the DSL reads $block.success, matching the fleet idiom), flipping that one call to success:false. (2) ALL scenarios at BOTH rungs: metrics.total_{input,output}_tokens were never mapped, leaving cell 26 dark. The drift ledger blamed absent data; the data was present in every sidecar all along, including 0.122.0's (51796/178). Now mapped from the sidecar's session-scoped tokenUsage \u2014 NOT inclusiveTokenUsage, see derive_token_totals in preprocess_droid.py \u2014 so cell 26 fires on all four frozen scenarios and annotated_cells_fired gains 26 throughout. Absent tokenUsage yields null, not 0 (kill-tested). THIRD RE-FREEZE CAUSE, recorded 2026-09-10: the telemetry-disclosure annotation's content.text was rewritten to drop an internal workstream reference. That string is emitted trace content, so it enters the JCS body and moved content_hash on every scenario of this rung. Recorded here because a later reader diffing hashes could not otherwise attribute the movement. RE-FREEZE CAUSE, recorded 2026-09-25: the turn-scoped provider-metadata annotations emitted scope.target_id as an integer (the turn index); the base schema requires a string, and a turn's identifier is its index. Now emitted as the index string (\"${state.last_assistant_turn_index}\"). Old vs new output differs only in those target_id values (int to equal string) and content_hash.",
+  "harness_version": "0.178.0",
+  "format_version": 2,
+  "capture_provenance": "Live container capture on the arm64 capture workstation (2026-07-23) with the version-pinned frameworks/droid/ image (miniobserve/droid-capture:0.178.0, droid binary from downloads.factory.ai pinned via DROID_VERSION=0.178.0 build-arg \u2014 the current shipping droid release), routed to the arm64 capture workstation's ollama (qwen2.5:7b, generic-chat-completion custom model, --auto high). Scenario s1-config: 'Read the version from config.toml and write it to VERSION.txt, then verify' \u2014 same read-config/write-version shape and basename (s1-config.jsonl) as the 0.122.0 baseline rung, so the release version is the only variable across the delta. The paired sidecar is s1-config.settings.json (resolved by suffix swap). Host droid (brew 0.122.0) untouched. NB session_start.hostId is a container-ephemeral droid-generated UUID (not host-identifying); cwd is the container /workspace.",
+  "capture_provenance_round2": "Round-2 coverage captures on the arm64 capture workstation (2026-07-25), same image (miniobserve/droid-capture:0.178.0) and route, model qwen3:8b (NOT the s1 rung's qwen2.5:7b: across three attempts qwen2.5:7b never produced the target ops \u2014 it answered the s2 grep task with the native Grep tool (no Execute) and failed every s3 Edit call on old_str anchoring, converging to a Create overwrite; qwen3:8b produced clean single-pass runs of both. Model is capture provenance, not freeze surface). Scenario tasks are the 2026-03-15 first-run S2/S3 arms (droid's archived S2/S3 sessions are the degenerate autonomyLevel:off corpus, hence live re-capture): s2-todo-grep = find TODOs, write FILE:LINE list to /tmp/claude/todos.txt \u2014 the prompt deviates from the archived arm by TWO added clauses, both EXECUTE-steering: 'by running a shell command (grep -rn or rg -n) in the terminal' and 'and show the command you ran and its output'. Archived arm: 'Find all TODO comments in this project. Write a list to /tmp/claude/todos.txt with one TODO per line in this exact format: FILE:LINE: TODO text. Sort by file path, then line number.' Frozen prompt: the same with those two clauses inserted and 'Write' becoming 'Then write'. The deviation was required to steer off the native Grep tool; the point of the scenario is EXECUTE coverage. (Corrected 2026-07-25: the original round-2 note here, in the capture set's provenance.txt, and in commit 5a54f50's message disclosed only the first clause.) Trace includes a genuine errored Execute (redirect into missing /tmp/claude, exit 1) followed by mkdir -p recovery \u2014 kept deliberately (error-result pairing coverage). s3-readme-edit = append '## Testing' section to README.md, prompt verbatim from the archived arm; single successful Edit. DROID_HOME on its own mount (not under /workspace) so the s2 search cannot sweep the factory state tree. Off-target/failed attempt state retained under captures/droid-0.178.0-round2/ (dhome-attempt*), not frozen.",
+  "adapter_pin": "droid/format-v2 (droid.dsl.yaml, harness 0.122.0+ vocabulary)",
+  "converter_version": "minitrace-droid-dsl-0.1.0",
+  "frozen_at": "2026-07-25",
+  "refrozen": "2026-10-04 trace spec rc3 §4.5 segment_type enumeration (release-set amendment 2026-10-04): droid.dsl.yaml emits x-agent_plan_snapshot instead of the bare agent_plan_snapshot, which §4.5 and DSL spec rc3 §14.3 forbid and the base schema now rejects; an old-vs-new runner diff over all four droid scenarios (0.178.0 s1-s3, 0.122.0 s1) showed only s3's segment_type and content_hash changed.",
+  "frozen_at_note": "Scalar = most recent freeze across this rung's scenarios, which were not all frozen on one date: s1-config-version 2026-07-23; s2-todo-grep and s3-readme-edit captured and frozen 2026-07-25; s2-todo-grep re-frozen 2026-07-25 for the output.success semantics correction (see freeze_semantics). Whether frozen_at should become per-scenario across the fleet is an open structural question, not settled here.",
+  "scenarios": {
+    "s1-config-version": {
+      "input": "inputs/s1-config.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:b661a50b714ede5ccbe82daf292de43ceb04836683c098caee8625d3add7b8ac"
+      ],
+      "unmapped_path_count": 3,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        7,
+        26
+      ]
+    },
+    "s2-todo-grep": {
+      "input": "inputs/s2-todo-grep.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:03c313521b735df670a2f9c2ae37697a9d646db00ed1e73569738e09ac3ee81f"
+      ],
+      "unmapped_path_count": 3,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        8,
+        26
+      ]
+    },
+    "s3-readme-edit": {
+      "input": "inputs/s3-readme-edit.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:c57535d27e1617448c7d5cd02873848973bcf8bf6449ed19f7a0c57306b0be7d"
+      ],
+      "unmapped_path_count": 3,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        10,
+        26
+      ]
+    }
+  }
+}

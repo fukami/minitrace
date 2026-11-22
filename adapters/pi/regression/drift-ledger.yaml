@@ -1,0 +1,56 @@
+# Drift ledger — pi adapter
+#
+# Machine-readable record of Axis-C drifts the drift watch has surfaced and
+# triaged. A drift whose surface an entry covers downgrades from FATAL to an
+# acknowledged line; a drift no entry covers still gates (exit 1). Format and the
+# verdict/disposition taxonomies: adapters/DRIFT-LEDGER.md.
+#
+# Matching is exact on the record type (the part before "::" in a
+# new_unmapped/dropped_dependency item, or the bare type for new_record_type).
+# pi's storage-format version is an in-band int on the session record; the
+# version_arm surfaces a format bump as a WARNING (non-gating) separately from
+# these entries.
+#
+# Changelog (format-evolution facts, for the reverse-engineered history — not
+# ledger entries because none GATE; the ledger's four signal classes are all
+# fatal-downgrade classes and these are non-gating raw-surface warnings):
+#
+#   RUNG LADDER (2026-07-23): 0.58.1 (archived-corpus anchor, host-captured) +
+#   0.74.0 + 0.80.3 (both version-pinned CONTAINER captures via frameworks/pi/).
+#   pi 0.58.1 is unpublished on npm so it cannot be image-captured; the canonical
+#   IMAGE delta is 0.74.0 -> 0.80.3. The historical host 0.58.1 -> 0.80.3 note
+#   below is retained for provenance but is superseded by the image delta.
+#
+#   0.74.0 -> 0.80.3  (IMAGE delta, format version unchanged, still v3; exit 0)
+#     edit-tool argument-shape evolution (0.74.0 edit = single oldText/newText;
+#     0.80.3 edit = an edits[] array + a result-diff detail block):
+#     + message.content[].arguments.edits           multi-edit array
+#     + message.content[].arguments.edits[].oldText
+#     + message.content[].arguments.edits[].newText
+#     + message.details.diff                         edit-result diff
+#     + message.details.firstChangedLine
+#     + message.details.patch
+#     + message.usage.reasoning                      reasoning-token subcount
+#     All additive, none read by 0.58.1.dsl.yaml (no new_unmapped / dropped_dep /
+#     dark cell). A future fixing pass could map the edits[] array + usage.reasoning
+#     (deferred, non-gating).
+#
+#   0.58.1 -> 0.80.3  (HISTORICAL host-capture delta, superseded; still v3)
+#     + message.responseId        assistant-message provider response id
+#                                  (openai-responses api). Additive; not read by
+#                                  the DSL. Benign provenance field.
+#     + message.usage.reasoning    reasoning-token subcount (0 when thinking off).
+#   Delta was otherwise clean: no new record type, no new unmapped path, no
+#   dropped dependency, no dark cell.
+
+# Version-coverage declaration (adapters/DRIFT-LEDGER.md "Coverage declaration").
+# The support claim: supported = the tested rung versions below; versions between
+# rungs are expected-compatible unless a ledger entry / changelog note says
+# otherwise. tested must equal the regression/<version>/ rung dirs (fleet sweep
+# asserts this). 0.58.1 is an archived-corpus anchor (unpublished on npm, no
+# capture image); 0.74.0/0.80.3 reproduce via capture/pi:<v>.
+coverage:
+  tested: ["0.58.1", "0.74.0", "0.80.3"]
+  policy: point-tested
+
+entries: []

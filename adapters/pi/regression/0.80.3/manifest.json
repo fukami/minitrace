@@ -1,0 +1,30 @@
+{
+  "freeze_semantics": "Content-hash freeze of the pi adapter's output over the conformance scenario at harness 0.80.3 (in-band storage-FORMAT int unchanged at session.version = 3 across 0.58.1 -> 0.80.3; the harness RELEASE version 0.80.3 is capture provenance, not in-band). pi is preprocessor-less: the DSL runner reads the native JSONL directly. verify.py re-runs the DSL on each input (cwd = this dir), normalizes the volatile provenance.converted_at, and asserts trace_count, the canonical (RFC 8785 JCS) content_hash, and unmapped_path_count. pi traces carry no provenance.source_path, so the freeze is checkout-independent. annotated_cells_fired is the structural fired-cell set (equals the pi CELL_SIGNALS extractor exactly). Newer end of pi's IMAGE release delta 0.74.0 -> 0.80.3 (both version-pinned container captures via frameworks/pi/); the 0.58.1 rung remains as an older archived-corpus anchor (pi 0.58.1 is unpublished on npm, so it cannot be image-captured).",
+  "harness_version": "0.80.3",
+  "format_version": 3,
+  "capture_provenance": "Live version-pinned CONTAINER capture on the arm64 capture workstation, 2026-07-23 (REPLACES the earlier host --session-dir capture, per the image-regime backfill). pi 0.80.3 headless via the frameworks/pi/ image (miniobserve/pi-capture:0.80.3, npm @earendil-works/pi-coding-agent@0.80.3 pinned by PI_VERSION build-arg), routed to the arm64 capture workstation's ollama (qwen2.5:7b) through an in-container socat forwarder (pi has no ollama base-URL override; a models.json custom openai-completions provider named 'ollama' points at localhost:11434 -> host). --thinking off (qwen2.5:7b 400s at pi's default medium). cwd is the container /workspace (no host-path PII, cleaner than the prior host capture). Same read-config/write-version s1-config task (basename s1-config.jsonl). The model emitted read+edit+write (cells add MODIFY 6 vs the archived 0.58.1's read+write [..,5,7,26]); the 0.74.0 image capture fired the SAME cell set, so the image delta's dark-cell signal is stable (behavioural, not format). Host brew pi untouched. Model: ollama/qwen2.5:7b.",
+  "capture_provenance_round2": "Round-2 coverage capture on the arm64 capture workstation (2026-07-25) closing pi's EXECUTE (cell 8) gap. Same PUBLISHED image, unmodified (miniobserve/pi-capture:0.80.3 = capture/pi:0.80.3), same socat/models.json ollama route, --thinking off, and — unlike the droid and opencode round-2 captures — the SAME model as this rung's s1 capture, ollama/qwen2.5:7b. It succeeded on the FIRST attempt: one bash call (rg -n TODO .) then one write. So there is NO model deviation and NO prompt-permission deviation on pi, and the 'qwen2.5:7b cannot drive a shell-tool scenario' finding from the droid and opencode lanes does NOT generalise — it is harness-specific, not a property of the model. pi also has no external-directory permission gate, so the arm's /tmp/claude/todos.txt target needed no grant (contrast opencode, which auto-rejects it headless). ONE deviation from the frameworks/pi/README invocation, and it is environmental only: HOME and PI_SESSION_DIR on a SEPARATE /pihome mount rather than the documented HOME=/workspace + PI_SESSION_DIR=/workspace/.pi-sessions, because under the documented form pi writes its own session store INTO the tree the s2 search walks, so an rg sweep would ingest the trace being captured. Scenario arm = 2026-03-15 first-run S2, live because no pi native session jsonl for S2 exists in the 2026-03 corpus. The prompt carries the same TWO added EXECUTE-steering clauses as the droid and opencode s2 freezes ('by running a shell command (grep -rn or rg -n) in the terminal' and 'and show the command you ran and its output'; 'Write' becomes 'Then write') and is BYTE-IDENTICAL to both, diff-verified, so all three harnesses share one arm. Seed is byte-identical to the droid and opencode s2 seeds (the archived S2 arm workspace minus that arm's .gitignore); the current shell-pipeline/containers/shared/workspace seed was NOT used because its main.py has TODO renamed to IMPROVE, which would make the S2 prompt match nothing. Diagnostics note: this input emits 9 'Unhandled pi record' DSL warnings and reports 4 read-but-never-present message.usage.* paths; both are PRE-EXISTING adapter characteristics, not capture defects — the frozen s1-config.jsonl emits 14 such warnings, and cell 26 fires here (4431 input / 309 output tokens), so the usage data is present via the DSL's alternate path. Since 2026-10-21 the DSL has no catch-all rule, so neither input emits 'Unhandled pi record' warnings; the catch-all had also masked unmapped paths, which the re-frozen unmapped_path_count now counts.",
+  "adapter_pin": "pi/format-v3 (0.58.1.dsl.yaml)",
+  "converter_version": "minitrace-pi-dsl-0.1.0",
+  "frozen_at": "2026-07-23",
+  "scenarios": {
+    "s1-config-version": {
+      "input": "inputs/s1-config.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:469f835f1ebfbd6b713bbebc7146b42905db24cb75599126d56a400096f704ab"
+      ],
+      "unmapped_path_count": 26,
+      "annotated_cells_fired": [1, 2, 3, 4, 5, 6, 7, 26]
+    },
+    "s2-todo-grep": {
+      "input": "inputs/s2-todo-grep.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:d003123fd3c4dcbe93afa0f90dcd09781960a34742e22d0b8407ea3ae4bbfb2e"
+      ],
+      "unmapped_path_count": 22,
+      "annotated_cells_fired": [1, 2, 3, 4, 7, 8, 26]
+    }
+  }
+}

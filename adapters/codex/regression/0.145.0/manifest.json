@@ -1,0 +1,26 @@
+{
+  "freeze_semantics": "Content-hash freeze of the codex adapter's output over the conformance scenario at harness 0.145.0. codex uses the preprocess path: preprocess_codex.py normalises the native rollout session log into one container, which codex.dsl.yaml turns into one trace. verify.py re-runs preprocess+DSL on each input (cwd = this dir, input paths relative) and asserts trace_count, per-trace content_hash, and unmapped_path_count. codex traces carry no provenance.source_path, so the content_hash is checkout-independent. Newer end of codex's image release-delta (candidate against the 0.132.0 baseline). NB the 0.145.0 rollout carries a world_state record type absent at 0.132.0 (a real Axis-C format drift the adapter tolerates \u2014 see drift-ledger.yaml).",
+  "harness_version": "0.145.0",
+  "capture_provenance": "Live container capture on the arm64 capture workstation (2026-07-25) via the version-pinned image miniobserve/codex-capture:0.145.0 (codex binary from npm @openai/codex@0.145.0, linux-arm64), routed to the arm64 capture workstation's ollama (qwen3:8b, --oss --local-provider ollama; socat relays the container's localhost:11434 to host.docker.internal:11434 because codex --oss preflights localhost). qwen3:8b emits real function_call items (qwen2.5* emit tool calls as TEXT). Sandbox bypassed (--dangerously-bypass-approvals-and-sandbox). Scenario s1-count: 'Count the lines in data.txt and write just the number to count.txt' (data.txt has 4 lines). Host brew codex untouched.",
+  "adapter_pin": "codex/multi-version (codex.dsl.yaml, rollout + exec vocabulary)",
+  "converter_version": "minitrace-codex-dsl-0.1.1",
+  "frozen_at": "2026-07-25",
+  "scenarios": {
+    "s1-count": {
+      "input": "inputs/s1-count.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:b96ac0def2993cdcdf89997312652806e08d81660a9374307b3e194964c3170b"
+      ],
+      "unmapped_path_count": 7,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        7,
+        26
+      ]
+    }
+  }
+}

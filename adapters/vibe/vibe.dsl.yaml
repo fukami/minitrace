@@ -1,0 +1,541 @@
+# minitrace adapter DSL — vibe (Mistral AI, Apache-2.0)
+#
+# Reads a JSON array of pre-processed containers produced by
+# preprocess_vibe.py — one container per vibe session directory
+# (versions 2.4.x and 2.9.5 both supported via field-presence in
+# the preprocessor; this DSL is schema-agnostic). Each container
+# becomes one minitrace agent-session trace. Multi-trace adapter:
+# parent and subagent (task tool) sessions emit as separate traces
+# with `delegates-to` / `delegated-by` lineage edges between them.
+#
+# v0.1 scope per the vibe adapter scoping note (2026-05-11):
+#   - One trace per vibe session directory.
+#   - Per-message turn emission with event_kind dispatch.
+#   - Atomic tool emission (assistant tool_calls + matched tool result
+#     unified by the preprocessor; no cross-message matching here).
+#   - Tier-1 first-deployment annotations (4):
+#       producer_config_snapshot, producer_system_prompt,
+#       producer_injected_flag (per turn when injected=true),
+#       tool_approval_outcomes.
+#   - Cross-session lineage: parent emits `delegates-to`, child emits
+#     `delegated-by`, when both in same input batch (D7).
+#   - Full tool-schema capture in environment.tools_enabled (D10).
+#   - agent_profile preserved as session-level metadata (D6).
+#   - producer_loops emitted only when non-empty (D11).
+#
+# Deferred to later iterations:
+#   - reasoning_* family annotations on assistant turns (gated on
+#     thinking-on probe completing; deep-dive §8 open item).
+#   - loops populated semantics (deep-dive §8 open item).
+#   - Non-bash tool result content-shape inspection (D9 deferred).
+#   - skill tool invocation inspection (deep-dive §8 open item).
+#   - Reciprocal lineage edges on parent (cycle 8 process note #7).
+#   - Voxtral transcribe / TTS surface.
+#
+# Conforms to minitrace-spec v0.3.0 + minitrace-adapter-dsl-spec v0.1.0.
+
+adapter:
+  name: vibe
+  harness_version: "vibe/multi-version"
+  dsl_version: "0.1.0"
+  source_format: vibe-session-v1
+  converter_version: minitrace-vibe-dsl-0.1.0
+  produces_schema: "0.3.0"
+
+input:
+  type: json
+  encoding: utf-8
+  container:
+    record_path: messages
+
+state:
+  next_turn_index: 0
+  last_assistant_turn_index: null
+  next_ann_id: 0
+  total_input_tokens: 0
+  total_output_tokens: 0
+  total_tokens: 0
+  total_cost: 0
+
+constants:
+  default_capture_mode: scrubbed
+
+# Tool-name → operation_type mapping. Vibe 2.9.5 surface plus 2.4.x
+# inheritance (edit_file deprecated, list_directory removed in 2.9.5
+# but kept here for 2.4.x compatibility).
+operation_types:
+  bash: EXECUTE
+  read_file: READ
+  grep: READ
+  list_directory: READ
+  web_search: READ
+  web_fetch: READ
+  ask_user_question: READ
+  write_file: NEW
+  search_replace: MODIFY
+  edit_file: MODIFY
+  todo: MODIFY
+  task: DELEGATE
+  exit_plan_mode: OTHER
+  skill: OTHER
+  default: OTHER
+
+sessions:
+
+  agent:
+    static:
+      schema_version: "0.3.0"
+      trace_type: "agent-session"
+      profile: "vibe"
+      # Nothing here checks for personal data, so the flags assume it is present:
+      # unchecked, not clean. contains_pii forces classification >= confidential.
+      classification: "confidential"
+      flags.for_research: false
+      flags.needs_cleaning: true
+      flags.contains_error: false
+      flags.contains_pii: true
+    derived:
+      id: "$container.trace_id"
+      title: "$container.trace_title"
+      timing.started_at: "$container.created_at"
+      timing.ended_at: "$container.updated_at"
+      environment.agent_framework: "vibe"
+      environment.agent_version: "$container.version_label"
+      environment.model: "$container.model_observed"
+      environment.provider: "$container.provider"
+      environment.agent_profile: "$container.agent_profile"
+      environment.tools_enabled: "$container.tools_enabled"
+      operational_context.working_directory: "$container.working_directory"
+      operational_context.framework_config.username: "$container.username"
+      operational_context.framework_config.git_commit: "$container.git_commit"
+      operational_context.framework_config.git_branch: "$container.git_branch"
+      operational_context.framework_config.input_price_per_million: "$container.input_price_per_million"
+      operational_context.framework_config.output_price_per_million: "$container.output_price_per_million"
+      provenance.source_format: "$container.source_format_versioned"
+      provenance.source_session_id: "$container.session_id"
+      provenance.source_schema_version: "$container.version_label"
+      coordination.parent_session: "$container.parent_trace_id"
+
+emit:
+
+  # ===== SESSION_INIT — fires once per container =====
+  # Anchor for session-level annotations and lineage edges.
+
+  # D3 (Tier-1 first-deployment): producer_config_snapshot.
+  # The full vibe config object embedded in meta.json, with values under
+  # secret-named keys replaced (redact.py); vibe_config_redacted counts them.
+  # Available in both 2.4.x and 2.9.5 corpora.
+  - target: agent
+    name: agent_emit_config_snapshot
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+        - { container_field: config_snapshot, present: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "vibe-ann-config-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$container.created_at"
+          annotator: "vibe-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Producer config snapshot (vibe). Includes providers, models with prices, all tool permission gates, all toggles. Frozen at session start. Values under secret-named keys are replaced by [redacted]."
+          claim_type: "observation"
+          vibe_config_snapshot: "$container.config_snapshot"
+          vibe_config_redacted: "$container.config_snapshot_redacted"
+          taxonomy:
+            - "vibe/${container.version_label}/session/producer_config_snapshot"
+
+  # D4 (Tier-1 first-deployment): producer_system_prompt.
+  # The verbatim system prompt sent to the model, captured per session.
+  # Privacy note: may contain user-customized content if config.system_prompt_id
+  # is non-default. Redaction policy deferred to a future cycle.
+  - target: agent
+    name: agent_emit_system_prompt
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+        - { container_field: system_prompt, present: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "vibe-ann-sysprompt-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$container.created_at"
+          annotator: "vibe-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Producer system prompt (vibe). Verbatim system message sent to the model, including available subagents / skills / scratchpad-dir context."
+          claim_type: "observation"
+          vibe_system_prompt: "$container.system_prompt"
+          taxonomy:
+            - "vibe/${container.version_label}/session/producer_system_prompt"
+
+  # D8 (Tier-1 first-deployment): tool_approval_outcomes.
+  # Session-level counters of user-approval gating outcomes. Producer-only
+  # signal: rejected calls do not appear in messages.jsonl.
+  - target: agent
+    name: agent_emit_tool_approval_outcomes
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+        - { container_field: tool_approval_outcomes, present: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "vibe-ann-toolapproval-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$container.created_at"
+          annotator: "vibe-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Tool approval outcomes (vibe). Producer-captured user-approval gating signal at session level."
+          claim_type: "observation"
+          vibe_tool_approval_outcomes: "$container.tool_approval_outcomes"
+          taxonomy:
+            - "vibe/${container.version_label}/session/tool_approval_outcomes"
+
+  # Nested JSON (tool arguments) that strict parsing refused and replaced
+  # by the default; emitted only when there was any.
+  - target: agent
+    name: agent_emit_nested_json_refused
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+        - { container_field: nested_json_refused, present: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "vibe-ann-nestedjson-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$container.created_at"
+          annotator: "vibe-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Nested JSON values refused by strict parsing (out-of-range number, NaN, nesting too deep) and replaced by the field's default; nested_json_refused counts them."
+          claim_type: "observation"
+          nested_json_refused: "$container.nested_json_refused"
+          taxonomy:
+            - "vibe/${container.version_label}/session/nested_json_refused"
+
+  # D11 (Tier-2 first-deployment, deferred semantics): producer_loops.
+  # Emit only when non-empty. Semantics of the loops array are unknown
+  # at adapter v0.1 (never observed populated in probes or corpus).
+  - target: agent
+    name: agent_emit_loops_passthrough
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+        - { container_field: loops_present, value: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "vibe-ann-loops-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$container.created_at"
+          annotator: "vibe-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "vibe 2.9.5+ loops array (raw pass-through; population trigger and semantics unknown at adapter v0.1)."
+          claim_type: "observation"
+          vibe_loops_raw: "$container.loops"
+          taxonomy:
+            - "vibe/${container.version_label}/session/loops_passthrough"
+
+  # Lineage: parent → child (delegates-to) for every in-batch child.
+  - target: agent
+    name: agent_emit_delegates_to_lineage
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+    foreach_block: "$container.spawned_trace_ids_in_batch"
+    on_block:
+      - name: delegates_to_one_child
+        when:
+          has_any: true
+        do:
+          - emit_lineage:
+              type: "delegates-to"
+              target_trace_id: "$block"
+              target_content_hash: "${trace:${block}:content_hash}"
+              authored_by: "vibe/${container.version_label}"
+              authored_at: "$container.created_at"
+
+  # Lineage: child → parent (delegated-by) when parent is in batch.
+  - target: agent
+    name: agent_emit_delegated_by_lineage
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+        - { container_field: parent_trace_id, present: true }
+    do:
+      - emit_lineage:
+          type: "delegated-by"
+          target_trace_id: "$container.parent_trace_id"
+          authored_by: "vibe/${container.version_label}"
+          authored_at: "$container.created_at"
+
+  # ===== SYSTEM_PROMPT_INLINE — message-level system record =====
+  # Some vibe 2.9.5 sessions persist the system message inline in
+  # messages.jsonl in addition to meta.system_prompt. It is carried as an
+  # annotation (not a turn), with whether it equals meta.system_prompt:
+  # either can be missing, and they can differ.
+  - target: agent
+    name: agent_system_prompt_inline
+    when:
+      all_of:
+        - { field: event_kind, value: system_prompt_inline }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "vibe-ann-sysprompt-inline-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$container.created_at"
+          annotator: "vibe-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Inline system message (vibe), as persisted in messages.jsonl."
+          claim_type: "observation"
+          vibe_inline_system_prompt: "$record.content_text"
+          vibe_matches_meta_system_prompt: "$record.matches_meta_system_prompt"
+          taxonomy:
+            - "vibe/${container.version_label}/session/inline_system_message"
+
+  # ===== USER text turn =====
+  - target: agent
+    name: agent_user_text_turn
+    when:
+      all_of:
+        - { field: event_kind, value: user_text }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "user"
+          source: "human"
+          content_type: "text"
+          content: "$record.content_text"
+          timestamp: "$record.timestamp"
+      - set:
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  # D5 (Tier-1 first-deployment): producer_injected_flag.
+  # Per-turn annotation when injected=true on the originating message.
+  # Producer-side prompt-injection awareness at message granularity.
+  # Emitted ONLY when injected=true (no noise on injected=false default).
+  - target: agent
+    name: agent_user_injected_annotation
+    when:
+      all_of:
+        - { field: event_kind, value: user_text }
+        - { field: injected, value: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "vibe-ann-injected-${container.session_id}-${state.next_ann_id}"
+          # vibe writes no per-message times; Annotation.timestamp is required
+          # (spec §3.5.1), so fall back to the recorded session start.
+          timestamp: "$record.timestamp ? $record.timestamp : $container.created_at"
+          annotator: "vibe-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "turn"
+            target_id: "${state.next_turn_index - 1}"
+          content:
+            text: "Message was framework-injected (vibe.injected=true), not user-originated."
+          claim_type: "observation"
+          vibe_injected: true
+          vibe_message_id: "$record.message_id"
+          taxonomy:
+            - "vibe/${container.version_label}/turn/producer_injected_flag"
+
+  # ===== ASSISTANT text turn (no tools) =====
+  - target: agent
+    name: agent_assistant_text_turn
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_text }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "assistant"
+          source: "model"
+          content_type: "text"
+          content: "$record.content_text"
+          timestamp: "$record.timestamp"
+      - set:
+          state.last_assistant_turn_index: "$state.next_turn_index"
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  - target: agent
+    name: agent_assistant_text_injected_annotation
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_text }
+        - { field: injected, value: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "vibe-ann-injected-${container.session_id}-${state.next_ann_id}"
+          # vibe writes no per-message times; Annotation.timestamp is required
+          # (spec §3.5.1), so fall back to the recorded session start.
+          timestamp: "$record.timestamp ? $record.timestamp : $container.created_at"
+          annotator: "vibe-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "turn"
+            target_id: "${state.last_assistant_turn_index}"
+          content:
+            text: "Assistant message was framework-injected (vibe.injected=true)."
+          claim_type: "observation"
+          vibe_injected: true
+          vibe_message_id: "$record.message_id"
+          taxonomy:
+            - "vibe/${container.version_label}/turn/producer_injected_flag"
+
+  # ===== ASSISTANT turn with tool calls (atomic) =====
+  # The preprocessor pre-matches tool result messages to their originating
+  # tool_calls by tool_call_id. Each tool_call record carries the result
+  # content directly; no cross-message matching needed at DSL layer.
+  - target: agent
+    name: agent_assistant_with_tools
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_with_tools }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "assistant"
+          source: "model"
+          content_type: "text"
+          content: "$record.content_text"
+          timestamp: "$record.timestamp"
+      - set:
+          state.last_assistant_turn_index: "$state.next_turn_index"
+          state.next_turn_index: "$state.next_turn_index + 1"
+    foreach_block: "$record.tool_calls"
+    on_block:
+      - name: emit_one_atomic_tool_call
+        when:
+          all_of:
+            - { block_field: id, present: true }
+        do:
+          - emit_tool_call:
+              id: "$block.id"
+              tool_name: "$block.tool_name"
+              tool_provider: "vibe"
+              emitting_turn_index: "$state.last_assistant_turn_index"
+              input:
+                arguments: "$block.arguments"
+              output:
+                success: "$block.success"
+                result: "$block.output_text"
+                content_origin: "tool_output"
+              invocation_source: "agent_choice"
+              framework_metadata:
+                vibe_raw_arguments: "$block.raw_arguments"
+                vibe_result_tool_name: "$block.result_name"
+                vibe_has_result: "$block.has_result"
+              taxonomy:
+                - "vibe/${container.version_label}/tool/${block.tool_name}"
+
+  - target: agent
+    name: agent_assistant_with_tools_injected_annotation
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_with_tools }
+        - { field: injected, value: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "vibe-ann-injected-${container.session_id}-${state.next_ann_id}"
+          # vibe writes no per-message times; Annotation.timestamp is required
+          # (spec §3.5.1), so fall back to the recorded session start.
+          timestamp: "$record.timestamp ? $record.timestamp : $container.created_at"
+          annotator: "vibe-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "turn"
+            target_id: "${state.last_assistant_turn_index}"
+          content:
+            text: "Assistant tool-using message was framework-injected (vibe.injected=true)."
+          claim_type: "observation"
+          vibe_injected: true
+          vibe_message_id: "$record.message_id"
+          taxonomy:
+            - "vibe/${container.version_label}/turn/producer_injected_flag"
+
+  # ===== ASSISTANT thinking-only turn =====
+  # Assistant message with no text and no tool_calls, but reasoning_content
+  # present. Not yet observed populated in vibe corpus / probes
+  # (deep-dive §8 open item); structure ready for when thinking-on
+  # models complete a probe successfully.
+  - target: agent
+    name: agent_assistant_thinking_only
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_thinking_only }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "assistant"
+          source: "model"
+          content_type: "text"
+          content: ""
+          thinking: "$record.reasoning_content"
+          timestamp: "$record.timestamp"
+      - set:
+          state.last_assistant_turn_index: "$state.next_turn_index"
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  # ===== ASSISTANT empty (no content, no tools, no reasoning) =====
+  # Skip turn emission. Vibe writes meta.json + messages.jsonl at session
+  # END; truly-empty assistant records are rare (typically only when the
+  # API call failed silently). No metric accumulation needed: vibe stats
+  # are session-level totals, not per-message.
+  - target: agent
+    name: agent_assistant_empty_skip
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_empty }
+    do: []
+
+finalize:
+  computed:
+    # Session-level token + cost totals from meta.stats (preprocessor
+    # surfaces these on the container directly; no per-message aggregation
+    # like opencode required).
+    metrics.total_tokens: "$container.total_tokens"
+    metrics.total_input_tokens: "$container.input_tokens"
+    metrics.total_output_tokens: "$container.output_tokens"
+    metrics.total_cost_usd: "$container.total_cost"

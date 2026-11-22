@@ -1,0 +1,65 @@
+# Drift ledger — goose adapter
+#
+# Machine-readable record of Axis-C drifts the drift watch has surfaced and
+# triaged. A drift whose surface an entry covers downgrades from FATAL to an
+# acknowledged line; a drift no entry covers still gates (exit 1). Format and
+# the verdict/disposition taxonomies: adapters/DRIFT-LEDGER.md.
+#
+# entries is EMPTY: behaviourally identical to having no ledger file (every
+# drift gates). The file exists to carry the coverage declaration; the
+# 1.28.0 -> 1.33.1 delta's signals (schema_version arm 8 -> 11, new native
+# column session.thread_id at v11) are non-gating WARNINGs, not ledger classes.
+
+# Cell 26 (token metrics) — FIXED 2026-07-25, recorded as a note
+# rather than an entry: this was an ADAPTER mapping defect, not an Axis-C format
+# drift, so it fits none of the entry taxonomies.
+#
+# Cell 26 fired on NO goose scenario, on either rung. The data was never absent:
+# the `sessions` row carries total_tokens / input_tokens / output_tokens, and the
+# 1.33.1 s1-fetch row holds 6281 / 6201 / 80. The adapter simply mapped them onto
+# metrics.session_* — names nothing reads — while the cell-26 predicate reads
+# metrics.total_input_tokens / total_output_tokens. metrics.total_input_tokens was
+# initialised to 0 in `state` and never assigned; metrics.total_tokens and
+# metrics.total_output_tokens were BOTH accumulated from the same per-message
+# $record.tokens field, conflating two different quantities and sparse besides,
+# since only assistant turns carry per-message tokens. The DSL's own comment
+# already said session_meta was "more reliable" than that accumulation.
+#
+# The finalize block now maps all three from the container. session_* names are
+# retained with the same values so any existing consumer keeps working. Cell 26
+# now fires on all four frozen goose scenarios, and every content_hash and
+# annotated_cells_fired on both rungs moved as a result — the frozen INPUTS are
+# untouched, only the emitted metrics changed.
+#
+# Same defect class, and the same "dark cell read as a data absence rather than a
+# mapping gap" mistake, as the droid fix b2299b8 landed the same day.
+#
+# FOLLOW-UP, same day: the mapping above initially carried a
+# pre-existing defect onto the fleet-standard names and thereby WIDENED it.
+# preprocess_goose.py coerced the three nullable `sessions` columns with `or 0`,
+# so a measurement never taken was emitted as a measurement of zero. Pre-fix
+# those zeros sat only on metrics.session_*, which nothing reads; post-fix they
+# would have sat on total_input_tokens / total_output_tokens, which cell 26 and
+# every cross-harness token comparison read. Reachable, not academic: the goose
+# schema declares all three as nullable INTEGER with no default.
+#
+# The coercion is now removed — absent yields null, never 0 — matching the fleet
+# precedent adapters/tests/test_absent_measurement.py (droid, cfb8661), whose
+# docstring had named goose as the outstanding violator. Verified both ways: with
+# the columns NULLed the adapter emits null/null/null, and all four frozen
+# scenarios still match their hashes, since every frozen input carries real
+# counts. A goose arm for that test is filed separately — this fix settles the
+# behaviour, a test is what keeps it settled.
+
+# Version-coverage declaration (adapters/DRIFT-LEDGER.md "Coverage declaration").
+# supported = the tested rung versions; versions between rungs are
+# expected-compatible unless a ledger entry / changelog note says otherwise.
+# NB coverage is by harness RELEASE; goose's storage schema moved v8 -> v11
+# across these rungs (archived pre-rung corpus is all v7; the DSL is pinned
+# v7+v11 and parses v8). tested must equal the regression/<version>/ rung dirs
+# (fleet sweep asserts this). Both rungs reproduce via capture/goose:<v>.
+coverage:
+  tested: ["1.28.0", "1.33.1"]
+  policy: point-tested
+
+entries: []

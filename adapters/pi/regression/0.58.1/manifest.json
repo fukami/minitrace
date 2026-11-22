@@ -1,0 +1,20 @@
+{
+  "freeze_semantics": "Content-hash freeze of the pi adapter's output over the conformance scenario at harness 0.58.1 (pi carries only a storage-FORMAT int in-band on session.version = 3; the harness RELEASE version 0.58.1 is capture provenance, not in-band). pi is the original DSL pilot: the DSL runner reads the native JSONL directly, so there is no preprocess step. verify.py re-runs the DSL on each input (cwd = this dir, input paths relative), normalizes the volatile provenance.converted_at, and asserts trace_count, the canonical (RFC 8785 JCS) content_hash, and unmapped_path_count. pi traces carry no provenance.source_path, so the freeze is checkout-independent regardless of the input path. annotated_cells_fired is the structural fired-cell set (drift self-test asserts it equals the pi CELL_SIGNALS extractor exactly). First pi rung and the older end of pi's first release-delta baseline; the candidate is a fresh 0.80.3 capture.",
+  "harness_version": "0.58.1",
+  "format_version": 3,
+  "capture_provenance": "Scoped from the archived pi 0.58.1 conformance corpus (scenario-runs/2026-03-15-first-run S4: 'Read the version from config.toml and write it to a new file VERSION.txt, then verify'), the single native pi session log copied from the ~/.pi/agent/sessions store. Two local host paths were replaced for publication, the session cwd by /workspace/project and the checkout root containing it by /workspace (once and five times; the model wrote VERSION.txt to the checkout root, outside its cwd, and the replacement keeps that relation); no other byte changed, and the content hash was re-frozen on the cleaned input on 2026-10-18.The S4 task is the same read-config/write-version shape as opencode's s1-config scenario, so the input basename is s1-config.jsonl for cross-adapter parity. Not a container-capture image; the older-version rung reuses the corpus that produced the adapter's original 0.58.1 result, per the release-delta build plan. Model: ollama/qwen3.5:cloud (from the session model_change record).",
+  "adapter_pin": "pi/format-v3 (0.58.1.dsl.yaml)",
+  "converter_version": "minitrace-pi-dsl-0.1.0",
+  "frozen_at": "2026-07-23",
+  "scenarios": {
+    "s1-config-version": {
+      "input": "inputs/s1-config.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:16623fac751a5fc2ed13df81f3c0ff39bbc64dc5a4fa14961452a73e6b3180f7"
+      ],
+      "unmapped_path_count": 20,
+      "annotated_cells_fired": [1, 2, 3, 4, 5, 7, 26]
+    }
+  }
+}

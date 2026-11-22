@@ -1,0 +1,287 @@
+# minitrace adapter DSL — cursor (Cursor `cursor-agent` CLI, proprietary)
+#
+# Reads a single-element JSON array of a pre-processed container produced by
+# preprocess_cursor.py (one cursor-agent session → one container). The native
+# source is the `--output-format stream-json` STDOUT event stream; the
+# preprocessor normalises it to the event_kind record stream this DSL consumes.
+#
+# Single-trace adapter: cursor sessions carry no subagent lineage in the
+# observed corpus, so there are no cross-trace edges (unlike vibe).
+#
+# v0.1 scope:
+#   - One trace per cursor-agent session.
+#   - Per-record turn emission with event_kind dispatch (user_text,
+#     assistant_turn, interaction_query).
+#   - Atomic tool emission: the preprocessor pairs each tool_call `started` with
+#     its `completed` and pre-computes operation_type, file_path and
+#     content_origin, so the DSL emits those verbatim (no command parsing at the
+#     DSL layer — same division of labour as the codex adapter).
+#   - Annotations: producer_config_snapshot (permission mode + auth source) and
+#     one producer_interaction per approval handshake event.
+#   - Session-level token totals and cache counters in metrics.
+#
+# Deferred:
+#   - `thinking` events. NOT observed in any of the six reference captures (the
+#     June 2026 probes saw them under Composer 2.5 Fast, never under
+#     claude-4-sonnet). The preprocessor maps them onto the owning assistant
+#     turn defensively so they cannot be silently dropped, but no rung exercises
+#     the path.
+#   - Mode-shift segment markers. switchModeToolCall IS captured (as a tool
+#     call), but its `fromModeId` is empty and the persisted mode is frozen at
+#     the init value, so a §4.5 segment_marker timeline must be STITCHED from
+#     init mode + ordered switch events. That is a spec-side question,
+#     not a v0.1 adapter concern.
+#
+# Conforms to minitrace-spec v0.3.0 + minitrace-adapter-dsl-spec v0.1.0.
+
+adapter:
+  name: cursor
+  harness_version: "cursor/multi-version"
+  dsl_version: "0.1.0"
+  source_format: cursor-stream-json-v1
+  converter_version: minitrace-cursor-dsl-0.1.0
+  produces_schema: "0.3.0"
+
+input:
+  type: json
+  encoding: utf-8
+  container:
+    record_path: messages
+
+state:
+  next_turn_index: 0
+  last_assistant_turn_index: null
+  next_ann_id: 0
+
+constants:
+  default_capture_mode: scrubbed
+
+# cursor exposes DISTINCT typed tools rather than routing everything through a
+# shell, so the tool kind alone fixes operation_type for most calls. The two
+# exceptions are pre-computed per tool_call by the preprocessor:
+#   - shell: classified from the harness's OWN parse (parsingResult) using the
+#     same verb semantics as the codex adapter, so values stay comparable.
+#   - edit:  NEW vs MODIFY from the presence of beforeFullFileContent.
+# This map is only a fallback for tool_calls that lack operation_type.
+operation_types:
+  read: READ
+  glob: READ
+  edit: MODIFY
+  shell: EXECUTE
+  createPlan: OTHER
+  switchMode: OTHER
+  default: OTHER
+
+session:
+  static:
+    schema_version: "0.3.0"
+    trace_type: "agent-session"
+    profile: "cursor"
+    # Nothing here checks for personal data, so the flags assume it is present:
+    # unchecked, not clean. contains_pii forces classification >= confidential.
+    classification: "confidential"
+    flags.for_research: false
+    flags.needs_cleaning: true
+    flags.contains_error: false
+    flags.contains_pii: true
+  derived:
+    id: "$container.trace_id"
+    title: "$container.trace_title"
+    timing.started_at: "$container.created_at"
+    timing.ended_at: "$container.updated_at"
+    environment.agent_framework: "cursor"
+    environment.agent_version: "$container.cli_version"
+    environment.model: "$container.model"
+    environment.provider: "$container.provider_hint"
+    environment.model_provider: "$container.model_provider"
+    environment.tools_enabled: "$container.tools_enabled"
+    operational_context.working_directory: "$container.cwd"
+    operational_context.framework_config.permission_mode: "$container.permission_mode"
+    operational_context.framework_config.api_key_source: "$container.api_key_source"
+    provenance.source_format: "$container.source_format_versioned"
+    provenance.source_session_id: "$container.session_id"
+    provenance.source_schema_version: "$container.version_label"
+
+emit:
+
+  # ===== SESSION_INIT — fires once per container =====
+
+  # producer_config_snapshot — cursor's system/init carries no system prompt
+  # (unlike codex's base_instructions), so the recoverable producer config is
+  # the permission mode plus which auth path the run used. apiKeySource is
+  # genuinely useful provenance: it distinguishes an env-var API key capture
+  # from a stored-login one without inspecting the environment.
+  - target: agent
+    name: cursor_emit_config_snapshot
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+        - { container_field: permission_mode, present: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "cursor-ann-config-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$container.created_at"
+          annotator: "cursor-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Producer config snapshot (cursor): permission mode and auth source, frozen at session start. NOTE the persisted mode is the INIT value and is not updated by a later switchModeToolCall."
+          claim_type: "observation"
+          cursor_permission_mode: "$container.permission_mode"
+          cursor_api_key_source: "$container.api_key_source"
+          cursor_result_subtype: "$container.result_subtype"
+          cursor_result_is_error: "$container.result_is_error"
+          # Non-fatal parse observations (unpaired tool_calls, unmapped tool
+          # kinds, unterminated trailing line). Carried into the trace rather
+          # than left on stderr so a rung records WHY a capture was imperfect.
+          cursor_preprocessor_warnings: "$container.preprocessor_warnings"
+          taxonomy:
+            - "cursor/${container.version_label}/session/producer_config_snapshot"
+
+  # ===== USER text turn =====
+  - target: agent
+    name: cursor_user_text_turn
+    when:
+      all_of:
+        - { field: event_kind, value: user_text }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "user"
+          source: "human"
+          content_type: "text"
+          content: "$record.content_text"
+          input_channel: "user_input"
+          timestamp: "$record.timestamp"
+      - set:
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  # ===== ASSISTANT turn (content + atomic tool calls) =====
+  # The preprocessor pairs started/completed and attaches each pair to the
+  # owning assistant turn, so tool emission here is atomic. A synthetic
+  # assistant turn is created when a stream opens with a tool call before any
+  # assistant text — observed on --resume runs, where the order is
+  # user → interaction_query → tool_call.
+  - target: agent
+    name: cursor_assistant_turn
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_turn }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "assistant"
+          source: "model"
+          content_type: "text"
+          content: "$record.content_text"
+          thinking: "$record.thinking"
+          timestamp: "$record.timestamp"
+      - set:
+          state.last_assistant_turn_index: "$state.next_turn_index"
+          state.next_turn_index: "$state.next_turn_index + 1"
+    foreach_block: "$record.tool_calls"
+    on_block:
+      - name: cursor_emit_one_tool_call
+        when:
+          all_of:
+            - { block_field: id, present: true }
+        do:
+          - emit_tool_call:
+              id: "$block.id"
+              tool_name: "$block.tool_name"
+              tool_provider: "cursor"
+              emitting_turn_index: "$state.last_assistant_turn_index"
+              operation_type: "$block.operation_type"
+              input:
+                command: "$block.command"
+                file_path: "$block.file_path"
+                arguments: "$block.arguments"
+              output:
+                success: "$block.success"
+                result: "$block.result"
+                error: "$block.error"
+                duration_ms: "$block.duration_ms"
+                content_origin: "$block.content_origin"
+              invocation_source: "agent_choice"
+              framework_metadata:
+                cursor_tool_kind: "$block.cursor_tool_kind"
+                cursor_rejected: "$block.cursor_rejected"
+              taxonomy:
+                - "cursor/${container.version_label}/tool/${block.tool_name}"
+
+  # ===== SYNTHETIC assistant turn → adapter_synthesis annotation =====
+  # Fires only when the preprocessor had to fabricate an assistant turn to own
+  # tool calls that arrived before any assistant text (observed on --resume
+  # runs: user → interaction_query → tool_call). The turn is an ADAPTER
+  # artefact, not something cursor emitted, and a reader must be able to tell
+  # the difference — so it is declared in the trace rather than left implicit.
+  - target: agent
+    name: cursor_emit_synthetic_turn_annotation
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_turn }
+        - { field: cursor_synthetic, value: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "cursor-ann-synthetic-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$record.annotation_timestamp"
+          annotator: "cursor-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Synthetic assistant turn inserted by the cursor adapter to own tool calls emitted before any assistant message. Not a turn cursor produced."
+          claim_type: "observation"
+          cursor_synthetic: "$record.cursor_synthetic"
+          taxonomy:
+            - "cursor/${container.version_label}/session/adapter_synthesis"
+
+  # ===== INTERACTION_QUERY → producer_interaction annotation =====
+  # The approval handshake. Request and response are SEPARATE events whose
+  # payload keys differ by name (createPlanRequestQuery vs
+  # createPlanRequestResponse), so they are correlated by `interaction_id`, not
+  # by key. Emitted as annotations rather than turns: an approval is producer
+  # machinery, not conversational content.
+  - target: agent
+    name: cursor_emit_interaction_annotation
+    when:
+      all_of:
+        - { field: event_kind, value: interaction_query }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "cursor-ann-interaction-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$record.annotation_timestamp"
+          annotator: "cursor-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Producer approval handshake (cursor): ${record.query_type} ${record.subtype}."
+          claim_type: "observation"
+          cursor_query_type: "$record.query_type"
+          cursor_interaction_subtype: "$record.subtype"
+          cursor_interaction_id: "$record.interaction_id"
+          taxonomy:
+            - "cursor/${container.version_label}/session/producer_interaction"
+
+finalize:
+  computed:
+    metrics.total_tokens: "$container.total_tokens"
+    metrics.total_input_tokens: "$container.total_input_tokens"
+    metrics.total_output_tokens: "$container.total_output_tokens"
+    metrics.cache_read_tokens: "$container.cache_read_tokens"
+    metrics.cache_write_tokens: "$container.cache_write_tokens"
+    metrics.duration_ms: "$container.duration_ms"

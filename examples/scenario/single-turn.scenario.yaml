@@ -1,0 +1,43 @@
+schema_version: "0.1.0"
+id: edit-existing-file
+version: "1"
+
+metadata:
+  title: "Add Testing section to README"
+  category: edit-existing
+  description: >
+    Agent must read README.md and add a specific Testing section at the end.
+  complexity: low
+  expected_tools: [READ, MODIFY]
+  expected_tool_count_range: [2, 6]
+
+interaction:
+  mode: single-turn
+  prompt: |
+    Add a "## Testing" section to the end of README.md with this exact content:
+
+    ## Testing
+
+    ```bash
+    python -m pytest tests/
+    ```
+
+    Run tests before committing changes.
+
+workspace: basic-project
+
+ground_truth:
+  type: file-diff
+  path: README.md
+  expected_file: ref/readme-expected.md
+  comparison: exact
+
+success_criteria:
+  - README.md contains "## Testing" section
+  - Section appears after existing content
+  - Code block contains the exact pytest command
+  - Existing content unchanged
+
+behavioural_notes: >
+  Tests precise text insertion. Observe read-before-write, exact preservation
+  of existing content, and any changes beyond what was asked.

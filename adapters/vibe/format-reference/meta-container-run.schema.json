@@ -1,0 +1,1680 @@
+{
+  "record_types": {
+    "<none>": 1
+  },
+  "field_count": 206,
+  "fields": {
+    "agent_profile": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "agent_profile.name": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "auto-approve"
+      ]
+    },
+    "agent_profile.overrides": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "agent_profile.overrides.auto_approve": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "True"
+      ]
+    },
+    "config": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.active_model": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "devstral-2"
+      ]
+    },
+    "config.agent_paths": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.api_timeout": {
+      "types": [
+        "float"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.auto_approve": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "False"
+      ]
+    },
+    "config.auto_compact_threshold": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "200000"
+      ]
+    },
+    "config.autocopy_to_clipboard": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "True"
+      ]
+    },
+    "config.context_warnings": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "False"
+      ]
+    },
+    "config.disable_welcome_banner_animation": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "False"
+      ]
+    },
+    "config.disabled_agents": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.disabled_skills": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.disabled_tools": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.displayed_workdir": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        ""
+      ]
+    },
+    "config.enable_auto_update": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "True"
+      ]
+    },
+    "config.enable_notifications": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "True"
+      ]
+    },
+    "config.enable_telemetry": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "True"
+      ]
+    },
+    "config.enable_update_checks": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "True"
+      ]
+    },
+    "config.enabled_agents": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.enabled_skills": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.enabled_tools": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.file_watcher_for_autocomplete": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "False"
+      ]
+    },
+    "config.include_commit_signature": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "True"
+      ]
+    },
+    "config.include_model_info": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "True"
+      ]
+    },
+    "config.include_project_context": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "True"
+      ]
+    },
+    "config.include_prompt_detail": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "True"
+      ]
+    },
+    "config.mcp_servers": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.models": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.models[].alias": {
+      "types": [
+        "str"
+      ],
+      "count": 3,
+      "sample_values": [
+        "devstral-2",
+        "devstral-small",
+        "local"
+      ]
+    },
+    "config.models[].auto_compact_threshold": {
+      "types": [
+        "int"
+      ],
+      "count": 3,
+      "sample_values": [
+        "200000"
+      ]
+    },
+    "config.models[].input_price": {
+      "types": [
+        "float"
+      ],
+      "count": 3,
+      "sample_values": []
+    },
+    "config.models[].name": {
+      "types": [
+        "str"
+      ],
+      "count": 3,
+      "sample_values": [
+        "devstral",
+        "devstral-small-latest",
+        "mistral-vibe-cli-latest"
+      ]
+    },
+    "config.models[].output_price": {
+      "types": [
+        "float"
+      ],
+      "count": 3,
+      "sample_values": []
+    },
+    "config.models[].provider": {
+      "types": [
+        "str"
+      ],
+      "count": 3,
+      "sample_values": [
+        "llamacpp",
+        "mistral"
+      ]
+    },
+    "config.models[].temperature": {
+      "types": [
+        "float"
+      ],
+      "count": 3,
+      "sample_values": []
+    },
+    "config.models[].thinking": {
+      "types": [
+        "str"
+      ],
+      "count": 3,
+      "sample_values": [
+        "off"
+      ]
+    },
+    "config.project_context": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.project_context.default_commit_count": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "5"
+      ]
+    },
+    "config.project_context.max_doc_bytes": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "32768"
+      ]
+    },
+    "config.project_context.timeout_seconds": {
+      "types": [
+        "float"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.providers": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.providers[].api_base": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "http://127.0.0.1:8080/v1",
+        "https://api.mistral.ai/v1"
+      ]
+    },
+    "config.providers[].api_key_env_var": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "",
+        "MISTRAL_API_KEY"
+      ]
+    },
+    "config.providers[].api_style": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "openai"
+      ]
+    },
+    "config.providers[].backend": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "generic",
+        "mistral"
+      ]
+    },
+    "config.providers[].name": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "llamacpp",
+        "mistral"
+      ]
+    },
+    "config.providers[].project_id": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        ""
+      ]
+    },
+    "config.providers[].reasoning_field_name": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "reasoning_content"
+      ]
+    },
+    "config.providers[].region": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        ""
+      ]
+    },
+    "config.session_logging": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.session_logging.enabled": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "True"
+      ]
+    },
+    "config.session_logging.save_dir": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "/root/.vibe/logs/session"
+      ]
+    },
+    "config.session_logging.session_prefix": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "session"
+      ]
+    },
+    "config.skill_paths": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.system_prompt_id": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "cli"
+      ]
+    },
+    "config.tool_paths": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.ask_user_question": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.ask_user_question.allowlist": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.ask_user_question.denylist": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.ask_user_question.permission": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "always"
+      ]
+    },
+    "config.tools.bash": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.bash.allowlist": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.bash.default_timeout": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "300"
+      ]
+    },
+    "config.tools.bash.denylist": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.bash.denylist_standalone": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.bash.max_output_bytes": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "16000"
+      ]
+    },
+    "config.tools.bash.permission": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "ask"
+      ]
+    },
+    "config.tools.exit_plan_mode": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.exit_plan_mode.allowlist": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.exit_plan_mode.denylist": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.exit_plan_mode.permission": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "always"
+      ]
+    },
+    "config.tools.grep": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.grep.allowlist": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.grep.codeignore_file": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        ".vibeignore"
+      ]
+    },
+    "config.tools.grep.default_max_matches": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "100"
+      ]
+    },
+    "config.tools.grep.default_timeout": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "60"
+      ]
+    },
+    "config.tools.grep.denylist": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.grep.exclude_patterns": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.grep.max_output_bytes": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "64000"
+      ]
+    },
+    "config.tools.grep.permission": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "always"
+      ]
+    },
+    "config.tools.read_file": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.read_file.allowlist": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.read_file.denylist": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.read_file.max_read_bytes": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "64000"
+      ]
+    },
+    "config.tools.read_file.permission": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "always"
+      ]
+    },
+    "config.tools.search_replace": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.search_replace.allowlist": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.search_replace.create_backup": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "False"
+      ]
+    },
+    "config.tools.search_replace.denylist": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.search_replace.fuzzy_threshold": {
+      "types": [
+        "float"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.search_replace.max_content_size": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "100000"
+      ]
+    },
+    "config.tools.search_replace.permission": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "ask"
+      ]
+    },
+    "config.tools.task": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.task.allowlist": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.task.denylist": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.task.permission": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "ask"
+      ]
+    },
+    "config.tools.todo": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.todo.allowlist": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.todo.denylist": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.todo.max_todos": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "100"
+      ]
+    },
+    "config.tools.todo.permission": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "always"
+      ]
+    },
+    "config.tools.web_fetch": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.web_fetch.allowlist": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.web_fetch.default_timeout": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "30"
+      ]
+    },
+    "config.tools.web_fetch.denylist": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.web_fetch.max_content_bytes": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "512000"
+      ]
+    },
+    "config.tools.web_fetch.max_timeout": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "120"
+      ]
+    },
+    "config.tools.web_fetch.permission": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "ask"
+      ]
+    },
+    "config.tools.web_fetch.user_agent": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.web_search": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.web_search.allowlist": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.web_search.denylist": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.web_search.model": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "mistral-vibe-cli-with-tools"
+      ]
+    },
+    "config.tools.web_search.permission": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "ask"
+      ]
+    },
+    "config.tools.web_search.timeout": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "120"
+      ]
+    },
+    "config.tools.write_file": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.write_file.allowlist": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.write_file.create_parent_dirs": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "True"
+      ]
+    },
+    "config.tools.write_file.denylist": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "config.tools.write_file.max_write_bytes": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "64000"
+      ]
+    },
+    "config.tools.write_file.permission": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "ask"
+      ]
+    },
+    "config.vim_keybindings": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "False"
+      ]
+    },
+    "end_time": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "2026-03-16T03:57:46.439192+00:00"
+      ]
+    },
+    "environment": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "environment.working_directory": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "/workspace"
+      ]
+    },
+    "git_branch": {
+      "types": [
+        "null"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "git_commit": {
+      "types": [
+        "null"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "session_id": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "04ba5d50-c00f-4d17-81aa-0faca53d4337"
+      ]
+    },
+    "start_time": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "2026-03-16T03:56:23.553664+00:00"
+      ]
+    },
+    "stats": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "stats.context_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "24064"
+      ]
+    },
+    "stats.input_price_per_million": {
+      "types": [
+        "float"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "stats.last_turn_completion_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "255"
+      ]
+    },
+    "stats.last_turn_duration": {
+      "types": [
+        "float"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "stats.last_turn_prompt_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "23809"
+      ]
+    },
+    "stats.last_turn_total_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "24064"
+      ]
+    },
+    "stats.output_price_per_million": {
+      "types": [
+        "float"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "stats.session_completion_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "7471"
+      ]
+    },
+    "stats.session_cost": {
+      "types": [
+        "float"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "stats.session_prompt_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "442278"
+      ]
+    },
+    "stats.session_total_llm_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "449749"
+      ]
+    },
+    "stats.steps": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "31"
+      ]
+    },
+    "stats.tokens_per_second": {
+      "types": [
+        "float"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "stats.tool_calls_agreed": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "29"
+      ]
+    },
+    "stats.tool_calls_failed": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "2"
+      ]
+    },
+    "stats.tool_calls_rejected": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "0"
+      ]
+    },
+    "stats.tool_calls_succeeded": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "27"
+      ]
+    },
+    "system_prompt": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "system_prompt.content": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "system_prompt.message_id": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "3b1ec87c-6bb4-4b3e-9c55-b45c1d148c9c"
+      ]
+    },
+    "system_prompt.name": {
+      "types": [
+        "null"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "system_prompt.reasoning_content": {
+      "types": [
+        "null"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "system_prompt.reasoning_signature": {
+      "types": [
+        "null"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "system_prompt.role": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "system"
+      ]
+    },
+    "system_prompt.tool_call_id": {
+      "types": [
+        "null"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "system_prompt.tool_calls": {
+      "types": [
+        "null"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "title": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "Improve the code quality."
+      ]
+    },
+    "tools_available": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "tools_available[].function": {
+      "types": [
+        "dict"
+      ],
+      "count": 5,
+      "sample_values": []
+    },
+    "tools_available[].function.description": {
+      "types": [
+        "str"
+      ],
+      "count": 5,
+      "sample_values": []
+    },
+    "tools_available[].function.name": {
+      "types": [
+        "str"
+      ],
+      "count": 5,
+      "sample_values": [
+        "bash",
+        "exit_plan_mode",
+        "grep",
+        "read_file",
+        "search_replace"
+      ]
+    },
+    "tools_available[].function.parameters": {
+      "types": [
+        "dict"
+      ],
+      "count": 5,
+      "sample_values": []
+    },
+    "tools_available[].function.parameters.properties": {
+      "types": [
+        "dict"
+      ],
+      "count": 5,
+      "sample_values": []
+    },
+    "tools_available[].function.parameters.properties.command": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "tools_available[].function.parameters.properties.command.type": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "string"
+      ]
+    },
+    "tools_available[].function.parameters.properties.content": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "tools_available[].function.parameters.properties.content.type": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "string"
+      ]
+    },
+    "tools_available[].function.parameters.properties.file_path": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "tools_available[].function.parameters.properties.file_path.type": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "string"
+      ]
+    },
+    "tools_available[].function.parameters.properties.limit": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "tools_available[].function.parameters.properties.limit.anyOf": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "tools_available[].function.parameters.properties.limit.anyOf[].type": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "integer",
+        "null"
+      ]
+    },
+    "tools_available[].function.parameters.properties.limit.default": {
+      "types": [
+        "null"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "tools_available[].function.parameters.properties.limit.description": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "Maximum number of lines to read."
+      ]
+    },
+    "tools_available[].function.parameters.properties.max_matches": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "tools_available[].function.parameters.properties.max_matches.anyOf": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "tools_available[].function.parameters.properties.max_matches.anyOf[].type": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "integer",
+        "null"
+      ]
+    },
+    "tools_available[].function.parameters.properties.max_matches.default": {
+      "types": [
+        "null"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "tools_available[].function.parameters.properties.max_matches.description": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "Override the default maximum number of matches."
+      ]
+    },
+    "tools_available[].function.parameters.properties.offset": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "tools_available[].function.parameters.properties.offset.default": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "0"
+      ]
+    },
+    "tools_available[].function.parameters.properties.offset.description": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "tools_available[].function.parameters.properties.offset.type": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "integer"
+      ]
+    },
+    "tools_available[].function.parameters.properties.path": {
+      "types": [
+        "dict"
+      ],
+      "count": 2,
+      "sample_values": []
+    },
+    "tools_available[].function.parameters.properties.path.default": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "."
+      ]
+    },
+    "tools_available[].function.parameters.properties.path.type": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "string"
+      ]
+    },
+    "tools_available[].function.parameters.properties.pattern": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "tools_available[].function.parameters.properties.pattern.type": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "string"
+      ]
+    },
+    "tools_available[].function.parameters.properties.timeout": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "tools_available[].function.parameters.properties.timeout.anyOf": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "tools_available[].function.parameters.properties.timeout.anyOf[].type": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "integer",
+        "null"
+      ]
+    },
+    "tools_available[].function.parameters.properties.timeout.default": {
+      "types": [
+        "null"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "tools_available[].function.parameters.properties.timeout.description": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "Override the default command timeout."
+      ]
+    },
+    "tools_available[].function.parameters.properties.use_default_ignore": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "tools_available[].function.parameters.properties.use_default_ignore.default": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "True"
+      ]
+    },
+    "tools_available[].function.parameters.properties.use_default_ignore.description": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "Whether to respect .gitignore and .ignore files."
+      ]
+    },
+    "tools_available[].function.parameters.properties.use_default_ignore.type": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "boolean"
+      ]
+    },
+    "tools_available[].function.parameters.required": {
+      "types": [
+        "list"
+      ],
+      "count": 4,
+      "sample_values": []
+    },
+    "tools_available[].function.parameters.type": {
+      "types": [
+        "str"
+      ],
+      "count": 5,
+      "sample_values": [
+        "object"
+      ]
+    },
+    "tools_available[].type": {
+      "types": [
+        "str"
+      ],
+      "count": 5,
+      "sample_values": [
+        "function"
+      ]
+    },
+    "total_messages": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "60"
+      ]
+    },
+    "username": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "root"
+      ]
+    }
+  }
+}

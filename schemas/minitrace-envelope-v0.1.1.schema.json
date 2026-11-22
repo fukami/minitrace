@@ -1,0 +1,327 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minitrace.spec/envelope/v0.1.1/manifest.schema.json",
+  "title": "minitrace-envelope v0.1.1 manifest schema",
+  "description": "Normative JSON Schema for the minitrace-envelope manifest (minitrace-envelope-spec v0.1.1 §4; additive over v0.1.0 RC1, §12). The root validates a manifest.json document. Per spec §13, each version ships one schema file. The signature.json document (§9) validates against #/$defs/SignatureFile (it is a separate file at envelope root, not part of the manifest root). Per-event x-* witness payloads (§7.6) are NDJSON sidecar files, not part of the manifest; this schema validates the witness *record* (kind, scope, paths, metadata declarations), including the §7.6.1 metadata.tool_call_id_attribution declaration the ten x-* kinds MUST carry (the eight kernel-side/userspace-hook kinds plus the two in-path control kinds x-dns-trace §7.6.10 and x-http-catch §7.6.11). The kind enum is non-rejecting: it gates the §7.6.1 metadata requirement, not the set of permitted kinds (additionalProperties is true), so an unlisted x-<name> still validates.",
+  "type": "object",
+  "required": ["envelope_version", "envelope_id", "created_at", "producer", "traces"],
+  "properties": {
+    "envelope_version": {"type": "string", "pattern": "^0\\.1\\.(0|[1-9][0-9]*)$", "description": "Any revision of the additive v0.1 line (§12): a v0.1.1 consumer accepts 0.1.0, 0.1.1 and later 0.1.<n>."},
+    "envelope_id": {"type": "string", "minLength": 1},
+    "created_at": {"$ref": "#/$defs/Iso8601Micros"},
+    "producer": {"$ref": "#/$defs/Producer"},
+    "clocks": {"type": "array", "items": {"$ref": "#/$defs/Clock"}},
+    "traces": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/TraceListing"},
+      "contains": {"properties": {"primary": {"const": true}}, "required": ["primary"]},
+      "minContains": 0,
+      "maxContains": 1
+    },
+    "raw_artefacts": {"type": "array", "items": {"$ref": "#/$defs/RawArtefact"}},
+    "witnesses": {"type": "array", "items": {"$ref": "#/$defs/Witness"}},
+    "annotations": {"type": "array", "items": {"$ref": "#/$defs/Annotation"}},
+    "bindings": {"type": "array", "items": {"$ref": "#/$defs/Binding"}},
+    "extensions": {"$ref": "#/$defs/Extensions"}
+  },
+  "additionalProperties": true,
+
+  "$defs": {
+    "Sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "Sha256OrNull": {
+      "oneOf": [{"$ref": "#/$defs/Sha256"}, {"type": "null"}]
+    },
+    "Iso8601Micros": {
+      "description": "ISO 8601 UTC at microsecond precision per §4.4 / minitrace-spec §3.5.",
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{6}Z$"
+    },
+    "Iso8601": {
+      "description": "ISO 8601 date-time (Z or numeric offset; fractional seconds optional). Used for the §7.1/§4.9/§9 timestamps the spec labels only 'ISO 8601'.",
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?(Z|[+-][0-9]{2}:[0-9]{2})$"
+    },
+    "RelPath": {
+      "description": "A path relative to the envelope root (§3.2): forward slashes, no leading slash, and no '.' or '..' path segment (a literal dot inside a filename, e.g. 'a.log' or 'archive..2026/x', is fine; only whole '.'/'..' segments are forbidden). Symbolic-link traversal (§3.2) cannot be checked from the string alone and is left to the loader.",
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!(.*/)?\\.\\.?(/|$)).+$"
+    },
+    "Extensions": {
+      "description": "Vendor-scoped (ext:<vendor>:<name>) or experimental (x-<name>) keys, arbitrary JSON values (§4.10).",
+      "type": "object",
+      "propertyNames": {"pattern": "^(x-.+|ext:[^:]+:.+)$"}
+    },
+
+    "Producer": {
+      "type": "object",
+      "required": ["id", "kind"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "kind": {"type": "string", "enum": ["automated_pipeline", "human_assembled", "hybrid"]},
+        "tool": {"type": "string"},
+        "host_clock_id": {"type": "string"},
+        "notes": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+
+    "Clock": {
+      "type": "object",
+      "required": ["id", "kind", "manipulated"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "kind": {
+          "type": "string",
+          "pattern": "^(host_system|external_authority|simulated|frozen|manipulated|x-.+)$"
+        },
+        "description": {"type": "string"},
+        "authority": {"type": ["string", "null"]},
+        "drift_attestation": {
+          "type": ["object", "null"],
+          "properties": {
+            "reference_authority": {"type": "string"},
+            "offset_at_start_ms": {"type": "integer"},
+            "offset_at_end_ms": {"type": "integer"},
+            "measurement_method": {
+              "type": "string",
+              "pattern": "^(ntp_offset|rfc3161_roundtrip|x-.+)$"
+            }
+          },
+          "additionalProperties": true
+        },
+        "manipulated": {"type": "boolean"},
+        "manipulation_notes": {"type": "string"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"manipulated": {"const": true}}, "required": ["manipulated"]},
+          "then": {"required": ["manipulation_notes"], "properties": {"manipulation_notes": {"minLength": 1}}}
+        },
+        {
+          "if": {"properties": {"kind": {"const": "manipulated"}}, "required": ["kind"]},
+          "then": {"properties": {"manipulated": {"const": true}}}
+        }
+      ],
+      "additionalProperties": true
+    },
+
+    "TraceListing": {
+      "type": "object",
+      "required": ["trace_id", "path", "trace_content_hash", "file_content_hash", "schema_version"],
+      "properties": {
+        "trace_id": {"type": "string", "minLength": 1},
+        "path": {"$ref": "#/$defs/RelPath"},
+        "trace_content_hash": {"$ref": "#/$defs/Sha256"},
+        "file_content_hash": {"$ref": "#/$defs/Sha256"},
+        "trace_type": {"type": "string", "minLength": 1},
+        "schema_version": {"type": "string", "minLength": 1},
+        "primary": {"type": "boolean"},
+        "clock_id": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+
+    "RawArtefact": {
+      "type": "object",
+      "description": "§4.7, §10.4: an artefact removed as a whole (redaction.operation remove, target_kind witness or absent) keeps its entry and carries no path, content_hash or size_bytes; any other entry requires path and content_hash.",
+      "required": ["id", "kind"],
+      "if": {"properties": {"redaction": {"type": "object", "required": ["operation"], "properties": {"operation": {"const": "remove"}, "target_kind": {"const": "witness"}}}}, "required": ["redaction"]},
+      "then": {"not": {"anyOf": [{"required": ["path"]}, {"required": ["content_hash"]}, {"required": ["size_bytes"]}]}},
+      "else": {"required": ["path", "content_hash"]},
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "path": {"$ref": "#/$defs/RelPath"},
+        "kind": {"type": "string", "pattern": "^(harness_log|source_file|config|x-.+)$"},
+        "harness": {"type": "string"},
+        "content_hash": {"$ref": "#/$defs/Sha256"},
+        "size_bytes": {"type": "integer", "minimum": 0},
+        "produces_trace_id": {"type": "string"},
+        "redaction": {"$ref": "#/$defs/Redaction"}
+      },
+      "additionalProperties": true
+    },
+
+    "Witness": {
+      "type": "object",
+      "required": ["id", "kind", "captured_at", "content_hash"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "kind": {
+          "type": "string",
+          "pattern": "^(network_capture|screenshot|screen_recording|environment_snapshot|process_tree|filesystem_snapshot|harness_artefact|inference_capture|external_log|binary_capture|x-.+|ext:[^:]+:.+)$"
+        },
+        "scope": {
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {"type": "string", "enum": ["envelope", "trace", "turn", "tool_call", "policy_trigger", "segment"]},
+            "target_id": {"type": "string"},
+            "target_trace_id": {"type": "string"}
+          },
+          "allOf": [
+            {
+              "if": {"properties": {"type": {"const": "trace"}}, "required": ["type"]},
+              "then": {"required": ["target_trace_id"]}
+            },
+            {
+              "if": {"properties": {"type": {"enum": ["turn", "tool_call", "policy_trigger", "segment"]}}, "required": ["type"]},
+              "then": {"required": ["target_id", "target_trace_id"]}
+            }
+          ],
+          "additionalProperties": true
+        },
+        "captured_at": {"$ref": "#/$defs/Iso8601"},
+        "captured_by": {"type": "string"},
+        "content_hash": {"$ref": "#/$defs/Sha256", "description": "§7.1: SHA-256 over the RFC 8785 (JCS) canonical form of the witness RECORD, excluding this field itself, with no other transformation (timestamps are hashed as stored). It does NOT cover the bytes of the witness payload files; those are covered by path_hashes."},
+        "size_bytes": {"type": "integer", "minimum": 0, "description": "§7.1: size of the primary payload file, not of the record."},
+        "primary_path": {"$ref": "#/$defs/RelPath"},
+        "auxiliary_paths": {"type": "array", "items": {"$ref": "#/$defs/RelPath"}},
+        "path_hashes": {"type": "object", "propertyNames": {"$ref": "#/$defs/RelPath"}, "additionalProperties": {"$ref": "#/$defs/Sha256"}, "description": "§7.1: SHA-256 over the literal bytes of each file this record lists. Every path in primary_path/auxiliary_paths MUST appear as a key and no key may name an unlisted path; that key-set correspondence is not expressible in JSON Schema and is checked by a consumer per §6.2 step 3. OPTIONAL so v0.1.1 stays additive over v0.1.0 RC1, but in an envelope declaring 0.1.0 a witness without it has unverifiable payload files and MUST NOT be reported as verified, and in one declaring 0.1.1 or later it fails §6.2 step 3 (§6.2)."},
+        "metadata": {"type": "object"},
+        "redaction": {"$ref": "#/$defs/Redaction"}
+      },
+      "allOf": [
+        {"description": "§7.1, §7.4: a witness removed as a whole (redaction.operation remove, target_kind witness or absent) lists no files and carries no primary_path, auxiliary_paths or size_bytes; any other witness requires primary_path.", "if": {"properties": {"redaction": {"type": "object", "required": ["operation"], "properties": {"operation": {"const": "remove"}, "target_kind": {"const": "witness"}}}}, "required": ["redaction"]}, "then": {"not": {"anyOf": [{"required": ["primary_path"]}, {"required": ["auxiliary_paths"]}, {"required": ["size_bytes"]}]}, "properties": {"path_hashes": {"maxProperties": 0}}}, "else": {"required": ["primary_path"]}},
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "x-process-exec-trace", "x-file-access-trace", "x-network-flow-trace",
+                  "x-syscall-trace", "x-process-hook-trace", "x-tls-keylog-trace",
+                  "x-lsm-event-trace", "x-resource-event-trace",
+                  "x-dns-trace", "x-http-catch"
+                ]
+              }
+            },
+            "required": ["kind"]
+          },
+          "then": {
+            "description": "§7.6.1: every kernel-side x-* witness record MUST declare its correlation discipline in metadata.tool_call_id_attribution.",
+            "required": ["metadata"],
+            "properties": {
+              "metadata": {
+                "type": "object",
+                "required": ["tool_call_id_attribution"],
+                "properties": {
+                  "tool_call_id_attribution": {"type": "string", "enum": ["always", "when_known", "never"]}
+                }
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": true
+    },
+
+    "Redaction": {
+      "description": "Witness / raw-artefact redaction record (§7.4, §10.4). target_kind 'payload_keys' declares a key-set redaction applied within every record of a line-delimited payload, which no RFC 6901 pointer can address.",
+      "type": ["object", "null"],
+      "required": ["operation", "reason_code", "authorised_by", "authorised_at"],
+      "properties": {
+        "operation": {"type": "string", "enum": ["remove", "pseudonymise", "truncate", "mask", "generalise"]},
+        "target_kind": {
+          "type": "string",
+          "enum": ["witness", "payload_keys"],
+          "description": "§7.4: what the operation applied to. Absent is read as 'witness', the only v0.1.0 behaviour, which is what keeps this addition additive."
+        },
+        "targets": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "minItems": 1,
+          "description": "§7.4: key names or dotted key paths withheld from every record of every listed payload file. REQUIRED when target_kind is 'payload_keys', MUST NOT be present otherwise."
+        },
+        "reason_code": {
+          "type": "string",
+          "pattern": "^(operator_privacy|pii_detected|confidentiality|legal_hold|submitter_anonymity|gdpr_erasure|x-.+)$"
+        },
+        "authorised_by": {"type": "string"},
+        "authorised_at": {"$ref": "#/$defs/Iso8601"},
+        "original_content_hash": {"$ref": "#/$defs/Sha256OrNull"},
+        "original_path_hashes": {
+          "type": "object",
+          "additionalProperties": {"$ref": "#/$defs/Sha256"},
+          "description": "§7.4: pre-redaction byte hashes of the payload files, keyed exactly as §7.1 path_hashes is. OPTIONAL. path_hashes itself always describes the bytes AS DISTRIBUTED, so §6.2 needs no special case for a redacted envelope."
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"target_kind": {"const": "payload_keys"}}, "required": ["target_kind"]},
+          "then": {"required": ["targets"]},
+          "else": {"not": {"required": ["targets"]}}
+        }
+      ],
+      "additionalProperties": true
+    },
+
+    "Annotation": {
+      "description": "Envelope-level annotation (§4.9).",
+      "type": "object",
+      "required": ["id", "scope", "annotator", "content"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "scope": {
+          "type": "object",
+          "required": ["type", "target_id"],
+          "properties": {
+            "type": {"type": "string", "enum": ["envelope", "trace", "raw_artefact", "witness"]},
+            "target_id": {"type": "string"}
+          },
+          "additionalProperties": true
+        },
+        "annotator": {"type": "string"},
+        "authored_at": {"$ref": "#/$defs/Iso8601"},
+        "content": {"type": "object"}
+      },
+      "additionalProperties": true
+    },
+
+    "Binding": {
+      "description": "Binding-sidecar listing (§4.11). The manifest lists and checksums the sidecar; the record format is owned by the spec named for each kind.",
+      "type": "object",
+      "required": ["kind", "path", "content_hash"],
+      "properties": {
+        "kind": {"type": "string", "pattern": "^(scenario-binding|adapter-identity|x-.+)$"},
+        "path": {"$ref": "#/$defs/RelPath"},
+        "content_hash": {"$ref": "#/$defs/Sha256"},
+        "produces_trace_id": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+
+    "SignatureFile": {
+      "description": "Shape of signature.json (§9.1). A separate file at envelope root; validate it against this $def. The cryptographic profile is deferred (§9.2): 'algorithm' is opaque in v0.1.0.",
+      "type": "object",
+      "required": ["signatures"],
+      "properties": {
+        "signatures": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "signer", "algorithm", "key_id", "manifest_hash", "signed_at", "signature", "covers"],
+            "properties": {
+              "id": {"type": "string", "minLength": 1},
+              "signer": {"type": "string"},
+              "algorithm": {"type": "string"},
+              "key_id": {"type": "string"},
+              "manifest_hash": {"$ref": "#/$defs/Sha256"},
+              "signed_at": {"$ref": "#/$defs/Iso8601"},
+              "signature": {"type": "string"},
+              "covers": {
+                "type": "array",
+                "items": {"type": "string", "enum": ["manifest"]}
+              }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

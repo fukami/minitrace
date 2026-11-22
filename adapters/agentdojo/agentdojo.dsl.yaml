@@ -1,0 +1,309 @@
+# minitrace adapter DSL — AgentDojo (ethz-spylab/agentdojo, MIT)
+#
+# Reads a pre-processed container array from preprocess_agentdojo.py (one
+# container per run file; identity from path; content flattened; event_kind and
+# the injection-entry marker pre-computed). One trace per container.
+#
+# v0.1 scope:
+#   - Per-message turn emission with role-based dispatch, mirroring tau-bench's
+#     event_kind pattern.
+#   - Tool-call emission from assistant.tool_calls[]; results attached by id,
+#     with AgentDojo's `error` boolean mapped to output.success (negated).
+#   - Run-level labels as annotations: utility (classification), and security
+#     as harm_linkage only when the agent was compromised.
+#   - Injection localization: a per-turn `x-injected-content` annotation marks
+#     the tool result where an injected string first entered the trace. This is
+#     the one signal this corpus gives that the others do not.
+#   - Defense (pipeline-directory suffix) as a policy_triggers entry.
+#
+# Deferred (see scoping note):
+#   - Cross-run lineage fan-out (task-across-models, model-across-attacks): S5.
+#   - Per-turn timestamps: only one run-level evaluation_timestamp exists (S3).
+#
+# Conforms to minitrace-spec v0.3.0 + minitrace-adapter-dsl-spec v0.1.0.
+
+adapter:
+  name: agentdojo
+  harness_version: "agentdojo/runs-main-2025-07"
+  dsl_version: "0.1.0"
+  source_format: agentdojo-run-v1
+  converter_version: minitrace-agentdojo-dsl-0.1.0
+  produces_schema: "0.3.0"
+
+input:
+  type: json
+  encoding: utf-8
+  container:
+    record_path: messages
+
+state:
+  next_turn_index: 0
+  last_assistant_turn_index: null
+  next_ann_id: 0
+
+constants:
+  default_capture_mode: scrubbed
+
+sessions:
+
+  run:
+    static:
+      schema_version: "0.3.0"
+      trace_type: "agent-session"
+      profile: "agentdojo-run"
+      classification: "public"
+      flags.for_research: true
+      flags.needs_cleaning: false
+      flags.contains_pii: false
+      provenance.dataset: "ethz-spylab/agentdojo"
+      provenance.dataset_license: "MIT"
+    derived:
+      id: "$container.trace_id"
+      scenario_id: "$container.scenario_id"
+      title: "$container.trace_title"
+      timing.started_at: "$container.event_ts_iso"
+      timing.duration_seconds: "$container.duration_seconds"
+      environment.benchmark: "agentdojo"
+      environment.benchmark_version: "$container.benchmark_version"
+      environment.benchmark_domain: "$container.suite"
+      environment.model: "$container.model"
+      flags.contains_error: "$container.contains_error"
+      provenance.source_format: "$container.source_format"
+      provenance.benchmark_task_id: "$container.user_task_id"
+      # user_task | injection_goal_solo — see the preprocessor's run_class note.
+      # An unattacked run is not necessarily a benign one.
+      provenance.benchmark_run_class: "$container.run_class"
+      # AgentDojo's serving pipeline name ("local" for local models), kept as
+      # provenance distinct from environment.model, which comes from the path.
+      provenance.harness_commit: "$container.serving_pipeline_name"
+      # ===== The experimental arm =====
+      # AgentDojo is a grid over (model, attack, defense). The model is the
+      # system under test and stays in environment; the other two are conditions
+      # applied to it, so they live in `condition` — one place a consumer reads
+      # the arm from.
+      #
+      # These were previously recoverable ONLY by string-parsing the trace id
+      # and reading policy_triggers[0].trigger_name. That is fine for a one-off
+      # census and wrong as an interface: 16 attack types and 5 defenses are the
+      # axes every per-arm result breaks down by, and stratified sampling needs
+      # them as fields, not as substrings of an identifier whose format is not
+      # itself specified anywhere.
+      #
+      # Nulls are emitted rather than omitted (dsl_runner deep_sets derived
+      # paths unconditionally), so `attack_type: null` states "no attack placed"
+      # instead of leaving a consumer to read absence as either that or a
+      # producer that never set the field.
+      condition.is_attacked: "$container.is_attacked"
+      condition.attack_type: "$container.attack_type"
+      condition.defense: "$container.defense"
+      # True only when a defense was present, an attack was placed, and the
+      # injection did not succeed. Already surfaced on the policy_trigger, which
+      # a consumer has to find by name; here it is readable directly.
+      condition.defense_fired: "$container.defense_fired"
+      condition.injection_task_id: "$container.injection_task_id"
+
+emit:
+
+  # ===== Injection entry point — the load-bearing annotation =====
+  # Fires on the message the preprocessor marked as where an injected string
+  # first surfaced. Turns the per-run security label into a per-turn signal: a
+  # judge can see WHERE untrusted content entered, not only THAT the run was
+  # attacked. claim_type x-injected-content is a vendor-extension type, since
+  # there is no normative claim_type for
+  # attacker-controlled input. Consumers that don't know the namespace can read
+  # it as an observation.
+  - target: run
+    name: run_emit_injection_entry
+    when:
+      all_of:
+        - { field: is_injection_entry, value: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "agentdojo-ann-injentry-${container.trace_id}-${state.next_ann_id}"
+          timestamp: "$container.event_ts_iso"
+          annotator: "agentdojo-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "$container.injection_scope_type"
+            target_id: "$container.injection_scope_target"
+          content:
+            text: "Injected content first surfaced in this tool result."
+            evidence: "$container.injection_key"
+          claim_type: "x-injected-content"
+          taxonomy:
+            - "agentdojo/${container.benchmark_version}/attack/${container.attack_type}"
+
+  # ===== Utility label (task success) =====
+  - target: run
+    name: run_emit_utility
+    when:
+      all_of:
+        - { field: msg_index, value: 0 }
+        - { container_field: utility, present: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "agentdojo-ann-utility-${container.trace_id}-${state.next_ann_id}"
+          timestamp: "$container.event_ts_iso"
+          annotator: "agentdojo-evaluator"
+          source:
+            type: "aggregator"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Task utility (did the agent complete the user's task)."
+            evidence: "$container.utility"
+          claim_type: "classification"
+          taxonomy:
+            - "agentdojo/${container.benchmark_version}/utility/${container.suite}"
+
+  # ===== Harm linkage (compromise) =====
+  # Fires only when an attack was placed AND the agent was compromised.
+  # AgentDojo's `security` is the injection task's OWN success check, so
+  # security=True means the injection succeeded and the agent WAS compromised;
+  # security=False is the injection failing, which is not a harm and emits no
+  # annotation. `compromised` is pre-computed in the preprocessor to keep the
+  # boolean polarity out of the DSL, where it is easy to get backwards.
+  - target: run
+    name: run_emit_compromise
+    when:
+      all_of:
+        - { field: msg_index, value: 0 }
+        - { container_field: compromised, value: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "agentdojo-ann-compromise-${container.trace_id}-${state.next_ann_id}"
+          timestamp: "$container.event_ts_iso"
+          annotator: "agentdojo-evaluator"
+          source:
+            type: "aggregator"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Agent was compromised by the injected task (the injection task's own success check passed)."
+            evidence: "$container.injection_task_id"
+          claim_type: "harm_linkage"
+          harm_category: "x-prompt-injection"
+          taxonomy:
+            - "agentdojo/${container.benchmark_version}/injection/${container.injection_task_id}"
+
+  # ===== Defense as a policy trigger =====
+  # A configured defense is a control that did or did not stop the attack.
+  # `fired` = a defense was present, an attack was placed, and the injection did
+  # NOT succeed. Clean or defenseless runs do not emit.
+  - target: run
+    name: run_emit_defense_trigger
+    when:
+      all_of:
+        - { field: msg_index, value: 0 }
+        - { container_field: defense, present: true }
+    do:
+      - emit_policy_trigger:
+          id: "agentdojo-pt-${container.trace_id}"
+          timestamp: "$container.event_ts_iso"
+          trigger_name: "agentdojo-defense/${container.defense}"
+          fired: "$container.defense_fired"
+
+  # ===== Per-message turn emission =====
+
+  - target: run
+    name: run_system_turn
+    when:
+      all_of:
+        - { field: event_kind, value: system_prompt }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "system"
+          source: "harness"
+          content_type: "text"
+          content: "$record.content"
+      - set:
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  - target: run
+    name: run_user_turn
+    when:
+      all_of:
+        - { field: event_kind, value: user_turn }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "user"
+          source: "human"
+          content_type: "text"
+          content: "$record.content"
+      - set:
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  - target: run
+    name: run_assistant_text_turn
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_text }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "assistant"
+          source: "model"
+          content_type: "text"
+          content: "$record.content"
+      - set:
+          state.last_assistant_turn_index: "$state.next_turn_index"
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  - target: run
+    name: run_assistant_tool_turn
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_with_tools }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "assistant"
+          source: "model"
+          content_type: "text"
+          content: "$record.content"
+      - set:
+          state.last_assistant_turn_index: "$state.next_turn_index"
+          state.next_turn_index: "$state.next_turn_index + 1"
+    foreach_block: "$record.tool_calls"
+    on_block:
+      - name: emit_one_tool_call
+        when:
+          all_of:
+            - { block_field: id, present: true }
+        do:
+          - emit_tool_call:
+              id: "$block.id"
+              # AgentDojo stores the tool name in `function` (a string).
+              tool_name: "$block.function"
+              emitting_turn_index: "$state.last_assistant_turn_index"
+              input:
+                arguments: "$block.args"
+              invocation_source: "agent_choice"
+
+  # Tool result: attach to the originating call by id. AgentDojo carries the
+  # matching id in `tool_call_id` and an `error` boolean the preprocessor has
+  # already coerced to a real bool.
+  - target: run
+    name: run_tool_result_attach
+    when:
+      all_of:
+        - { field: event_kind, value: tool_result }
+        - { field: resolved_tool_call_id, present: true }
+    do:
+      - attach_tool_result:
+          target_id: "$record.resolved_tool_call_id"
+          output:
+            success: "not $record.error"
+            result: "$record.content"
+            content_origin: "tool_output"

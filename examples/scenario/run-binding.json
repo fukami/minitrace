@@ -1,0 +1,18 @@
+{
+  "binding_version": "0.1.0",
+  "scenario": {
+    "id": "edit-existing-file",
+    "version": "1",
+    "schema_version": "0.1.0",
+    "content_hash": "sha256:3f2a000000000000000000000000000000000000000000000000000000000000"
+  },
+  "model": {
+    "id": "claude-opus-4-8",
+    "digest": "sha256:9c01000000000000000000000000000000000000000000000000000000000000"
+  },
+  "harness": {
+    "name": "claude-code",
+    "version": "2.1.0"
+  },
+  "run_spec_hash": "sha256:b77e000000000000000000000000000000000000000000000000000000000000"
+}

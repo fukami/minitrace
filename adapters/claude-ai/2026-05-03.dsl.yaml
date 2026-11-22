@@ -1,0 +1,240 @@
+# minitrace adapter DSL — claude.ai web export, format snapshot 2026-05-03
+# Converts conversations.json from a claude.ai data export to v0.3.0 minitrace
+# agent-session traces (one trace per conversation).
+#
+# Reads conversations.json AFTER pre-processing by preprocess_claude_ai.py, which
+# re-orders each conversation's chat_messages by parent_message_uuid chain walk
+# (ordering primary, timestamp fallback). The pre-processor preserves the
+# `chat_messages` field name so this DSL's record_path is unchanged; the
+# chain-walk convention is materialised at the pre-processor layer, matching
+# the claude-code precedent (preprocess_claude_code.py:order_events). This DSL
+# trusts the input to be in chain-walk order and emits in array iteration order.
+#
+# Snapshot reference: format observed in fresh export from main account, 2026-05-03.
+# Differs from earlier 2026-03-28 format in:
+#   - parent_message_uuid on every message (conversation tree)
+#   - new block types: thinking (with new fields), token_budget, voice_note, flag
+#   - tool_use blocks carry MCP integration fields (integration_name, mcp_server_url, ...)
+#   - per-project files split into projects/<uuid>.json (handled at extraction time, not here)
+#
+# Limitations of v0.1.0:
+#   - tool_use block ids are often null in claude.ai exports. A tool_result
+#     attaches to the call its tool_use_id names; one with no tool_use_id
+#     attaches to the most recent emitted tool_call, which relies on the
+#     harness emitting them in pairs (ruled 2026-10-21). A tool_use_id that
+#     names no emitted call is reported unattached, never attached by position.
+#   - New block types (token_budget, voice_note, flag) are noted in diagnostics
+#     and not mapped to canonical events; preserving them as ext: payloads is
+#     a candidate enhancement for v0.1.x.
+
+adapter:
+  name: claude-ai
+  harness_version: "2026-05-03"
+  dsl_version: "0.1.0"
+  source_format: claude-ai-export-v2
+  converter_version: minitrace-claude-ai-dsl-0.1.0
+  produces_schema: "0.3.0"
+
+input:
+  type: json
+  encoding: utf-8
+  container:
+    record_path: chat_messages
+
+state:
+  next_turn_index: 0
+  last_turn_index: null
+  last_tool_call_id: null
+  next_synthetic_id: 0
+  all_timestamps: []
+  unhandled_block_types: []
+
+constants:
+  default_capture_mode: scrubbed
+
+operation_types:
+  # claude.ai built-ins observed in 2026-05-03 export
+  repl: EXECUTE
+  artifacts: NEW
+  web_search: READ
+  web_fetch: READ
+  conversation_search: READ
+  recent_chats: READ
+  project_knowledge_search: READ
+  google_drive_search: READ
+  google_drive_fetch: READ
+  view: READ
+  str_replace: MODIFY
+  create_file: NEW
+  default: OTHER
+
+session:
+  static:
+    schema_version: "0.3.0"
+    trace_type: "agent-session"
+    profile: "claude-ai-export"
+    classification: "confidential"
+    flags.for_research: false
+    flags.needs_cleaning: true
+    flags.contains_error: false
+    flags.contains_pii: true
+    # NOTE: operator.* fields are NOT declared here. Per DSL spec §7.1, the
+    # consent-claim values (type, operator_aware, capture_mode, capture_purpose)
+    # are supplied at runtime via the dsl_runner --operator-* flags. The runner
+    # refuses to emit a trace if they are missing.
+    environment.agent_framework: "claude.ai"
+    environment.platform_type: "web"
+    environment.provider_hint: "anthropic"
+    timing.privacy_level: "scrubbed"
+    coordination.human_attention: "active"
+
+  derived:
+    id: "$container.uuid"
+    title: "$container.name"
+    summary: "$container.summary"
+    operational_context.working_directory: null
+    environment.agent_version: "$adapter.harness_version"
+    provenance.source_format: "$adapter.source_format"
+    provenance.converter_version: "$adapter.converter_version"
+    provenance.original_session_id: "$container.uuid"
+    timing.started_at: "$container.created_at"
+    # ended_at filled in finalize from accumulated timestamps
+
+  passthrough:
+    handover:
+      received: null
+      produced: null
+    coordination:
+      project_id: null
+      predecessor_session: null
+      concurrent_sessions: null
+      human_attention: "active"
+    operational_context:
+      git_branch: null
+      git_ref: null
+      autonomy_level: "none"
+      sandbox: false
+      framework_config: null
+    condition: null
+
+emit:
+
+  - name: turn_message
+    # Every message produces one turn (its `text` field is the high-level
+    # rendered text). Tool calls inside the message's content[] are emitted
+    # as separate tool_call events via foreach_block.
+    when: { has: uuid }
+    do:
+      - accumulate:
+          state.all_timestamps: "$record.created_at"
+      - emit_turn:
+          index: "$state.next_turn_index"
+          timestamp: "$record.created_at"
+          role: "$record.sender == 'human' ? 'user' : 'assistant'"
+          source: "$record.sender == 'human' ? 'human' : 'model'"
+          content_type: "text"
+          content: "$record.text"
+          input_channel: "$record.sender == 'human' ? 'user_input' : null"
+      - set:
+          state.next_turn_index: "$state.next_turn_index + 1"
+    foreach_block: "$record.content"
+    on_block:
+
+      - name: tool_use_block
+        when: { block_type: tool_use }
+        do:
+          - set:
+              state.next_synthetic_id: "$state.next_synthetic_id + 1"
+              state.synthetic_tu_id: "claude-ai-tu-${state.next_synthetic_id}"
+          - emit_tool_call:
+              # The block's own id when it has one, so a tool_result's
+              # tool_use_id finds its call (ruled 2026-10-21, as 2026-09-26).
+              id: "$block.id ? $block.id : $state.synthetic_tu_id"
+              timestamp: "$block.start_timestamp"
+              tool_name: "$block.name"
+              emitting_turn_index: "$state.last_turn_index"
+              input:
+                arguments: "$block.input"
+                command: "$block.input.command"
+                file_path: "$block.input.path"
+              invocation_source: "agent_choice"
+              context:
+                position_in_session: null
+                tools_before: []
+                time_since_last_user: null
+
+      - name: tool_result_block
+        when: { block_type: tool_result }
+        do:
+          - attach_tool_result:
+              # Positional only when the block has no tool_use_id (absent or
+              # null); any other value is the target as given (ruled 2026-10-21).
+              target_id: "$block.tool_use_id == null ? $state.last_tool_call_id : $block.tool_use_id"
+              output:
+                success: "not $block.is_error"
+                result: "first_block_text($block.content)"
+                error: "$block.is_error ? first_block_text($block.content) : null"
+                content_origin: "tool_output"
+
+      - name: thinking_block
+        when: { block_type: thinking }
+        # Thinking blocks accompany the assistant turn; the most recent emitted
+        # turn already has its `content`. We don't emit a new event but record
+        # the thinking text on the most recent turn would be ideal — v0.1.0
+        # doesn't support post-emission turn mutation cleanly. Note as
+        # diagnostic for now; v0.1.x can add a `mutate_last_turn` action.
+        do:
+          - note:
+              level: info
+              message: "thinking block on turn ${state.last_turn_index} (preserved in source.text via emit_turn; not mutated)"
+
+      - name: token_budget_block
+        when: { block_type: token_budget }
+        do:
+          - note:
+              level: info
+              message: "token_budget block on turn ${state.last_turn_index} not mapped (new in 2026-05-03 format)"
+
+      - name: voice_note_block
+        when: { block_type: voice_note }
+        do:
+          - note:
+              level: info
+              message: "voice_note block on turn ${state.last_turn_index} not mapped (new in 2026-05-03 format)"
+
+      - name: flag_block
+        when: { block_type: flag }
+        do:
+          - note:
+              level: info
+              message: "flag block on turn ${state.last_turn_index} not mapped (new in 2026-05-03 format)"
+
+      - name: text_block
+        when: { block_type: text }
+        # Text blocks are already aggregated into the turn's content via
+        # the message-level $record.text field. No separate emission.
+        do:
+          - note:
+              level: info
+              message: "text block on turn ${state.last_turn_index} (already in turn.content)"
+
+      - name: unknown_block
+        when: { has_any: true }
+        do:
+          - note:
+              level: warning
+              message: "unhandled block type=${block.type} on turn ${state.last_turn_index}"
+
+finalize:
+  computed:
+    timing.ended_at: "max($state.all_timestamps)"
+    timing.duration_seconds: "duration_seconds($container.created_at, max($state.all_timestamps))"
+    timing.active_duration_seconds: "duration_seconds($container.created_at, max($state.all_timestamps))"
+    metrics.turn_count: "len($trace.turns)"
+    metrics.tool_call_count: "len($trace.tool_calls)"
+    metrics.execute_count: "count_where($trace.tool_calls, operation_type, EXECUTE)"
+    metrics.read_count: "count_where($trace.tool_calls, operation_type, READ)"
+    metrics.modify_count: "count_where($trace.tool_calls, operation_type, MODIFY)"
+    metrics.create_count: "count_where($trace.tool_calls, operation_type, NEW)"
+    metrics.delegate_count: "count_where($trace.tool_calls, operation_type, DELEGATE)"
+    provenance.converted_at: "now_microseconds()"

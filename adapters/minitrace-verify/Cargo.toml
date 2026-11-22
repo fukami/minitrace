@@ -1,0 +1,40 @@
+[package]
+name = "minitrace-verify"
+version = "0.2.0"
+edition = "2021"
+description = "Trace-aware verifier for minitrace v0.3.0 §3.4 content_hash. Single-trace recompute (JCS+SHA-256) plus set / edge-consistency mode for §7.1 cross-trace integrity edges."
+license = "MIT"
+publish = false
+
+# Scope B extension of the Path B JCS oracle work.
+#
+# Where `jcs-oracle` proves the JCS+SHA-256 floor matches Python (no
+# trace-shape knowledge), this CLI is the trace-aware verifier that
+# operationalises minitrace-spec v0.3.0 §3.4: read a trace, strip the
+# `content_hash` field, canonicalise the remainder per RFC 8785,
+# SHA-256, and compare to the trace's stored hash.
+#
+# Notably, when the recomputed hash mismatches AND the trace contains
+# integers outside the JCS-safe range [-(2^53-1), 2^53-1], the output
+# carries a note pointing at §14.3 so a consumer doesn't treat the
+# mismatch as tampering without first ruling out
+# verifier-implementation divergence (the Path B first finding).
+#
+# Set / edge-consistency mode (v0.2.0) verifies §7.1 cross-trace integrity
+# edges across a supplied set: each edge's target_content_hash must match
+# the referenced in-set trace's stored hash (§7.1).
+#
+# Out of scope by design: resolving `${trace:<id>:content_hash}` placeholders.
+# Those are a producer-side authoring construct that `cross_trace.py` resolves
+# before stamping; published traces do not carry them. A trace containing
+# unresolved placeholders exits with an explanatory error.
+
+[dependencies]
+serde = "1"
+serde_json = "1"
+serde_json_canonicalizer = "0.3"
+sha2 = "0.10"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

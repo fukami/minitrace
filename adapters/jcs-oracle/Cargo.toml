@@ -1,0 +1,28 @@
+[package]
+name = "jcs-oracle"
+version = "0.1.0"
+edition = "2021"
+description = "Independent JCS (RFC 8785) + SHA-256 oracle for minitrace content_hash cross-language parity tests."
+license = "MIT"
+publish = false
+
+# Path B reference verifier for minitrace-spec v0.3.0 §3.4.
+#
+# Goal: an independently-implemented JCS-then-SHA-256 pipeline that should
+# reproduce the `content_hash` computed by `adapters/cross_trace.py` (Python
+# `rfc8785` + `hashlib.sha256`) byte-for-byte on the same input JSON. Used by
+# the Python parity test driver to falsify the spec's cross-implementation
+# byte-identical claim on edge cases (numeric formatting around 1e-7 / 1e16,
+# non-BMP key sort, deeply-nested structure, etc.).
+#
+# Not intended for publication. The artefact is a CLI used by tests, not a
+# library users should depend on.
+
+[dependencies]
+serde_json = "1"
+serde_json_canonicalizer = "0.3"
+sha2 = "0.10"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

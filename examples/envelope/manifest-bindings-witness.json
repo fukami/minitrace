@@ -1,0 +1,110 @@
+{
+  "envelope_version": "0.1.0",
+  "envelope_id": "0193d4a0-bbbb-7890-abcd-ef0123456789",
+  "created_at": "2038-01-19T03:13:36.000000Z",
+  "producer": {
+    "id": "y2038-research-pipeline",
+    "kind": "hybrid",
+    "tool": "minitrace-envelope-builder/0.1.0",
+    "host_clock_id": "host-clock-0",
+    "notes": "Adversarial-condition bundle; inference capture not included, so no separate consent boundary applies."
+  },
+  "clocks": [
+    {
+      "id": "host-clock-0",
+      "kind": "host_system",
+      "manipulated": false
+    },
+    {
+      "id": "y2038-fast-forward",
+      "kind": "manipulated",
+      "description": "System clock fast-forwarded near the 32-bit signed time_t boundary.",
+      "manipulated": true,
+      "manipulation_notes": "faketime LD_PRELOAD wrapper; offset target 2038-01-19T03:14:06Z; method: faketime '@2038-01-19 03:14:06'; intended purpose: behavioural research on time-handling edge cases."
+    }
+  ],
+  "traces": [
+    {
+      "trace_id": "0193d4a0-2234-7890-abcd-ef0123456789",
+      "path": "traces/agent-session.minitrace.json",
+      "trace_content_hash": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "file_content_hash": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "trace_type": "agent-session",
+      "schema_version": "0.3.0",
+      "primary": true,
+      "clock_id": "y2038-fast-forward"
+    }
+  ],
+  "raw_artefacts": [
+    {
+      "id": "raw-001",
+      "path": "raw/claude-code/output.jsonl",
+      "kind": "harness_log",
+      "harness": "claude-code",
+      "content_hash": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "size_bytes": 88210,
+      "produces_trace_id": "0193d4a0-2234-7890-abcd-ef0123456789"
+    }
+  ],
+  "witnesses": [
+    {
+      "id": "w-exec-001",
+      "kind": "x-process-exec-trace",
+      "scope": {
+        "type": "trace",
+        "target_trace_id": "0193d4a0-2234-7890-abcd-ef0123456789"
+      },
+      "captured_at": "2038-01-19T03:13:40.000000Z",
+      "captured_by": "process-exec-bpf-module/0.2.1",
+      "content_hash": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+      "size_bytes": 20480,
+      "primary_path": "witnesses/w-exec-001/exec.ndjson",
+      "auxiliary_paths": [],
+      "metadata": {
+        "tool_call_id_attribution": "when_known",
+        "clock_source": "kernel_monotonic"
+      },
+      "redaction": null
+    },
+    {
+      "id": "w-netflow-001",
+      "kind": "x-network-flow-trace",
+      "scope": {"type": "envelope"},
+      "captured_at": "2038-01-19T03:13:41.000000Z",
+      "captured_by": "tcp-connect-bpf-module/0.2.1",
+      "content_hash": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+      "size_bytes": 4096,
+      "primary_path": "witnesses/w-netflow-001/flows.ndjson",
+      "metadata": {
+        "tool_call_id_attribution": "never"
+      }
+    }
+  ],
+  "annotations": [
+    {
+      "id": "ann-001",
+      "scope": {"type": "envelope", "target_id": "0193d4a0-bbbb-7890-abcd-ef0123456789"},
+      "annotator": "assembly-pipeline",
+      "authored_at": "2038-01-19T03:13:42.000000Z",
+      "content": {"category": "chain_of_custody", "title": "Manipulated-clock research bundle", "detail": "Y2038 scenario; not real-time evidence."}
+    }
+  ],
+  "bindings": [
+    {
+      "kind": "scenario-binding",
+      "path": "run-binding.json",
+      "content_hash": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+      "produces_trace_id": "0193d4a0-2234-7890-abcd-ef0123456789"
+    },
+    {
+      "kind": "adapter-identity",
+      "path": "adapter.json",
+      "content_hash": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+      "produces_trace_id": "0193d4a0-2234-7890-abcd-ef0123456789"
+    }
+  ],
+  "extensions": {
+    "x-research-campaign": "example-campaign-1",
+    "ext:example:evidence-grade": "research-only"
+  }
+}

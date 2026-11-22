@@ -1,0 +1,38 @@
+{
+  "freeze_semantics": "Content-hash freeze of the goose adapter's output over the conformance-scenario corpus at harness 1.33.1. verify.py re-runs preprocess+DSL on each input (cwd = this dir, input paths relative) and asserts trace_count, per-trace content_hash, and unmapped_path_count. Inputs are the harvested goose SQLite session DBs (sessions.db, WAL-checkpointed at capture); content_hash folds provenance.source_path, so inputs MUST stay at inputs/<name>.db. Adapter-code (verify.py) and format/Axis-C (drift_watch.py) drift are separate loops. annotated_cells_fired is the structural fired-cell set (drift self-test asserts it equals the goose CELL_SIGNALS extractor exactly). First goose rung; the anchor for future goose release-delta comparisons.",
+  "harness_version": "1.33.1",
+  "capture_image": "miniobserve/goose-combo2:0.1.0",
+  "capture_provenance_round2": "Round-2 coverage captures on the arm64 capture workstation (2026-07-25) closing goose's READ(5) / MODIFY(6) / NEW(7) gaps. The s1-fetch-example scenario is a FETCH task, so EXECUTE(8) was the only op cell goose fired on either rung. Same capture_image as s1 (miniobserve/goose-combo2:0.1.0), unmodified. PROVIDER DEVIATION, a deliberate choice recorded 2026-07-25: these two run ollama at host.docker.internal:11434 (MINIOBSERVE_PROVIDER=ollama), whereas s1-fetch-example ran provider_name=anthropic / claude-opus-4-8. NB s1's manifest records no capture_provenance at all — that anthropic+opus attribution was recovered empirically from the frozen s1-fetch.db sessions row (provider_name, model_config_json) during this session, not read off a record. Local ollama was chosen over matching s1's provider so the captures cost no cloud spend and stay regenerable; provider and model are capture provenance, not freeze surface. MODEL: gemma4:12b for BOTH kept traces. Prompts are VERBATIM canonical arms with NO added clauses — s2-config-version is the 2026-03-15 first-run S4 arm byte-identical to run-scenarios.sh PROMPTS[S4] (232 bytes, diff-verified), s3-readme-edit is the S3 arm byte-identical to droid's frozen s3-readme-edit prompt (diff-verified). So unlike the droid/opencode/pi s2 freezes, these two carry NO prompt deviation. Off-target attempts retained under captures/goose-1.33.1-round2/, not frozen: s2-config/attempt1-qwen3-shellonly (qwen3:8b answered the whole S4 task through developer__shell, firing only [1,2,3,4,8] — the cells s1 already had — and wrote a garbage 2-byte VERSION.txt of '='; the run still exited 0, so the EVENT succeeded while the OPERATION failed); s3-readme/attempt1-gemma-literalescapes (gemma4:12b fired MODIFY but wrote literal backslash-n escapes and destroyed the Configuration line); s3-readme/attempt2-qwen3-overwrite (qwen3:8b used developer__write to overwrite README.md wholesale, i.e. NEW not MODIFY, destroying the file — the same converged-to-Create-overwrite failure the droid lane recorded for qwen2.5:7b). Both kept traces were checked for OPERATION correctness, not just event firing: s2 wrote VERSION.txt == '0.3.1' matching config.toml, and s3 appended the ## Testing section with real newlines leaving the preceding Configuration line intact (git diff inspected). CELL 26: dark when these two scenarios were first frozen, and RE-FROZEN here once it was fixed (in the same commit sweep). It was never a scenario artifact — the sessions row always carried real token counts, but goose.dsl.yaml routed them to metrics.session_* instead of the metrics.total_input_tokens/total_output_tokens names the cell-26 predicate reads, so cell 26 could not fire on ANY goose scenario. All content_hashes and annotated_cells_fired on this rung therefore moved when that mapping was corrected; the frozen INPUTS are untouched.",
+  "adapter_pin": "goose/schema-v7+v11",
+  "converter_version": "minitrace-goose-dsl-0.1.0",
+  "frozen_at": "2026-07-23",
+  "scenarios": {
+    "s1-fetch-example": {
+      "input": "inputs/s1-fetch.db",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:529df503e78ba5d7d7e4c18db04c05088fe4217e5a873a54084bf1c7d80b9c07"
+      ],
+      "unmapped_path_count": 16,
+      "annotated_cells_fired": [1, 2, 3, 4, 8, 26]
+    },
+    "s2-config-version": {
+      "input": "inputs/s2-config.db",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:587788b767bbb625bdeb1ac5d3b49c7876c1c73344d14104c7394edcf1d17f10"
+      ],
+      "unmapped_path_count": 16,
+      "annotated_cells_fired": [1, 2, 3, 4, 5, 7, 8, 26]
+    },
+    "s3-readme-edit": {
+      "input": "inputs/s3-readme.db",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:f6969118b0d8fee8807434c6f871a77c3b1356d33fda066f72d8eef1019896c2"
+      ],
+      "unmapped_path_count": 16,
+      "annotated_cells_fired": [1, 2, 3, 4, 5, 6, 8, 10, 26]
+    }
+  }
+}

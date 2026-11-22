@@ -1,0 +1,368 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minitrace.spec/v0.3.0/base.schema.json",
+  "title": "minitrace v0.3.0 base schema",
+  "description": "Common fields for all v0.3.0 trace types. Type-specific extensions live in sibling schemas (agent-session, judge-session). Per spec §13, a trace is conformant if and only if it validates against the base schema plus the appropriate type-specific schema and meets every requirement the text places on a trace; the schemas check a subset.",
+  "type": "object",
+  "required": ["id", "schema_version", "trace_type", "operator"],
+  "if": {
+    "required": ["trace_type"],
+    "properties": {"trace_type": {"not": {"enum": ["agent-session", "judge-session"]}}}
+  },
+  "then": {
+    "required": ["schema_uri"],
+    "properties": {"schema_uri": {"type": "string", "minLength": 1}}
+  },
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "schema_version": {"type": "string", "pattern": "^0\\.3\\.(0|[1-9][0-9]*)$"},
+    "trace_type": {"type": "string", "minLength": 1},
+    "schema_uri": {"type": ["string", "null"]},
+    "operator": {"$ref": "#/$defs/Operator"},
+    "turns": {"type": "array", "items": {"$ref": "#/$defs/Turn"}},
+    "tool_calls": {"type": "array", "items": {"$ref": "#/$defs/ToolCall"}},
+    "segment_markers": {"type": "array", "items": {"$ref": "#/$defs/SegmentMarker"}},
+    "policy_triggers": {"type": "array", "items": {"$ref": "#/$defs/PolicyTrigger"}},
+    "annotations": {"type": "array", "items": {"$ref": "#/$defs/Annotation"}},
+    "lineage": {"type": "array", "items": {"$ref": "#/$defs/LineageEdge"}},
+    "redactions": {"type": "array", "items": {"$ref": "#/$defs/Redaction"}},
+    "content_hash": {
+      "type": ["string", "null"],
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+
+    "profile": {"type": ["string", "null"]},
+    "scenario_id": {"type": ["string", "null"]},
+    "quality": {"type": ["string", "null"]},
+    "title": {"type": ["string", "null"]},
+    "summary": {"type": ["string", "null"]},
+    "classification": {"type": ["string", "null"], "enum": ["public", "internal", "confidential", "customer-confidential", null]},
+    "provenance": {"type": ["object", "null"]},
+    "flags": {"type": ["object", "null"]},
+    "environment": {"type": ["object", "null"]},
+    "operational_context": {"type": ["object", "null"]},
+    "timing": {"type": ["object", "null"]},
+    "condition": {"type": ["object", "null"]},
+    "coordination": {"type": ["object", "null"]},
+    "handover": {"type": ["object", "null"]},
+    "outcome": {"type": ["object", "null"]},
+    "metrics": {
+      "type": ["object", "null"],
+      "description": "Open object (spec §3.1). Keys named in v0.2.x carry these types when present; no key is required; other keys are permitted.",
+      "properties": {
+        "turn_count": {"type": "integer", "minimum": 0},
+        "tool_call_count": {"type": "integer", "minimum": 0},
+        "read_count": {"type": "integer", "minimum": 0},
+        "modify_count": {"type": "integer", "minimum": 0},
+        "create_count": {"type": "integer", "minimum": 0},
+        "execute_count": {"type": "integer", "minimum": 0},
+        "delegate_count": {"type": "integer", "minimum": 0},
+        "subagent_count": {"type": "integer", "minimum": 0},
+        "subagent_tool_calls": {"type": "integer", "minimum": 0},
+        "read_ratio": {"type": ["number", "null"]},
+        "time_to_first_action": {"type": ["number", "null"]},
+        "idle_ratio": {"type": ["number", "null"]},
+        "session_cost": {"type": ["number", "null"]},
+        "total_input_tokens": {"type": ["integer", "null"], "minimum": 0},
+        "total_output_tokens": {"type": ["integer", "null"], "minimum": 0},
+        "total_cache_read_tokens": {"type": ["integer", "null"], "minimum": 0},
+        "total_cache_creation_tokens": {"type": ["integer", "null"], "minimum": 0},
+        "total_reasoning_tokens": {"type": ["integer", "null"], "minimum": 0},
+        "total_tool_tokens": {"type": ["integer", "null"], "minimum": 0},
+        "model_switches": {"type": ["integer", "null"], "minimum": 0},
+        "unique_models": {"type": ["integer", "null"], "minimum": 0},
+        "median_response_tokens": {"type": ["integer", "null"], "minimum": 0},
+        "max_response_tokens": {"type": ["integer", "null"], "minimum": 0}
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true,
+
+  "$defs": {
+    "ISO8601Timestamp": {
+      "description": "ISO 8601 timestamp at microsecond precision per §3.5.",
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}\\.[0-9]{6}Z$"
+    },
+
+    "Operator": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["human", "ai_overseer", "scripted", "delegated"]
+        },
+        "operator_aware": {"type": ["boolean", "null"]},
+        "capture_mode": {
+          "type": ["string", "null"],
+          "enum": [null, "full", "pseudonymised", "scrubbed", "reference_only"]
+        },
+        "capture_purpose": {
+          "type": ["object", "null"],
+          "properties": {
+            "legal_basis": {"type": "string"},
+            "reference": {"type": "string"},
+            "authorised_at": {"$ref": "#/$defs/ISO8601Timestamp"}
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"type": {"const": "human"}}},
+          "then": {"required": ["operator_aware"]}
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {"const": "human"},
+              "capture_mode": {"const": "full"}
+            },
+            "required": ["type", "capture_mode"]
+          },
+          "then": {
+            "required": ["capture_purpose"],
+            "properties": {"capture_purpose": {"type": "object"}}
+          }
+        },
+        {
+          "if": {
+            "properties": {"type": {"const": "human"}},
+            "required": ["type"]
+          },
+          "then": {
+            "properties": {
+              "capture_purpose": {
+                "if": {"type": "object"},
+                "then": {
+                  "required": ["legal_basis", "reference", "authorised_at"],
+                  "properties": {
+                    "legal_basis": {
+                      "type": "string",
+                      "anyOf": [
+                        {"enum": ["gdpr_art6_consent", "gdpr_art6_contract", "gdpr_art6_legitimate_interest", "gdpr_art88_employment_safeguards", "works_council_agreement", "research_ethics_approval"]},
+                        {"pattern": "^x-"}
+                      ]
+                    },
+                    "reference": {"type": "string", "minLength": 1}
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {"type": {"enum": ["human", "delegated"]}},
+            "required": ["type"]
+          },
+          "then": {
+            "required": ["capture_mode"],
+            "properties": {"capture_mode": {"enum": ["full", "pseudonymised", "scrubbed", "reference_only"]}}
+          }
+        }
+      ],
+      "additionalProperties": true
+    },
+
+    "Turn": {
+      "type": "object",
+      "required": ["index", "role"],
+      "properties": {
+        "index": {"type": "integer", "minimum": 0},
+        "timestamp": {"oneOf": [{"$ref": "#/$defs/ISO8601Timestamp"}, {"type": "null"}]},
+        "role": {"type": "string"},
+        "content": {"type": ["string", "null"]},
+        "ordering": {"type": ["integer", "null"]}
+      },
+      "additionalProperties": true
+    },
+
+    "ToolCall": {
+      "type": "object",
+      "required": ["id"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "emitting_turn_index": {"type": ["integer", "null"], "minimum": 0},
+        "timestamp": {"oneOf": [{"$ref": "#/$defs/ISO8601Timestamp"}, {"type": "null"}]},
+        "tool_name": {"type": ["string", "null"]},
+        "operation_type": {"type": ["string", "null"]},
+        "invocation_source": {
+          "type": ["string", "null"],
+          "enum": [null, "operator_explicit", "agent_choice", "harness_injected", "unknown"]
+        },
+        "ordering": {"type": ["integer", "null"]},
+        "output": {
+          "description": "§4.8.3: content_origin is the closed v0.2.x set, the legacy value tool_output, or null; any other value makes the trace non-conformant.",
+          "properties": {
+            "result": {"type": ["string", "null"]},
+            "content_origin": {
+              "enum": [null, "local_file", "local_exec", "web", "mcp_server", "database", "sub_agent", "model_echo", "user_provided", "tool_output"]
+            }
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "SegmentMarker": {
+      "type": "object",
+      "required": ["id", "timestamp", "segment_type"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "timestamp": {"$ref": "#/$defs/ISO8601Timestamp"},
+        "segment_type": {"type": "string", "anyOf": [{"enum": ["mode_shift", "focus_shift", "context_reset", "operator_change"]}, {"pattern": "^x-"}]},
+        "segment_label": {"type": ["string", "null"]},
+        "ordering": {"type": ["integer", "null"]}
+      },
+      "additionalProperties": true
+    },
+
+    "PolicyTrigger": {
+      "type": "object",
+      "required": ["id", "timestamp", "trigger_name", "fired"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "timestamp": {"$ref": "#/$defs/ISO8601Timestamp"},
+        "trigger_name": {"type": "string"},
+        "threshold_proximity": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "fired": {"type": "boolean"},
+        "ordering": {"type": ["integer", "null"]}
+      },
+      "additionalProperties": true
+    },
+
+    "Annotation": {
+      "type": "object",
+      "required": ["id", "timestamp", "annotator", "scope", "content"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "timestamp": {"$ref": "#/$defs/ISO8601Timestamp"},
+        "annotator": {"type": "string"},
+        "source": {
+          "type": ["object", "null"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "enum": ["runtime", "reviewer", "judge", "overseer", "aggregator"]
+            }
+          }
+        },
+        "scope": {
+          "type": "object",
+          "required": ["type"],
+          "properties": {
+            "type": {"type": "string", "anyOf": [{"enum": ["session", "trace", "turn", "tool_call", "event_range", "segment", "handover"]}, {"pattern": "^x-"}]},
+            "target_id": {"type": "string"},
+            "start_id": {"type": "string", "minLength": 1},
+            "end_id": {"type": "string", "minLength": 1}
+          },
+          "allOf": [
+            {
+              "if": {"properties": {"type": {"enum": ["session", "trace", "event_range"]}}},
+              "else": {"required": ["target_id"]}
+            },
+            {
+              "if": {"properties": {"type": {"const": "event_range"}}, "required": ["type"]},
+              "then": {"required": ["start_id", "end_id"], "not": {"required": ["target_id"]}}
+            }
+          ],
+          "additionalProperties": true
+        },
+        "claim_type": {
+          "type": ["string", "null"],
+          "pattern": "^(observation|classification|harm_linkage|segment_marker_note|disposition|x-.+)$"
+        },
+        "content": {"type": "object"},
+        "taxonomy_mappings": {"type": ["object", "null"]},
+        "taxonomy": {
+          "type": ["array", "null"],
+          "items": {"type": "string"}
+        },
+        "classification": {"type": ["string", "null"], "enum": ["public", "internal", "confidential", "customer-confidential", null]},
+        "authored_at": {"oneOf": [{"$ref": "#/$defs/ISO8601Timestamp"}, {"type": "null"}]},
+        "author_signature": {"type": ["string", "null"]},
+        "harm_category": {
+          "type": ["string", "null"],
+          "pattern": "^(aia_3_49_a|aia_3_49_b|aia_3_49_c|aia_3_49_d|gpai_cop_cybersecurity|x-.+)$"
+        },
+        "near_miss_proximity": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "near_miss_threshold_name": {"type": ["string", "null"]}
+      },
+      "additionalProperties": true
+    },
+
+    "LineageEdge": {
+      "type": "object",
+      "required": ["type", "target_trace_id"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "pattern": "^(derived-from|judges|reviews|audits|delegates-to|delegated-by|wraps|wrapped-by|x-.+)$"
+        },
+        "target_trace_id": {"type": "string", "minLength": 1},
+        "target_content_hash": {
+          "type": ["string", "null"],
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "authored_by": {"type": ["string", "null"]},
+        "authored_at": {"oneOf": [{"$ref": "#/$defs/ISO8601Timestamp"}, {"type": "null"}]}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"type": {"enum": ["judges", "reviews", "audits"]}}, "required": ["type"]},
+          "then": {
+            "required": ["target_content_hash", "authored_by", "authored_at"],
+            "properties": {
+              "authored_at": {"$ref": "#/$defs/ISO8601Timestamp"},
+              "authored_by": {"type": "string"},
+              "target_content_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"type": {"const": "wraps"}}, "required": ["type"]},
+          "then": {
+            "required": ["target_content_hash"],
+            "properties": {"target_content_hash": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}}
+          }
+        }
+      ],
+      "additionalProperties": true
+    },
+
+    "Redaction": {
+      "type": "object",
+      "required": ["id", "target_kind", "target", "operation", "reason_code", "authorised_by", "authorised_at"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "target_kind": {"type": "string", "enum": ["event", "annotation", "field"]},
+        "target": {"type": "string", "minLength": 1},
+        "operation": {
+          "type": "string",
+          "enum": ["remove", "pseudonymise", "truncate", "mask", "generalise"]
+        },
+        "reason_code": {
+          "type": "string",
+          "pattern": "^(operator_privacy|pii_detected|confidentiality|legal_hold|submitter_anonymity|gdpr_erasure|x-.+)$"
+        },
+        "authorised_by": {"type": "string"},
+        "authorised_at": {"$ref": "#/$defs/ISO8601Timestamp"},
+        "original_content_hash": {
+          "type": ["string", "null"],
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

@@ -1,0 +1,154 @@
+{
+  "record_types": {
+    "<none>": 60
+  },
+  "field_count": 12,
+  "fields": {
+    "content": {
+      "types": [
+        "str"
+      ],
+      "count": 60,
+      "sample_values": [
+        "",
+        "Improve the code quality."
+      ]
+    },
+    "message_id": {
+      "types": [
+        "str"
+      ],
+      "count": 31,
+      "sample_values": [
+        "08d58713-7cb7-416f-9f30-90a7a609ea7f",
+        "096ca1ec-3e6e-4da6-801e-918443a205fc",
+        "10636189-a67c-43c0-b477-ec121528a002",
+        "13a54af4-7a5b-4d58-92c3-c9b00f41f2d3",
+        "215ae2c5-9cce-4a00-8f69-d58f34562fcf",
+        "2287dacb-6453-4268-831d-65383ef47e5f",
+        "241c6220-aa4d-4dbb-8f9f-642f0c816fa5",
+        "3217a48d-8e6f-4e56-b80a-654757007601",
+        "6f573f0b-0bcc-4d15-a90d-926f3584bcc9",
+        "735a5e70-989e-4407-84af-81ccffc04ce3"
+      ]
+    },
+    "name": {
+      "types": [
+        "str"
+      ],
+      "count": 29,
+      "sample_values": [
+        "bash",
+        "read_file",
+        "search_replace",
+        "todo"
+      ]
+    },
+    "role": {
+      "types": [
+        "str"
+      ],
+      "count": 60,
+      "sample_values": [
+        "assistant",
+        "tool",
+        "user"
+      ]
+    },
+    "tool_call_id": {
+      "types": [
+        "str"
+      ],
+      "count": 29,
+      "sample_values": [
+        "8HDrIsrG2",
+        "EOY9jEZko",
+        "IQpW6EP64",
+        "Kb5jzfKyX",
+        "MKeK2nIrT",
+        "NsulqPlvX",
+        "P6cGyFuxR",
+        "PEFMsTbps",
+        "Q9VAEkmxs",
+        "SBAyUpN9x"
+      ]
+    },
+    "tool_calls": {
+      "types": [
+        "list"
+      ],
+      "count": 29,
+      "sample_values": []
+    },
+    "tool_calls[].function": {
+      "types": [
+        "dict"
+      ],
+      "count": 29,
+      "sample_values": []
+    },
+    "tool_calls[].function.arguments": {
+      "types": [
+        "str"
+      ],
+      "count": 29,
+      "sample_values": [
+        "{\"command\": \"cd /workspace && python main.py\"}",
+        "{\"command\": \"ls -la /workspace\"}",
+        "{\"path\": \"README.md\"}",
+        "{\"path\": \"config.toml\"}",
+        "{\"path\": \"main.py\", \"limit\": 50}",
+        "{\"path\": \"main.py\", \"offset\": 300, \"limit\": 20}",
+        "{\"path\": \"main.py\"}"
+      ]
+    },
+    "tool_calls[].function.name": {
+      "types": [
+        "str"
+      ],
+      "count": 29,
+      "sample_values": [
+        "bash",
+        "read_file",
+        "search_replace",
+        "todo"
+      ]
+    },
+    "tool_calls[].id": {
+      "types": [
+        "str"
+      ],
+      "count": 29,
+      "sample_values": [
+        "8HDrIsrG2",
+        "EOY9jEZko",
+        "IQpW6EP64",
+        "Kb5jzfKyX",
+        "MKeK2nIrT",
+        "NsulqPlvX",
+        "P6cGyFuxR",
+        "PEFMsTbps",
+        "Q9VAEkmxs",
+        "SBAyUpN9x"
+      ]
+    },
+    "tool_calls[].index": {
+      "types": [
+        "int"
+      ],
+      "count": 29,
+      "sample_values": [
+        "0"
+      ]
+    },
+    "tool_calls[].type": {
+      "types": [
+        "str"
+      ],
+      "count": 29,
+      "sample_values": [
+        "function"
+      ]
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "freeze_semantics": "Content-hash freeze of the aider adapter's output over the conformance scenario at harness 0.82.0. aider uses the preprocess path: preprocess_aider.py parses the native markdown transcript (.aider.chat.history.md) — aider's only complete source — into one container, which aider.dsl.yaml turns into one trace. verify.py re-runs preprocess+DSL on each input (cwd = this dir, input paths relative) and asserts trace_count, per-trace content_hash, and unmapped_path_count; the drift_watch self-test asserts annotated_cells_fired equals the aider CELL_SIGNALS extractor. aider traces carry no provenance.source_path, so the content_hash is checkout-independent. First IMAGE rung and the older end of aider's release-delta; the candidate is the 0.86.2 fresh capture.",
+  "harness_version": "0.82.0",
+  "capture_provenance": "Live container capture on the arm64 capture workstation (2026-07-25) via the version-pinned image miniobserve/aider-capture:0.82.0 (aider from pip aider-chat==0.82.0), routed to the arm64 capture workstation's ollama (qwen3:8b) via OLLAMA_API_BASE=host.docker.internal:11434 (aider/litellm reads it directly — no socat). --no-auto-commits, HOME=/workspace. Scenario s1-edit: 'Add a line delta to data.txt, then create summary.txt containing just the number of lines in data.txt' — exercises MODIFY (data.txt existed in the seed commit) + NEW (summary.txt created), so the rung fires cells 6 and 7 both. Host aider untouched.",
+  "adapter_pin": "aider/multi-version (aider.dsl.yaml, chat-history-md vocabulary)",
+  "converter_version": "minitrace-aider-dsl-0.1.0",
+  "frozen_at": "2026-07-25",
+  "scenarios": {
+    "s1-edit": {
+      "input": "inputs/s1-edit.chat.history.md",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:da08e294b9277942ff477272f333516a80eb835d7ba679db0e552f1be04f503d"
+      ],
+      "unmapped_path_count": 1,
+      "annotated_cells_fired": [1, 2, 3, 4, 6, 7, 26]
+    }
+  }
+}

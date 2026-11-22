@@ -1,0 +1,68 @@
+# Drift ledger — droid adapter
+#
+# Machine-readable record of Axis-C drifts the drift watch has surfaced and
+# triaged. A drift whose surface an entry covers downgrades from FATAL to an
+# acknowledged line; a drift no entry covers still gates (exit 1). Format and the
+# verdict/disposition taxonomies: adapters/DRIFT-LEDGER.md.
+#
+# Matching is exact on the record type (the part before "::" in a
+# new_unmapped/dropped_dependency item, or the bare type for new_record_type).
+# droid's storage-format version is an in-band int on the session_start record;
+# the version_arm surfaces a format bump as a WARNING (non-gating) separately
+# from these entries. The paired .settings.json sidecar is folded into the
+# raw-surface via the sidecar_records hook, so a new sidecar key also surfaces as
+# a signal-0 raw-field WARNING.
+#
+# Changelog (format-evolution facts across frozen rungs — not ledger entries
+# unless a drift GATES; the ledger's four signal classes are all fatal-downgrade
+# classes and these are non-gating raw-surface warnings):
+#
+#   0.122.0 -> 0.178.0  (in-band format version unchanged, still v2; delta exit 0)
+#     16 additive native fields, none read-required by the DSL (no new_unmapped,
+#     no dropped_dependency, no dark cell — the adapter maps everything it needs):
+#     session_start:
+#       + hostId                          per-host UUID (container-ephemeral)
+#       + isSessionTitleManuallySet       title-provenance flag
+#     message:
+#       + modelId                         per-message model id (was model_change-only)
+#       + reasoningEffort                 per-message reasoning-effort echo
+#     settings sidecar (token-accounting expansion — surfaced ONLY via the
+#     sidecar_records hook; the default read_jsonl reader is blind to the sidecar):
+#       + compactionThresholdCheckEnabled        context-compaction toggle
+#       + childInclusiveTokenUsageBySessionId     per-child-session token rollup
+#       + inclusiveTokenUsage.{inputTokens,outputTokens,cacheCreationTokens,
+#           cacheReadTokens,thinkingTokens,factoryCredits}
+#       + lastCallTokenUsage.{inputTokens,outputTokens,cacheReadTokens}
+#       + tokenUsage.factoryCredits
+#     DONE 2026-07-25. This note previously read: "A
+#     future fixing pass could map inclusiveTokenUsage.{input,output}Tokens onto
+#     the trace metrics.total_{input,output}_tokens (would also light cell 26,
+#     currently dark for droid because the 0.122.0 sidecar reported no token
+#     counts). Deferred, non-gating."
+#
+#     The stated cause was FALSE and had been re-asserted in four places without
+#     anyone opening a sidecar. The 0.122.0 sidecar reports tokenUsage
+#     inputTokens 51796 / outputTokens 178, and all three 0.178.0 sidecars report
+#     counts too (61216/61833/46223). Cell 26 was dark because the adapter mapped
+#     NEITHER field onto metrics.total_{input,output}_tokens — not because the
+#     data was absent. "Ledgered" had been read as "verified".
+#
+#     The mapping now exists, and takes tokenUsage rather than the
+#     inclusiveTokenUsage this note proposed: tokenUsage is present at BOTH rungs
+#     (inclusiveTokenUsage is a 0.178.0 addition, so keying on it would have left
+#     0.122.0 dark and split cell-26 coverage by rung), and inclusiveTokenUsage
+#     rolls up child sessions, which a single-trace adapter with no sub-agent
+#     emission must not fold into a trace's own metrics. Rationale in full at
+#     derive_token_totals() in preprocess_droid.py. Cell 26 now fires on all four
+#     frozen scenarios; absent tokenUsage yields null, not 0.
+
+# Version-coverage declaration (adapters/DRIFT-LEDGER.md "Coverage declaration").
+# supported = the tested rung versions; versions between rungs (a ~56-release
+# span) are expected-compatible unless a ledger entry / changelog note says
+# otherwise. tested must equal the regression/<version>/ rung dirs (fleet sweep
+# asserts this). Both rungs reproduce via capture/droid:<v>.
+coverage:
+  tested: ["0.122.0", "0.178.0"]
+  policy: point-tested
+
+entries: []

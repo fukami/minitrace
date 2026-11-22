@@ -1,0 +1,5 @@
+{"type":"session","version":3,"id":"f3c9f518-b7df-46ec-aed5-dd7262a3c6e9","timestamp":"2026-03-15T17:29:10.235Z","cwd":"/home/user/project"}
+{"type":"model_change","id":"56c4ea11","parentId":null,"timestamp":"2026-03-15T17:29:10.236Z","provider":"openai","modelId":"qwen3.5:cloud"}
+{"type":"thinking_level_change","id":"0c6df901","parentId":"56c4ea11","timestamp":"2026-03-15T17:29:10.236Z","thinkingLevel":"medium"}
+{"type":"message","id":"3e587c8f","parentId":"0c6df901","timestamp":"2026-03-15T17:29:10.237Z","message":{"role":"user","content":[{"type":"text","text":"hello, respond in one sentence"}],"timestamp":1773595750236}}
+{"type":"message","id":"d8921023","parentId":"3e587c8f","timestamp":"2026-03-15T17:29:10.684Z","message":{"role":"assistant","content":[],"api":"openai-responses","provider":"openai","model":"qwen3.5:cloud","usage":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"totalTokens":0,"cost":{"input":0,"output":0,"cacheRead":0,"cacheWrite":0,"total":0}},"stopReason":"error","timestamp":1773595750237,"errorMessage":"401 Incorrect API key provided: dummy. You can find your API key at https://platform.openai.com/account/api-keys."}}

@@ -1,0 +1,79 @@
+adapter:
+  name: synthetic-trace-pair
+  harness_version: "0.0.1"
+  dsl_version: "0.1.0"
+  source_format: synthetic
+  converter_version: "0.0.1"
+
+input:
+  type: json
+  container:
+    record_path: events
+
+state: {}
+constants: {}
+
+sessions:
+  agent:
+    static:
+      schema_version: "0.3.0"
+      trace_type: "agent-session"
+      profile: "synthetic"
+      flags.for_research: true
+      flags.needs_cleaning: false
+      flags.contains_error: false
+      flags.contains_pii: false
+      environment.agent_framework: "synthetic"
+      environment.agent_version: "test"
+    derived:
+      id: "agent-${container.id}"
+      title: "synthetic-pair-agent-${container.id}"
+  judge:
+    static:
+      schema_version: "0.3.0"
+      trace_type: "judge-session"
+      profile: "synthetic"
+      flags.for_research: true
+      flags.needs_cleaning: false
+      flags.contains_error: false
+      flags.contains_pii: false
+      environment.agent_framework: "synthetic-judge"
+      environment.agent_version: "test"
+    derived:
+      id: "judge-${container.id}"
+      title: "synthetic-pair-judge-${container.id}"
+
+emit:
+  - target: agent
+    when:
+      any_of:
+        - { field: role, value: user }
+        - { field: role, value: assistant }
+    do:
+      - emit_turn:
+          index: "$record.index"
+          role: "$record.role"
+          content: "$record.content"
+  - target: judge
+    when:
+      field: index
+      value: 0
+    do:
+      - emit_lineage:
+          type: "judges"
+          target_trace_id: "agent-${container.id}"
+          target_content_hash: "${trace:agent-${container.id}:content_hash}"
+          authored_by: "synthetic-test-judge"
+          authored_at: "2026-05-04T00:00:00.000000Z"
+      - emit_annotation:
+          id: "ann-synthetic-${container.id}"
+          timestamp: "2026-05-04T00:00:00.000000Z"
+          annotator: "synthetic-test-judge"
+          scope:
+            type: "trace"
+            target_id: "agent-${container.id}"
+          content:
+            verdict: "synthetic-test"
+          claim_type: "classification"
+          source:
+            type: "reviewer"

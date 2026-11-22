@@ -1,0 +1,6 @@
+# Runtime dependencies for the minitrace adapter reference implementation,
+# pinned to the versions the fleet sweep was run with. Install into a venv.
+PyYAML==6.0.3     # DSL files + fixtures (preprocess_*.py, dsl_runner.py)
+rfc8785==0.1.4    # RFC 8785 (JCS) canonicalisation for content_hash (spec §3.4)
+jsonschema==4.26.0 # schema gate in verify_run.py and the regression rungs (schema_gate.py)
+pytest==9.1.1     # every spine test runs through it (run_fleet_sweep)

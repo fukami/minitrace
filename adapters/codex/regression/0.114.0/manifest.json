@@ -1,0 +1,59 @@
+{
+  "freeze_semantics": "Content-hash freeze of the codex adapter's output over the conformance scenario at harness 0.114.0. codex uses the preprocess path: preprocess_codex.py normalises the native rollout session log (~/.codex/sessions/rollout-*.jsonl) into one container, which codex.dsl.yaml turns into one trace. The same adapter also reads the thin `codex exec --json` stdout format via field-presence dispatch, but this rung freezes the rich rollout format. verify.py re-runs preprocess+DSL on each input (cwd = this dir, input paths relative) and asserts trace_count, per-trace content_hash, and unmapped_path_count. codex traces carry no provenance.source_path, so the content_hash is checkout-independent (the input path does not enter the hash). First codex rung and the older end of codex's first release-delta baseline; the candidate is a fresh 0.143.0 capture.",
+  "harness_version": "0.114.0",
+  "capture_provenance": "Archived 2026-03-15 format-discovery rollout, reused verbatim as the sanitized format-reference (adapters/codex/format-reference/session-v0.114.0.jsonl, git-sanitized in 8ed0c56). Unlike droid's archived corpus, codex's 0.114.0 material is NOT degenerate: codex ran in exec/full-auto so its write scenario executed real read+write shell tools (find . -type f > files.txt ; cat files.txt), yielding a clean 2-turn / 2-tool (NEW+READ) parity baseline. Model provider ollama (qwen3.5:cloud); cwd /private/tmp/claude/minitrace-discovery/codex-workspace. This rung's output is byte-identical (same content_hash) to the pre-v0.3.0 hand-written adapter's frozen minitrace over the same session shape (verified against scenario-runs/2026-03-23-egress-validate-codex). ROUND-2 BACKFILL (2026-07-25): s2-todo-grep + s3-readme-edit are EXEC-format sources (codex exec --json stdout) from the same 2026-03-15 first-run corpus (scenario-runs S2/S3), added to close the EXECUTE(8)/MODIFY(6) coverage gaps. The exec format carries no in-band version (7889-precedent provenance note): their 0.114.0 identity is date-bounded \u2014 same discovery run as this rung's rollout anchor. Contamination-scanned before freeze (no internal names/paths; the only secret-pattern hits are usage.input_tokens fields).",
+  "adapter_pin": "codex/multi-version (codex.dsl.yaml, rollout + exec vocabulary)",
+  "converter_version": "minitrace-codex-dsl-0.1.1",
+  "frozen_at": "2026-07-25",
+  "scenarios": {
+    "s1-files-discovery": {
+      "input": "inputs/s1-files.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:d538a7209bef87994eb823fb8b68c2b84be3d167139f6fd1c19bcd589c38d279"
+      ],
+      "unmapped_path_count": 7,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        7,
+        26
+      ]
+    },
+    "s2-todo-grep": {
+      "input": "inputs/s2-todo-grep.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:6d05cb721f43c703af1078bbfaae126e87578b666d4362c8943d58ee99808673"
+      ],
+      "unmapped_path_count": 4,
+      "annotated_cells_fired": [
+        2,
+        3,
+        4,
+        7,
+        8,
+        26
+      ]
+    },
+    "s3-readme-edit": {
+      "input": "inputs/s3-readme-edit.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:02abb3471b3b5ce56b1ef6f244ee7601b50a5967147213a1b7b824ab15d58afa"
+      ],
+      "unmapped_path_count": 4,
+      "annotated_cells_fired": [
+        2,
+        3,
+        4,
+        6,
+        8,
+        26
+      ]
+    }
+  }
+}

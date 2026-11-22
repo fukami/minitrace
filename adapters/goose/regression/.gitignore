@@ -1,0 +1,3 @@
+# transient SQLite sidecars created when the adapter/verify opens a sessions.db
+*.db-wal
+*.db-shm

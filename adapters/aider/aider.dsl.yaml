@@ -1,0 +1,188 @@
+# minitrace adapter DSL — aider (Aider AI pair programmer, Apache-2.0)
+#
+# Reads a single-element JSON array of a pre-processed container produced by
+# preprocess_aider.py (one aider chat.history.md → one container). aider has no
+# structured session log; the preprocessor parses the markdown transcript
+# (.aider.chat.history.md) — the only COMPLETE native source — into the same
+# event_kind record stream the other adapters use, so this DSL is a thin emitter.
+#
+# Single-trace adapter: aider has no subagent/lineage surface.
+#
+# v0.1 scope:
+#   - One trace per aider session (one chat.history.md session block).
+#   - Per-record turn emission (user_text, assistant_turn).
+#   - aider's tool surface is whole-file edits: the model echoes the entire file
+#     (content_origin = model_echo), applied as NEW or MODIFY. The preprocessor
+#     classifies op from the `Create new file?` prompt and pairs the applied-edit
+#     confirmation with the file listing; the DSL emits verbatim.
+#   - Reasoning captured as turn.thinking from the <thinking-content> block.
+#   - One annotation: producer_config (edit_format).
+#   - Session-level token totals in metrics.
+#
+# Deferred:
+#   - Shell-command (EXECUTE) tool surface — flagged by the preprocessor when
+#     present, not yet emitted as a distinct tool_call in v0.1.
+#   - Per-turn usage annotations (token totals surfaced at session level).
+#   - System prompt (lives in .aider.llm.history, not the transcript; not read).
+#
+# Conforms to minitrace-spec v0.3.0 + minitrace-adapter-dsl-spec v0.1.0.
+
+adapter:
+  name: aider
+  harness_version: "aider/multi-version"
+  dsl_version: "0.1.0"
+  source_format: aider-chat-history-md-v1
+  converter_version: minitrace-aider-dsl-0.1.0
+  produces_schema: "0.3.0"
+
+input:
+  type: json
+  encoding: utf-8
+  container:
+    record_path: messages
+
+state:
+  next_turn_index: 0
+  last_assistant_turn_index: null
+  next_ann_id: 0
+
+constants:
+  default_capture_mode: scrubbed
+
+# aider edits are model-echoed whole-file listings; the real operation_type
+# (NEW/MODIFY) is pre-computed per edit by the preprocessor, so this map is
+# only a fallback.
+operation_types:
+  edit: MODIFY
+  default: OTHER
+
+session:
+  static:
+    schema_version: "0.3.0"
+    trace_type: "agent-session"
+    profile: "aider"
+    # Nothing here checks for personal data, so the flags assume it is present:
+    # unchecked, not clean. contains_pii forces classification >= confidential.
+    classification: "confidential"
+    flags.for_research: false
+    flags.needs_cleaning: true
+    flags.contains_error: false
+    flags.contains_pii: true
+  derived:
+    id: "$container.trace_id"
+    title: "$container.trace_title"
+    timing.started_at: "$container.created_at"
+    timing.ended_at: "$container.updated_at"
+    environment.agent_framework: "aider"
+    environment.agent_version: "$container.cli_version"
+    environment.model: "$container.model"
+    environment.provider: "$container.provider_hint"
+    environment.model_provider: "$container.model_provider"
+    environment.tools_enabled: "$container.tools_enabled"
+    operational_context.working_directory: "$container.cwd"
+    operational_context.framework_config.edit_format: "$container.edit_format"
+    provenance.source_format: "$container.source_format_versioned"
+    provenance.source_session_id: "$container.session_id"
+    provenance.source_schema_version: "$container.version_label"
+    # Spec §3.5.1: aider's only timestamp is a zoneless local time; this records
+    # the zone applied: naive_local:UTC-assumed | naive_local:<IANA zone> |
+    # unparsed | absent.
+    provenance.created_at_basis: "$container.created_at_basis"
+
+emit:
+
+  # ===== SESSION_INIT — producer_config (edit_format) =====
+  - target: agent
+    name: aider_emit_config
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+        - { container_field: edit_format, present: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "aider-ann-config-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$container.created_at"
+          annotator: "aider-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Producer config (aider): edit format determines how the model expresses file changes (whole / diff / udiff / …), which shapes the tool surface."
+          claim_type: "observation"
+          aider_edit_format: "$container.edit_format"
+          taxonomy:
+            - "aider/${container.version_label}/session/producer_config"
+
+  # ===== USER text turn =====
+  - target: agent
+    name: aider_user_text_turn
+    when:
+      all_of:
+        - { field: event_kind, value: user_text }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "user"
+          source: "human"
+          content_type: "text"
+          content: "$record.content_text"
+          input_channel: "user_input"
+          timestamp: "$record.timestamp"
+      - set:
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  # ===== ASSISTANT turn (content + thinking + whole-file edits) =====
+  - target: agent
+    name: aider_assistant_turn
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_turn }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "assistant"
+          source: "model"
+          content_type: "text"
+          content: "$record.content_text"
+          thinking: "$record.thinking"
+          timestamp: "$record.timestamp"
+      - set:
+          state.last_assistant_turn_index: "$state.next_turn_index"
+          state.next_turn_index: "$state.next_turn_index + 1"
+    foreach_block: "$record.tool_calls"
+    on_block:
+      - name: aider_emit_one_edit
+        when:
+          all_of:
+            - { block_field: id, present: true }
+        do:
+          - emit_tool_call:
+              id: "$block.id"
+              tool_name: "$block.tool_name"
+              tool_provider: "aider"
+              emitting_turn_index: "$state.last_assistant_turn_index"
+              operation_type: "$block.operation_type"
+              input:
+                file_path: "$block.file_path"
+                arguments: "$block.arguments"
+              output:
+                success: "$block.success"
+                result: "$block.result"
+                error: "$block.error"
+                duration_ms: "$block.duration_ms"
+                content_origin: "$block.content_origin"
+              invocation_source: "agent_choice"
+              framework_metadata:
+                aider_edit_format: "$block.aider_edit_format"
+              taxonomy:
+                - "aider/${container.version_label}/tool/${block.tool_name}"
+
+finalize:
+  computed:
+    metrics.total_tokens: "$container.total_tokens"
+    metrics.total_input_tokens: "$container.total_input_tokens"
+    metrics.total_output_tokens: "$container.total_output_tokens"

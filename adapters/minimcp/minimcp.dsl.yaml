@@ -1,0 +1,188 @@
+# minitrace adapter DSL — minimcp MCP-server bridge
+# Converts the preprocessed minimcp wire-level NDJSON (see preprocess_minimcp.py)
+# into a v0.3.0 *bridge-session* trace. Conforms to minitrace-adapter-dsl-spec
+# v0.1.0; mapping decisions of 2026-06-03.
+#
+# FORK 1 = A (standalone bridge trace).  FORK 2 = ext: now, defer baseline promotion.
+# Vantage: minimcp observes the conversation from the SERVER end, so it is blind to
+# the host's caller-type -> client tool calls carry invocation_source=unknown.
+# Server-initiated flows, capability negotiation, and the advertised-vs-serviced
+# divergence ride ext:bridge:* / ext:mcp:* annotations (claim_type stays baseline;
+# the ext: namespace lives in annotator + content.ext_namespace).
+#
+# Input is the PREPROCESSED JSONL, not raw NDJSON.
+
+adapter:
+  name: minimcp
+  harness_version: "0.1.0"
+  dsl_version: "0.1.0"
+  source_format: minimcp-bridge-jsonl-v0.1
+  converter_version: minitrace-minimcp-dsl-0.1.0
+  produces_schema: "0.3.0"
+
+input:
+  type: jsonl
+  encoding: utf-8
+
+state:
+  all_ts: []
+
+session:
+  static:
+    schema_version: "0.3.0"
+    trace_type: "ext:minitrace:bridge-session"
+    schema_uri: "https://minitrace.dev/schemas/ext/minitrace/bridge-session/v0.1.0.json"
+    profile: "scenario-run"
+    classification: "internal"
+    flags.for_research: true
+    flags.needs_cleaning: false
+    flags.contains_error: false
+    flags.contains_pii: false
+    # Bridge trace has no agent turns; turns[] stays empty (base-schema valid:
+    # turns is not required and has no minItems for an unknown trace_type).
+    timing.privacy_level: "scrubbed"
+    coordination.human_attention: "passive"
+
+  derived:
+    id: "$record_first.session_id"
+    title: "minimcp bridge: ${record_first.host} <-> minimcp"
+    provenance.source_format: "$adapter.source_format"
+    provenance.converter_version: "$adapter.converter_version"
+    provenance.original_session_id: "$record_first.session_id"
+
+  passthrough:
+    coordination:
+      human_attention: "passive"
+    operational_context:
+      autonomy_level: "supervised"
+      sandbox: true
+    condition: null
+
+emit:
+
+  # --- session metadata + capability negotiation -----------------------------
+  - name: session_meta
+    when: { field: kind, value: session_meta }
+    do:
+      # Two actions: one mapping cannot hold the key twice (YAML keeps the
+      # last), which silently dropped first_ts.
+      - accumulate:
+          state.all_ts: "$record.first_ts"
+      - accumulate:
+          state.all_ts: "$record.last_ts"
+      - set:
+          session.environment.agent_framework: "$record.host"
+          session.environment.agent_version: "$record.host_version"
+          session.environment.transport_hint: "$record.transport"
+          session.timing.started_at: "$record.first_ts"
+          session.timing.ended_at: "$record.last_ts"
+      - emit_annotation:
+          id: "mcp-ann-capneg"
+          timestamp: "$record.first_ts"
+          annotator: "minimcp-bridge"
+          source:
+            type: "runtime"
+          scope:
+            type: "session"
+            target_id: "$record.session_id"
+          claim_type: "observation"
+          content:
+            category: "observation"
+            ext_namespace: "ext:mcp:capability_negotiation"
+            title: "MCP initialize: ${record.host} offered ${record.protocol_offered}"
+            host: "$record.host"
+            host_version: "$record.host_version"
+            protocol_offered: "$record.protocol_offered"
+            protocol_supported: "$record.protocol_supported"
+            init_ok: "$record.init_ok"
+            reject_code: "$record.reject_code"
+            advertised_capabilities: "$record.advertised"
+            detail: "init_ok=${record.init_ok}; if false, minimcp rejected the offered protocol version (server single-version pin, not a host fault)."
+
+  # --- server-initiated request (the divergence carrier) ---------------------
+  - name: server_request
+    when: { field: kind, value: server_request }
+    do:
+      - emit_annotation:
+          id: "$record.ann_id"
+          timestamp: "$record.ts"
+          annotator: "minimcp-bridge"
+          source:
+            type: "runtime"
+          scope:
+            type: "session"
+            target_id: "$record.session_id"
+          claim_type: "observation"
+          content:
+            category: "observation"
+            ext_namespace: "ext:bridge:mcp:server_request"
+            title: "server-initiated ${record.method}"
+            mcp_method: "$record.method"
+            capability: "$record.capability"
+            advertised: "$record.advertised"
+            serviced: "$record.serviced"
+            response_summary: "$record.response_summary"
+            detail: "Server-initiated request. serviced=${record.serviced}; an unserviced request is detected by request-without-response correlation (the abandonment warning does not fire on host process-kill)."
+
+  # --- client tool call (server-side vantage: invocation_source unknown) ------
+  - name: tool_call
+    when: { field: kind, value: tool_call }
+    do:
+      - accumulate:
+          state.all_ts: "$record.ts"
+      - emit_tool_call:
+          id: "$record.id"
+          timestamp: "$record.ts"
+          tool_name: "$record.tool_name"
+          input:
+            arguments: "$record.arguments"
+          output:
+            result: "$record.output_summary"
+            success: "$record.serviced"
+          invocation_source: "unknown"
+
+  # --- advertised-vs-serviced divergence (post-hoc, aggregator) --------------
+  - name: cap_divergence
+    when: { field: kind, value: cap_divergence }
+    do:
+      - emit_annotation:
+          id: "$record.ann_id"
+          timestamp: "$record.ts"
+          annotator: "minimcp-bridge"
+          source:
+            type: "aggregator"
+          scope:
+            type: "session"
+            target_id: "$record.session_id"
+          claim_type: "classification"
+          content:
+            # Neutral category: the server-side vantage cannot establish FAULT
+            # (design note §3 — blind to client motive). "outcome" carries the
+            # divergence/conformant discriminator; fault is a downstream call.
+            category: "observation"
+            ext_namespace: "ext:mcp:advertised_vs_serviced"
+            outcome: "$record.outcome"
+            title: "advertised-vs-serviced (${record.outcome}): unserviced=${record.unserviced_text}; serviced-unadvertised=${record.serviced_unadvertised_text}"
+            advertised_capabilities: "$record.advertised"
+            server_initiated_capabilities: "$record.fired"
+            serviced_capabilities: "$record.serviced"
+            # Two divergence directions (see preprocess_minimcp.py): advertised-but-
+            # unserviced (host claimed it, did not honor it) and serviced-but-
+            # unadvertised (host honored a capability it never claimed — surfaced
+            # only because minimcp fires regardless of advertisement, divergence
+            # EM10). outcome="divergence" if EITHER is non-empty.
+            unserviced_capabilities: "$record.unserviced"
+            serviced_unadvertised_capabilities: "$record.serviced_unadvertised"
+            detail: "Host advertised ${record.advertised_text}; server fired ${record.fired_text}; host serviced ${record.serviced_text}. Advertised-and-fired but unserviced: ${record.unserviced_text}. Serviced but never advertised: ${record.serviced_unadvertised_text}. Classification of fault, if any, is left to a consumer with host-side context."
+
+  # NOTE: no catch-all rule. Top-level dispatch is all-match (no break), so a
+  # `has_any: true` catch-all fires on EVERY record and emits a spurious
+  # "unhandled" note even for handled records. All record kinds are produced by
+  # preprocess_minimcp.py (a closed set), so an unknown kind is a preprocessor
+  # bug to fix there, not a runtime branch here.
+
+finalize:
+  computed:
+    metrics.turn_count: "len($trace.turns)"
+    metrics.tool_call_count: "len($trace.tool_calls)"
+    provenance.converted_at: now_microseconds()

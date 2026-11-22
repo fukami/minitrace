@@ -1,0 +1,20 @@
+{
+  "freeze_semantics": "Content-hash freeze of the pi adapter's output over the conformance scenario at harness 0.74.0 (in-band storage-FORMAT int session.version = 3, same as 0.58.1 and 0.80.3; the harness RELEASE version 0.74.0 is capture provenance, not in-band). pi is preprocessor-less: the DSL runner reads the native JSONL directly. verify.py re-runs the DSL on each input (cwd = this dir), normalizes the volatile provenance.converted_at, and asserts trace_count, the canonical (RFC 8785 JCS) content_hash, and unmapped_path_count. pi traces carry no provenance.source_path, so the freeze is checkout-independent. annotated_cells_fired is the structural fired-cell set (equals the pi CELL_SIGNALS extractor exactly). Older end of pi's IMAGE release delta 0.74.0 -> 0.80.3 (both version-pinned container captures). 0.74.0 is the OLDEST pi version published on npm — pi 0.58.1 is unpublished and cannot be image-captured, so it remains only as an archived-corpus rung.",
+  "harness_version": "0.74.0",
+  "format_version": 3,
+  "capture_provenance": "Live version-pinned CONTAINER capture on the arm64 capture workstation, 2026-07-23, via the frameworks/pi/ image (miniobserve/pi-capture:0.74.0, npm @earendil-works/pi-coding-agent@0.74.0 pinned by PI_VERSION build-arg), routed to the arm64 capture workstation's ollama (qwen2.5:7b) through an in-container socat forwarder (pi has no ollama base-URL override; a models.json custom openai-completions provider named 'ollama' points at localhost:11434 -> host). --thinking off (qwen2.5:7b 400s at pi's default medium). cwd is the container /workspace (no host-path PII). Same read-config/write-version s1-config task (basename s1-config.jsonl) as the other rungs. The model emitted read+edit+write; the 0.80.3 image capture fired the SAME cell set [1,2,3,4,5,6,7,26], so the image delta's dark-cell signal is stable. Host brew pi untouched. Model: ollama/qwen2.5:7b.",
+  "adapter_pin": "pi/format-v3 (0.58.1.dsl.yaml)",
+  "converter_version": "minitrace-pi-dsl-0.1.0",
+  "frozen_at": "2026-07-23",
+  "scenarios": {
+    "s1-config-version": {
+      "input": "inputs/s1-config.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:da5cf58c015211ffababceaa33b22245ad669feeb1263ea83db7871dcf01e834"
+      ],
+      "unmapped_path_count": 22,
+      "annotated_cells_fired": [1, 2, 3, 4, 5, 6, 7, 26]
+    }
+  }
+}

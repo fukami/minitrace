@@ -1,236 +1,134 @@
 # minitrace
 
-A session trace format for capturing human-AI interactions across frameworks.
+minitrace is a vendor-neutral interchange format for agent traces. It defines a
+portable, canonical shape for a session — turns, tool
+calls, annotations, lineage between traces, redactions, and provenance — so that
+sessions produced by different harnesses can be stored, compared, and analysed
+with one set of tools.
 
-minitrace converts native session data from 11 coding agent and web AI frameworks into a common JSON format, enabling cross-framework behavioral comparison, failure pattern analysis, and reproducible experiments.
+This repository holds the **format specifications** and the **adapters** that
+convert native harness output into the format. If you want to *build or extend*
+minitrace (write an adapter, propose a spec change), read
+[`AGENTS.md`](AGENTS.md) first. This README is for *using* the format.
 
-## Supported Frameworks
+## The specifications
 
-| Framework | Type | Tested Version | Storage Format | Adapter |
-|-----------|------|----------------|---------------|---------|
-| Claude Code | Agent | 2.1.76+ | JSONL | `adapters/claude-code/` |
-| Codex | Agent | 0.114.0 | JSONL | `adapters/codex/` |
-| Goose (Block) | Agent | 3.27.0 | SQLite | `adapters/goose/` |
-| Pi | Agent | 0.58.1 | JSONL | `adapters/pi/` |
-| OpenCode | Agent | 1.2.20 | SQLite | `adapters/opencode/` |
-| Droid (Factory) | Agent | 0.74.0 | JSONL | `adapters/droid/` |
-| Gemini CLI | Agent | 0.33.1 | JSON | `adapters/gemini/` |
-| Vibe (Mistral) | Agent | 2.4.2 | meta.json + JSONL | `adapters/vibe/` |
-| OpenClaw | Agent | 2026.3.13 | JSONL | `adapters/openclaw/` |
-| ChatGPT | Web | Data export | ZIP (conversations.json) | `adapters/chatgpt/` |
-| claude.ai | Web | Data export | ZIP (conversations.json) | `adapters/claude-ai/` |
+minitrace v0.3 is four specifications released together as one bundle. They
+reference each other; treat them as a set. Each is versioned independently (see
+[`VERSIONING.md`](VERSIONING.md)).
 
-## Quick Start
+| Spec | File | Defines |
+|---|---|---|
+| **Trace** | [`spec/minitrace-spec-v0.3.0.md`](spec/minitrace-spec-v0.3.0.md) | The on-disk shape of a trace: turns, tool calls, operator, annotations, lineage, redactions. |
+| **Adapter DSL** | [`spec/minitrace-adapter-dsl-spec-v0.1.0.md`](spec/minitrace-adapter-dsl-spec-v0.1.0.md) | A declarative YAML language for mapping one harness's native output to a trace. |
+| **Envelope** | [`spec/minitrace-envelope-spec-v0.1.1.md`](spec/minitrace-envelope-spec-v0.1.1.md) | A container that bundles traces with attestation, witnesses, and provenance. |
+| **Scenario** | [`spec/minitrace-scenario-spec-v0.1.0.md`](spec/minitrace-scenario-spec-v0.1.0.md) | A framework- and model-agnostic scenario definition, and the binding record that pins a run to its `(model, harness, scenario)` triple. |
 
-```bash
-# Clone (Python 3.9+, no external dependencies)
-git clone https://github.com/fukami/minitrace.git
-cd minitrace
+The specifications define a **format**, not an implementation. Conformance is a
+property of a document (does this trace match the shape?), not of any particular
+tool.
 
-# Convert Claude Code sessions
-python3 adapters/claude-code/minitrace-claude-adapter.py \
-    --source-dir ~/.claude/projects/ \
-    --output-dir ./output/
+## Using the format
 
-# Convert Goose sessions
-python3 adapters/goose/minitrace-goose-adapter.py \
-    --source-db ~/.local/share/goose/sessions/sessions.db \
-    --output-dir ./output/
+- **Read a trace.** A trace is a single JSON document. The trace spec is the
+  authoritative description of every field; start at its §3 (trace structure).
+- **Convert a session.** An adapter under `adapters/<harness>/` maps a specific
+  harness version's output to a trace. Each adapter is normally a DSL file (plus
+  an optional Python preprocessor for native quirks; the exceptions are noted
+  below).
+- **Not every adapter is regression-gated.** The adapters with a `regression/`
+  directory are frozen against captured inputs and checked on every sweep. The
+  agentdojo, claude-ai, gemini-cli, mcpuniverse, minimcp, inspect-swe and otel-openinference
+  adapters are included only because tests under `adapters/tests/` exercise them;
+  they have no regression rung and no format reference. Of these, gemini-cli,
+  inspect-swe and otel-openinference ship their preprocessor only; their DSL files
+  are not part of this release. Where the validation evidence below cites one of
+  them, or an adapter this release does not ship, that result comes from a corpus
+  run that is not part of this repository, and the sweep does not re-check it.
+- **Configuration is redacted by key name.** vibe's configuration snapshot, droid's
+  settings sidecar and claude-code's environment snapshots are carried into the trace
+  with every value under a key whose last word (ignoring a trailing `value`, `header` and
+  the like) names a secret (`token`, `apiKey`, `client_secret`, `Authorization`, ...)
+  replaced by `[redacted]` (booleans, nulls and empty strings are kept); the trace
+  records how many (`vibe_config_redacted`, `_raw_redacted`, `environment_redacted`). The rule is in
+  `adapters/redact.py`. Plurals count like the singular (`secrets`, `api_keys`), a
+  trailing `pem` like `value` (`private_key_pem`), and an environment-style `*_KEY` or
+  `*_PAT` name is a secret (`OPENAI_KEY`, `GH_PAT`). `tokens` is redacted only over an
+  object or list, since as a number it is a count (`max_tokens`). It does not see a
+  secret under an innocuous key name, a bare `key` or a
+  scalar `tokens`, nor one in a prompt, a tool call or its output. codex's configuration annotation carries a few posture fields only and is not
+  redacted.
+- **vibe tool success is inferred.** vibe records no status field. A bash call's
+  success is read from the final `returncode: N` line the harness appends (no such line
+  means not successful), and a text result the harness wraps in `<tool_error>` is a
+  failure; any other vibe tool call with a result, an empty one included, is recorded as
+  successful, because the spec (v0.2.0, unchanged in v0.3.0) expects a boolean. A call
+  with no result is recorded as not successful; `framework_metadata.vibe_has_result:
+  false` tells it apart from a recorded failure.
+- **Bundle for distribution.** The envelope spec describes how to wrap one or
+  more traces with provenance and integrity material for redistribution.
+- **Bind a run to a scenario.** The scenario spec defines a portable scenario
+  format and a binding record that pins a run to the exact `(model, harness,
+  scenario)` it was produced for — the reproducibility surface for evaluation
+  and comparison.
 
-# Convert ChatGPT data export
-python3 adapters/chatgpt/minitrace-chatgpt-adapter.py \
-    --source data-export.zip \
-    --output-dir ./output/
+The empirical grounding of the specifications — which elements have been
+exercised by which adapters, with what evidence — is recorded in
+[`docs/minitrace-v0.3.0-validation-evidence.md`](docs/minitrace-v0.3.0-validation-evidence.md).
 
-# Convert claude.ai data export
-python3 adapters/claude-ai/minitrace-claude-ai-adapter.py \
-    --source data-export.zip \
-    --output-dir ./output/
+## Running the checks
 
-# Validate output
-python3 adapters/validate-minitrace.py --dir ./output/ --recursive
+The commands below reproduce the release checks from the root of a clone of this
+repository. They need Python 3.13 or later with its venv module, git, and a Rust
+toolchain with cargo 1.78 or later; no particular operating system or image is
+assumed. Run them as a user other than root, since some of the tests check file
+permissions, which root bypasses. The first block fetches the Python packages
+(the four direct dependencies are pinned in `adapters/requirements.txt`; the
+eight packages they pull in are not, so pip installs whatever versions PyPI
+serves that day) and the Rust crates and needs network access;
+the second runs without it.
+
+```sh
+python3 -m venv .venv
+.venv/bin/pip install -r adapters/requirements.txt
+cargo fetch --locked --manifest-path adapters/minitrace-verify/Cargo.toml
+cargo fetch --locked --manifest-path adapters/jcs-oracle/Cargo.toml
 ```
 
-## Querying with DuckDB
-
-Query minitrace JSON files directly with SQL. No loading step, no database setup.
-
-```bash
-# Framework comparison (aggregate stats)
-duckdb -f queries/framework-summary.sql
-
-# One-liner: list all sessions
-duckdb -c "
-SELECT id, environment->>'agent_framework' as framework,
-       environment->>'platform_type' as type,
-       CAST(metrics->>'tool_call_count' AS INT) as tools
-FROM read_json('output/**/*.minitrace.json',
-  columns={id: 'VARCHAR', environment: 'JSON', metrics: 'JSON'},
-  ignore_errors=true)
-ORDER BY tools DESC
-"
+```sh
+cargo build --release --offline --locked --manifest-path adapters/minitrace-verify/Cargo.toml
+cargo build --release --offline --locked --manifest-path adapters/jcs-oracle/Cargo.toml
+cargo test --release --offline --locked --manifest-path adapters/minitrace-verify/Cargo.toml
+cargo test --release --offline --locked --manifest-path adapters/jcs-oracle/Cargo.toml
+.venv/bin/python adapters/run_fleet_sweep.py
 ```
 
-See [`queries/`](queries/) for ready-made SQL files covering framework summaries,
-tool operation breakdowns, read-ratio analysis, timing, and annotations.
+The checks pass when every command exits 0. Each `cargo test` reports `0 failed`;
+jcs-oracle has no unit tests of its own, and the sweep checks it against the
+canonical vectors. The fleet sweep runs every regression rung, every test under
+`adapters/tests/` (the canonical vectors among them), a lint and the coverage
+declarations, and ends with a line beginning `fleet sweep: N/N pass`.
 
-## Format Discovery
+## Reference implementation
 
-Each agent adapter includes a `--discover` mode that inspects the native format without converting:
+[`go-minitrace`](https://github.com/go-go-golems/go-minitrace), by Manuel
+(go-go-golems), is an independent Go implementation of the v0.2.0 format and
+the reference for a working storage and query architecture:
 
-```bash
-python3 adapters/codex/minitrace-codex-adapter.py --discover --source-dir ~/.codex/
-python3 adapters/pi/minitrace-pi-adapter.py --discover
-python3 adapters/gemini/minitrace-gemini-adapter.py --discover
-```
+- canonical `.minitrace.json` as the portable interchange format;
+- a SQLite working store for fast annotation mutation;
+- a DuckDB analytical read layer over the working store; and
+- parameterised SQL query commands for shipping analysis patterns across
+  installations.
 
-## Format Stability Testing
+That storage split and the query-command pattern are **reference, not mandated**:
+the format specifications do not require them. go-minitrace is a separate project
+— its author is not a contributor to these specifications, and the
+specifications do not depend on it. It is credited here as an independent
+implementation and a worked reference for tooling around the format.
 
-The `test-format-stability.py` tool detects when a framework updates its native format:
+## Status
 
-```bash
-# Test all adapters against reference schemas
-python3 adapters/test-format-stability.py --all
-
-# Extract schema from a session file
-python3 adapters/test-format-stability.py --extract session.jsonl
-
-# Check a new file against a reference schema
-python3 adapters/test-format-stability.py --check new.jsonl --reference ref.schema.json
-```
-
-## Specification
-
-The current specification is [`spec/minitrace-spec-v0.2.0.md`](spec/minitrace-spec-v0.2.0.md). It defines:
-
-- **Session schema:** Full session structure with turns, tool calls, metrics
-- **Two profiles:** Controlled (experiments) and Organic (natural sessions)
-- **Input provenance:** `input_channel` and `content_origin` fields for prompt injection path analysis
-- **Failure taxonomy:** Classification system for AI behavioral failures
-- **Annotation layer:** Structured observations, patterns, and reviews
-- **Adapter requirements:** What adapters must extract and how
-
-v0.2.0 is backward-compatible with v0.1.0. The previous specification is at [`spec/minitrace-spec-v0.1.0.md`](spec/minitrace-spec-v0.1.0.md).
-
-## Examples
-
-The `examples/` directory contains reference traces organized by spec version:
-
-- `examples/v0.1.0/` -- 44 traces from 9 agent frameworks (containerized scenario runs)
-- `examples/v0.2.0/` -- traces demonstrating v0.2.0 fields (input provenance, quality tiers)
-
-```bash
-# Validate v0.2.0 examples
-python3 adapters/validate-minitrace.py --dir ./examples/v0.2.0/ --recursive
-
-# Validate v0.1.0 examples (backward-compatible validator)
-python3 adapters/validate-minitrace.py --dir ./examples/v0.1.0/ --recursive
-
-# Query examples with DuckDB
-duckdb -c "SELECT environment->>'agent_framework' as fw, count(*) as n
-FROM read_json('examples/**/*.minitrace.json',
-  columns={environment: 'JSON'}, ignore_errors=true)
-GROUP BY fw ORDER BY n DESC"
-```
-
-## Output Structure
-
-Adapters write converted traces to a directory with this structure:
-
-```
-<output-dir>/
-├── manifest.json                    # Root manifest
-└── active/
-    └── 2026-03/
-        ├── manifest.json            # Period manifest
-        ├── <session-id>.minitrace.json
-        └── ...
-```
-
-Each `.minitrace.json` file contains a complete session:
-
-```json
-{
-  "id": "session-uuid",
-  "schema_version": "minitrace-v0.2.0",
-  "profile": "controlled",
-  "quality": "A",
-  "environment": {
-    "model": "claude-sonnet-4-5-20250514",
-    "agent_framework": "claude-code",
-    "agent_version": "2.1.76",
-    "platform_type": "agent"
-  },
-  "timing": {
-    "duration_seconds": 45.2,
-    "started_at": "2026-03-15T14:30:00Z"
-  },
-  "turns": [...],
-  "tool_calls": [...],
-  "metrics": {
-    "turn_count": 12,
-    "tool_call_count": 8,
-    "read_ratio": 0.375
-  },
-  "annotations": [...]
-}
-```
-
-## Quality Tiers
-
-Sessions are assigned a quality tier during conversion:
-
-| Tier | Criteria |
-|------|----------|
-| **A** | Full conversation + tool I/O, >10 tool calls, >5 turns |
-| **B** | Conversation but limited tool I/O or few tool calls |
-| **C** | No conversation (metadata only) |
-| **D** | Empty/trivial |
-
-Web sessions without tool calls are capped at tier B regardless of conversational depth.
-
-## Architecture
-
-```
-adapters/
-├── minitrace_common.py          # Shared utilities (all adapters import this)
-├── validate-minitrace.py        # Schema validator
-├── test-format-stability.py     # Format change detector
-├── claude-code/                 # Agent frameworks
-├── codex/
-├── goose/
-├── pi/
-├── opencode/
-├── droid/
-├── gemini/
-├── vibe/
-├── openclaw/
-├── chatgpt/                     # Web platforms
-└── claude-ai/
-```
-
-## Documentation
-
-- [`spec/minitrace-spec-v0.2.0.md`](spec/minitrace-spec-v0.2.0.md) -- Format specification (schemas, types, constraints)
-- [`spec/minitrace-spec-v0.1.0.md`](spec/minitrace-spec-v0.1.0.md) -- Previous specification
-- [`docs/adapter-guide.md`](docs/adapter-guide.md) -- How to write an adapter (conversion process, tool mapping, quality tiers)
-- [`docs/experiment-guide.md`](docs/experiment-guide.md) -- How to run reproducible experiments
-- [`docs/format-discovery.md`](docs/format-discovery.md) -- Native format documentation for supported frameworks
-- [`docs/related-work.md`](docs/related-work.md) -- Relationship to MAST, ToolEmu, OWASP
-- [`docs/threat-model.md`](docs/threat-model.md) -- Threat model and security review
-- [`docs/cross-framework-format-gaps.md`](docs/cross-framework-format-gaps.md) -- Known gaps and future candidates
-
-## Security Considerations
-
-These adapters read untrusted data from framework session stores. See
-`docs/threat-model.md` for the threat model and review checklist.
-
-Key properties:
-- **Read-only:** Adapters only read native session data, never modify it
-- **No code execution:** Parsed content is stored as strings, never evaluated
-- **Content truncation:** Large outputs are truncated with hash references
-- **PII detection:** Unsanitized user paths are flagged
-
-## License
-
-[MIT](LICENSE)
+v0.3 is released. The four specifications are versioned independently (trace
+v0.3.0, adapter DSL v0.1.0, envelope v0.1.1, scenario v0.1.0) and ship as a
+coherent bundle.

@@ -1,0 +1,177 @@
+{
+  "record_types": {
+    "session": 1,
+    "message": 8
+  },
+  "field_count": 17,
+  "fields": {
+    "content_json": {
+      "types": [
+        "str"
+      ],
+      "count": 8,
+      "sample_values": []
+    },
+    "created_at": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "2026-03-15 18:28:22"
+      ]
+    },
+    "created_timestamp": {
+      "types": [
+        "int"
+      ],
+      "count": 8,
+      "sample_values": [
+        "1773599302",
+        "1773599304",
+        "1773599305",
+        "1773599306",
+        "1773599308"
+      ]
+    },
+    "id": {
+      "types": [
+        "int",
+        "str"
+      ],
+      "count": 9,
+      "sample_values": [
+        "10",
+        "20260315_3",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ]
+    },
+    "input_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "3964"
+      ]
+    },
+    "message_id": {
+      "types": [
+        "str"
+      ],
+      "count": 8,
+      "sample_values": [
+        "chatcmpl-402",
+        "chatcmpl-499",
+        "chatcmpl-881",
+        "msg_2987ca36-b2f5-4e1a-9484-962051ab3f9e",
+        "msg_2d608aa3-1799-4910-be0e-c107c6f4b7d7",
+        "msg_37c47b3a-d9dc-4ac0-8aef-22b1d4e2e86e",
+        "msg_f5659d17-36bf-415a-8b9c-1399ea046be3"
+      ]
+    },
+    "metadata_json": {
+      "types": [
+        "str"
+      ],
+      "count": 8,
+      "sample_values": [
+        "{\"userVisible\":true,\"agentVisible\":true}"
+      ]
+    },
+    "model_config_json": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "name": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "CLI Session"
+      ]
+    },
+    "output_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "78"
+      ]
+    },
+    "provider_name": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "ollama"
+      ]
+    },
+    "role": {
+      "types": [
+        "str"
+      ],
+      "count": 8,
+      "sample_values": [
+        "assistant",
+        "user"
+      ]
+    },
+    "session_id": {
+      "types": [
+        "str"
+      ],
+      "count": 8,
+      "sample_values": [
+        "20260315_3"
+      ]
+    },
+    "tokens": {
+      "types": [
+        "null"
+      ],
+      "count": 8,
+      "sample_values": []
+    },
+    "total_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "4042"
+      ]
+    },
+    "type": {
+      "types": [
+        "str"
+      ],
+      "count": 9,
+      "sample_values": [
+        "message",
+        "session"
+      ]
+    },
+    "working_dir": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "/private/tmp/claude/goose-test"
+      ]
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "freeze_semantics": "Content-hash freeze of the goose adapter's output over the conformance-scenario corpus at harness 1.28.0 (goose writes sessions.db schema_version 8 at this release). verify.py re-runs preprocess+DSL on each input (cwd = this dir, input paths relative) and asserts trace_count, per-trace content_hash, and unmapped_path_count. content_hash folds provenance.source_path, so inputs MUST stay at inputs/<name>.db. NOTE: the DSL adapter_pin declares schema-v7+v11, but its schema dispatch also parses this v8 corpus (the preprocessor branches on schema_version and v8 falls in the pre-v11 shape); recorded as an observed-compatible schema, not a claimed-supported one. annotated_cells_fired is the structural fired-cell set (drift self-test asserts it equals the goose CELL_SIGNALS extractor exactly). Second goose rung, older than the 1.33.1 anchor; the pair is goose's first release-delta baseline.",
+  "harness_version": "1.28.0",
+  "capture_image": "miniobserve/goose-combo2:0.1.0-goose1.28.0",
+  "adapter_pin": "goose/schema-v7+v11",
+  "converter_version": "minitrace-goose-dsl-0.1.0",
+  "frozen_at": "2026-07-23",
+  "scenarios": {
+    "s1-fetch-example": {
+      "input": "inputs/s1-fetch.db",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:1824746b727a48748dbf94d9c30fee9ede5e20c2a2db01e2f040fbf15524df80"
+      ],
+      "unmapped_path_count": 16,
+      "annotated_cells_fired": [1, 2, 3, 4, 8, 26]
+    }
+  }
+}

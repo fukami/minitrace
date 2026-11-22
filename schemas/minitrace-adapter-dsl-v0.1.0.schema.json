@@ -1,0 +1,290 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minitrace.spec/adapter-dsl/v0.1.0/adapter.schema.json",
+  "title": "minitrace-adapter-dsl v0.1.0 adapter file schema",
+  "description": "JSON Schema for the structure of a minitrace adapter DSL file (minitrace-adapter-dsl-spec v0.1.0 §17), applied to the document as loaded under the YAML 1.2 core schema (§2). It checks structure only. Out of its reach, and left to the runner's load checks: the YAML-level rules of §2 (duplicate keys, tags, anchors and aliases, multi-document streams); the numeric domain of §2, since a loaded document no longer tells an integer literal from a float; literal, template and expression classification and the expression syntax of §8.3; the placeholder-location rule of §8.4 and §13.1 beyond the lineage writes checked here; and whether a rule's `target` names a declared shape (§14.3). Unknown top-level keys are permitted (§2: a runner MAY warn and MUST NOT let them affect the output); unknown keys inside a block are not. Predicates are checked against the §8.1 forms including where each form may appear; a runner only warns about a predicate that can never match, so this schema is stricter than loading there.",
+  "type": "object",
+  "required": ["adapter", "input", "emit"],
+  "oneOf": [
+    { "required": ["session"], "not": { "required": ["sessions"] } },
+    { "required": ["sessions"], "not": { "required": ["session"] } }
+  ],
+  "if": { "required": ["sessions"] },
+  "then": {
+    "properties": {
+      "emit": { "items": { "required": ["target"] } }
+    }
+  },
+  "properties": {
+    "adapter": { "$ref": "#/$defs/Adapter" },
+    "input": { "$ref": "#/$defs/Input" },
+    "state": {
+      "description": "§5: named initial values, literal. §8.2.3: never tool_calls_by_id, which the runner maintains.",
+      "type": "object",
+      "propertyNames": { "not": { "pattern": "^tool_calls_by_id(\\.|$)" } }
+    },
+    "constants": {
+      "description": "§6: immutable values, literal.",
+      "type": "object"
+    },
+    "session": { "$ref": "#/$defs/Session" },
+    "sessions": {
+      "description": "§14.2: DSL-local handle to trace shape.",
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/Session" }
+    },
+    "operation_types": {
+      "description": "§10: tool name to operation type; the key `default` is the fallback.",
+      "type": "object",
+      "additionalProperties": {
+        "enum": ["READ", "MODIFY", "NEW", "EXECUTE", "DELEGATE", "OTHER"]
+      }
+    },
+    "emit": {
+      "description": "§8: ordered emit rules.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/Rule" }
+    },
+    "finalize": { "$ref": "#/$defs/Finalize" }
+  },
+  "$defs": {
+    "Adapter": {
+      "description": "§3. Only dsl_version is required by the specification text.",
+      "type": "object",
+      "required": ["dsl_version"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "harness_version": { "type": "string" },
+        "dsl_version": { "const": "0.1.0" },
+        "source_format": { "type": "string" },
+        "converter_version": { "type": "string" },
+        "produces_schema": { "type": "string" }
+      }
+    },
+    "Input": {
+      "description": "§4.",
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "enum": ["jsonl", "json"] },
+        "encoding": { "description": "§4: UTF-8 is the only encoding; an input in another is converted by a pre-processor first.", "const": "utf-8" },
+        "container": {
+          "description": "§4.1: record_path is a field name, a dotted path (§4.1.1) or \"$self\" (§4.1.2).",
+          "type": "object",
+          "required": ["record_path"],
+          "additionalProperties": false,
+          "properties": {
+            "record_path": { "type": "string" }
+          }
+        }
+      }
+    },
+    "Session": {
+      "description": "§7 and §14.2: one trace shape. Keys are dotted field paths.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "static": { "$ref": "#/$defs/SessionFieldMap" },
+        "derived": { "$ref": "#/$defs/SessionFieldMap" },
+        "passthrough": { "$ref": "#/$defs/SessionFieldMap" }
+      }
+    },
+    "SessionFieldMap": {
+      "description": "A session field map. §13.1: lineage is written only by emit_lineage. §8.2.3: tool_calls is written only by emit_tool_call and attach_tool_result. §7.1: the operator object is runtime-supplied; the key operator and every key beneath it MUST NOT be declared here, whatever the value. §15: a key with an empty segment is a structural failure.",
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[^.]+(\\.[^.]+)*$",
+        "not": {
+          "anyOf": [
+            { "$ref": "#/$defs/LineagePath" },
+            { "$ref": "#/$defs/ToolCallsPath" },
+            { "$ref": "#/$defs/OperatorPath" }
+          ]
+        }
+      }
+    },
+    "LineagePath": {
+      "type": "string",
+      "pattern": "^lineage(\\.|$)"
+    },
+    "ToolCallsPath": {
+      "type": "string",
+      "pattern": "^tool_calls(\\.|$)"
+    },
+    "OperatorPath": {
+      "type": "string",
+      "pattern": "^operator(\\.|$)"
+    },
+    "Finalize": {
+      "description": "§9.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "computed": {
+          "type": "object",
+          "propertyNames": { "pattern": "^[^.]+(\\.[^.]+)*$", "not": { "anyOf": [{ "$ref": "#/$defs/LineagePath" }, { "$ref": "#/$defs/ToolCallsPath" }, { "$ref": "#/$defs/OperatorPath" }] } }
+        }
+      }
+    },
+    "Rule": {
+      "description": "§8 and §14.3: a top-level emit rule. A rule iterating blocks carries foreach_block and on_block together.",
+      "type": "object",
+      "required": ["when"],
+      "additionalProperties": false,
+      "anyOf": [
+        { "required": ["do"] },
+        { "required": ["foreach_block"] }
+      ],
+      "dependentRequired": {
+        "foreach_block": ["on_block"],
+        "on_block": ["foreach_block"]
+      },
+      "properties": {
+        "name": { "type": "string" },
+        "target": { "type": "string" },
+        "when": { "$ref": "#/$defs/Predicate" },
+        "do": { "$ref": "#/$defs/Actions" },
+        "foreach_block": { "type": ["string", "null"], "description": "§8: an expression string, or null (iterates nothing); any other literal is a structural failure at load (§15)." },
+        "on_block": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/BlockRule" }
+        }
+      }
+    },
+    "BlockRule": {
+      "description": "§8: an on_block sub-rule. Block iteration is one level deep.",
+      "type": "object",
+      "required": ["when", "do"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "when": { "$ref": "#/$defs/BlockPredicate" },
+        "do": { "$ref": "#/$defs/Actions" }
+      }
+    },
+    "Predicate": {
+      "description": "§8.1 forms valid in a top-level rule.",
+      "oneOf": [
+        { "$ref": "#/$defs/PredHasAny" },
+        { "$ref": "#/$defs/PredHas" },
+        { "$ref": "#/$defs/PredField" },
+        { "$ref": "#/$defs/PredContainerField" },
+        {
+          "type": "object", "required": ["all_of"], "additionalProperties": false,
+          "properties": { "all_of": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Predicate" } } }
+        },
+        {
+          "type": "object", "required": ["any_of"], "additionalProperties": false,
+          "properties": { "any_of": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Predicate" } } }
+        }
+      ]
+    },
+    "BlockPredicate": {
+      "description": "§8.1 forms valid in an on_block sub-rule: the top-level forms plus block_type and block_field.",
+      "oneOf": [
+        { "$ref": "#/$defs/PredHasAny" },
+        { "$ref": "#/$defs/PredHas" },
+        { "$ref": "#/$defs/PredField" },
+        { "$ref": "#/$defs/PredContainerField" },
+        { "$ref": "#/$defs/PredBlockType" },
+        { "$ref": "#/$defs/PredBlockField" },
+        {
+          "type": "object", "required": ["all_of"], "additionalProperties": false,
+          "properties": { "all_of": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/BlockPredicate" } } }
+        },
+        {
+          "type": "object", "required": ["any_of"], "additionalProperties": false,
+          "properties": { "any_of": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/BlockPredicate" } } }
+        }
+      ]
+    },
+    "PredHasAny": {
+      "type": "object", "required": ["has_any"], "additionalProperties": false,
+      "properties": { "has_any": { "const": true } }
+    },
+    "PredHas": {
+      "type": "object", "required": ["has"], "additionalProperties": false,
+      "properties": { "has": { "type": "string" } }
+    },
+    "PredBlockType": {
+      "type": "object", "required": ["block_type"], "additionalProperties": false,
+      "properties": { "block_type": true }
+    },
+    "PredField": { "$ref": "#/$defs/ScopedTest", "required": ["field"], "properties": { "field": { "type": "string" } }, "unevaluatedProperties": false },
+    "PredContainerField": { "$ref": "#/$defs/ScopedTest", "required": ["container_field"], "properties": { "container_field": { "type": "string" } }, "unevaluatedProperties": false },
+    "PredBlockField": { "$ref": "#/$defs/ScopedTest", "required": ["block_field"], "properties": { "block_field": { "type": "string" } }, "unevaluatedProperties": false },
+    "ScopedTest": {
+      "description": "Exactly one of value (any value, compared by §8.3 equality) or present (boolean).",
+      "type": "object",
+      "oneOf": [
+        { "required": ["value"], "not": { "required": ["present"] } },
+        { "required": ["present"], "not": { "required": ["value"] } }
+      ],
+      "properties": {
+        "value": true,
+        "present": { "type": "boolean" }
+      }
+    },
+    "Actions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/Action" }
+    },
+    "Action": {
+      "description": "§8.2 and §14.3: a single-key mapping naming one of eleven actions; omit_if_none is the one second key, beside emit_turn only (§8.2.2).",
+      "oneOf": [
+        { "type": "object", "required": ["set"], "additionalProperties": false, "properties": { "set": { "$ref": "#/$defs/SetBody" } } },
+        {
+          "type": "object", "required": ["emit_turn"], "additionalProperties": false,
+          "properties": {
+            "emit_turn": { "type": "object" },
+            "omit_if_none": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        { "type": "object", "required": ["emit_tool_call"], "additionalProperties": false, "properties": { "emit_tool_call": { "type": "object" } } },
+        { "type": "object", "required": ["attach_tool_result"], "additionalProperties": false, "properties": { "attach_tool_result": { "$ref": "#/$defs/AttachToolResultBody" } } },
+        { "type": "object", "required": ["accumulate"], "additionalProperties": false, "properties": { "accumulate": { "$ref": "#/$defs/AccumulateBody" } } },
+        { "type": "object", "required": ["note"], "additionalProperties": false, "properties": { "note": { "$ref": "#/$defs/NoteBody" } } },
+        { "type": "object", "required": ["emit_lineage"], "additionalProperties": false, "properties": { "emit_lineage": { "type": "object" } } },
+        { "type": "object", "required": ["emit_annotation"], "additionalProperties": false, "properties": { "emit_annotation": { "type": "object" } } },
+        { "type": "object", "required": ["emit_redaction"], "additionalProperties": false, "properties": { "emit_redaction": { "type": "object" } } },
+        { "type": "object", "required": ["emit_policy_trigger"], "additionalProperties": false, "properties": { "emit_policy_trigger": { "type": "object" } } },
+        { "type": "object", "required": ["emit_segment_marker"], "additionalProperties": false, "properties": { "emit_segment_marker": { "type": "object" } } }
+      ]
+    },
+    "SetBody": {
+      "description": "§8.2.1: keys under state. or session., never session.lineage (§13.1), session.tool_calls or state.tool_calls_by_id (§8.2.3), nor session.operator or a key beneath it (§7.1).",
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^(state|session)(\\.[^.]+)+$",
+        "not": { "pattern": "^(session\\.(lineage|tool_calls|operator)|state\\.tool_calls_by_id)(\\.|$)" }
+      }
+    },
+    "AccumulateBody": {
+      "description": "§8.2.5: keys under state., never state.tool_calls_by_id (§8.2.3).",
+      "type": "object",
+      "propertyNames": { "pattern": "^state(\\.[^.]+)+$", "not": { "pattern": "^state\\.tool_calls_by_id(\\.|$)" } }
+    },
+    "AttachToolResultBody": {
+      "description": "§8.2.4.",
+      "type": "object",
+      "required": ["target_id"],
+      "additionalProperties": false,
+      "properties": {
+        "target_id": true,
+        "output": { "type": "object" }
+      }
+    },
+    "NoteBody": {
+      "description": "§8.2.6.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "level": { "type": "string" },
+        "message": true
+      }
+    }
+  }
+}

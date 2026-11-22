@@ -1,0 +1,16 @@
+[
+  {
+    "id": "rec-001",
+    "events": [
+      {"index": 0, "role": "user", "content": "synthetic prompt one"},
+      {"index": 1, "role": "assistant", "content": "synthetic response one"}
+    ]
+  },
+  {
+    "id": "rec-002",
+    "events": [
+      {"index": 0, "role": "user", "content": "synthetic prompt two"},
+      {"index": 1, "role": "assistant", "content": "synthetic response two"}
+    ]
+  }
+]

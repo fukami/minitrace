@@ -1,0 +1,112 @@
+# Drift ledger — vibe adapter
+#
+# Machine-readable record of Axis-C drifts the drift watch has surfaced and
+# triaged. A drift whose surface an entry covers downgrades from FATAL to an
+# acknowledged line; a drift no entry covers still gates (exit 1). Format and
+# the verdict/disposition taxonomies: adapters/DRIFT-LEDGER.md.
+#
+# vibe carries NO in-band harness version anywhere in its session output —
+# meta.json has no version field, messages.jsonl none either (weaker than
+# codex's exec format, which at least pairs with --framework-meta at capture).
+# Version identity rests on manifest.harness_version + capture provenance; the
+# in-band signal that DOES exist is the format ERA (2.9.5+ meta.json carries
+# title_source / parent_session_id / loops; 2.4-era does not), which
+# drift_watch.py's era arm reads.
+#
+# Changelog (format-evolution facts across frozen rungs — not ledger entries
+# unless a drift GATES):
+#
+#   2.4.x  (first rung; archived 2026-03-16 container-run batch)
+#     Baseline, DATE-BOUND not point-pinned (capture predates 2.5.0's release
+#     by hours; Dockerfile pin mistral-vibe==2.4.2 committed only 2026-03-31 —
+#     see the rung manifest's capture_provenance). 2.4-era meta.json: no
+#     title_source / parent_session_id / loops. Native message vocabulary:
+#     roles user / assistant / tool (system in meta.system_prompt only). Tool
+#     surface: bash, exit_plan_mode, grep, read_file, search_replace, task,
+#     todo, web_fetch, web_search, write_file. unmapped surface = 81 advisory
+#     paths (mostly tools_available[] JSON-schema internals, consumed whole as
+#     environment.tools_enabled; plus container fields the DSL deliberately
+#     does not read). Multi-trace emission: one trace per session dir, lineage
+#     only possible from 2.9-era metadata onward (2.4-era has no
+#     parent_session_id, so cells 9/12/13 are structurally dark here).
+#
+#   2.9.5  (first IMAGE rung; live container capture, pip-pinned)
+#     2.9-era in-band: meta.json adds title_source / parent_session_id /
+#     loops; message records add reasoning_* / images / name / tool_call_id /
+#     message_id / user_display_content. System message persists INLINE in
+#     messages.jsonl (role=system) in addition to meta.system_prompt. CLI:
+#     unattended approval spelled --agent auto-approve (no --auto-approve
+#     flag yet). unmapped surface = 80 advisory paths.
+#
+#   2.9.5 -> 2.22.0  (image delta; exit 1 first run, VB-0001 + VB-0002 ledgered)
+#     One BEHAVIORAL drift, no lost format coverage:
+#       - dark cell 7 (VB-0001): at 2.9.5 the s1-count agent writes count.txt
+#         via write_file (NEW); at 2.22.0 it uses a single bash call with a
+#         shell redirect, 4/4 independent captures — the harness's much-
+#         expanded 2.19-era system prompt steers tool selection. Harness
+#         behaviour drift, not a classifier break (write_file -> NEW is a
+#         static DSL name-map, era-independent).
+#       - new_unmapped (VB-0002): 21 paths, ALL tools_available[] JSON-schema
+#         internals (parameter descriptions/types added to tool schemas).
+#         The schemas are consumed WHOLE into environment.tools_enabled, so
+#         the material is in the trace; the coverage walker just itemises
+#         subtree paths the DSL does not read field-by-field.
+#     Non-gating raw-field warnings (recorded here, no entry needed): the
+#     meta.config surface grows heavily by 2.22.0 (compaction_*, connectors,
+#     otel, experiments.*, registry skills, per-model temperature/thinking/
+#     supports_images, api_retry_*, applied_migrations) and agent_profile
+#     gains overrides.disabled_tools. CLI gains --auto-approve, --max-tokens,
+#     --yolo, --worktree, --add-dir. unmapped surface = 95 advisory paths.
+
+# Version-coverage declaration (adapters/DRIFT-LEDGER.md "Coverage declaration").
+# supported = the tested rung versions; versions between rungs are
+# expected-compatible unless a ledger entry / changelog note says otherwise.
+# tested must equal the regression/<version>/ rung dirs (fleet sweep asserts
+# this). 2.4.x is an archived-only anchor (date-bound provenance, no capture
+# image — the March capture predates version stamping); 2.9.5 / 2.22.0
+# reproduce via capture/vibe:<v> (every mistral-vibe release 2.4.2..2.22.0 is
+# a stable PyPI upload, so intermediate versions are also pinnable on demand).
+coverage:
+  tested: ["2.4.x", "2.9.5", "2.22.0"]
+  policy: point-tested
+
+entries:
+  - id: VB-0001
+    introduced_at: { from: "2.9.5", to: "2.22.0" }
+    signal: dark_cell
+    matches:
+      items: ["7"]
+    verdict: benign_redundant
+    disposition: dismissed
+    rationale: >
+      Cell 7 (NEW operation) goes dark on the s1-count delta because the
+      2.22.0 agent satisfies the scenario with one bash call (shell redirect
+      writes count.txt) where the 2.9.5 agent called write_file. Confirmed
+      behavioural, not adapter-side: 4/4 independent 2.22.0 captures chose
+      bash-only (the 2.19-era system prompt is far more prescriptive about
+      shell use), and the write_file -> NEW classification is a static
+      tool-name map in vibe.dsl.yaml, identical across eras. Matching is
+      narrow (cell 7 only): a future delta where cells 5/6/9 etc. go dark
+      still gates.
+    confirmed_by: repeated-capture (4x) + DSL name-map inspection
+    date: "2026-07-25"
+  - id: VB-0002
+    introduced_at: { from: "2.9.5", to: "2.22.0" }
+    signal: new_unmapped
+    matches:
+      path_prefixes: ["_untyped::parameters."]
+    verdict: mapped
+    disposition: dismissed
+    rationale: >
+      All 21 new unmapped paths are tools_available[] JSON-schema internals —
+      2.22.0 adds descriptions/types to tool parameter schemas (TodoItem
+      field descriptions, bash command description, read offset/limit
+      constraints, search_replace old/new_string + replace_all). The adapter
+      consumes each tool schema WHOLE into environment.tools_enabled
+      (derive_tools_enabled passes parameters verbatim), so the material is
+      captured in the trace; the coverage walker itemises subtree paths the
+      DSL never reads field-by-field. The prefix match covers only the
+      parameters.* subtree of the schema surface: a new native record type or
+      a new message/meta field still gates.
+    confirmed_by: payload-inspection (frozen 2.22.0 s1-count meta.json)
+    date: "2026-07-25"

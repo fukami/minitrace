@@ -1,0 +1,19 @@
+{
+  "freeze_semantics": "Content-hash freeze of the opencode adapter's output over the conformance-scenario corpus at harness 1.2.20 (opencode carries its release version in-band on session.version; this is the pre-1.14.40 schema shape, still emitting snapshot/patch parts). verify.py re-runs preprocess+DSL on each input (cwd = this dir, input paths relative) and asserts trace_count, per-trace content_hash, and unmapped_path_count. content_hash folds provenance.source_path, so inputs MUST stay at inputs/<name>.db. annotated_cells_fired is the structural fired-cell set (drift self-test asserts it equals the opencode CELL_SIGNALS extractor exactly). Older end of opencode's IMAGE release delta 1.2.20 -> 1.17.15 (both version-pinned container captures via frameworks/opencode/; both opencode versions are published on npm, so unlike pi both ends are image-captured at their exact frozen versions).",
+  "harness_version": "1.2.20",
+  "capture_provenance": "Live version-pinned CONTAINER capture on the arm64 capture workstation, 2026-07-23 (REPLACES the earlier archived-corpus scoping, per the image-regime backfill). opencode 1.2.20 headless (opencode run --agent build) via the frameworks/opencode/ image (miniobserve/opencode-capture:1.2.20, npm opencode-ai@1.2.20 pinned by OPENCODE_VERSION build-arg), routed straight to the arm64 capture workstation's ollama (qwen2.5:7b, structured tool calls) via the config-configurable provider baseUrl -> host.docker.internal:11434 (no socat needed, unlike pi). cwd is the container /workspace (no host-path PII). Same read-config/write-version s1-config task (basename s1-config.db). The native SQLite store was WAL-checkpointed then scoped to the trace-relevant tables (session/message/part; the credential/account tables were empty and are dropped). Host brew opencode untouched. Model: ollama/qwen2.5:7b.",
+  "adapter_pin": "opencode/schema-v1.2.20+v1.14.40",
+  "converter_version": "minitrace-opencode-dsl-0.1.0",
+  "frozen_at": "2026-07-23",
+  "scenarios": {
+    "s1-config-version": {
+      "input": "inputs/s1-config.db",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:f6ef428e9c1ba69a1895a023e40cc73aaa7e351c6a2d73efb9d5410aac1e61f5"
+      ],
+      "unmapped_path_count": 41,
+      "annotated_cells_fired": [1, 2, 3, 4, 5, 6, 7, 26]
+    }
+  }
+}

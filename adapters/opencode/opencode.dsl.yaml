@@ -1,0 +1,446 @@
+# minitrace adapter DSL — opencode (sst, MIT)
+#
+# Reads a JSON array of pre-processed containers produced by
+# preprocess_opencode.py — one container per opencode session row in the
+# source SQLite DB (versions 1.2.20 and 1.14.40 both supported via
+# session.version dispatch in the preprocessor). Each container becomes
+# one minitrace agent-session trace. Multi-trace adapter: parent and
+# subagent (task tool) sessions emit as separate traces with
+# `delegates-to` / `delegated-by` lineage edges between them.
+#
+# v0.1 scope:
+#   - One trace per opencode session.
+#   - Per-message turn emission with event_kind dispatch.
+#   - Atomic tool emission (request + response unified in a single part;
+#     no cross-message matching needed, unlike goose / claude-code).
+#   - Reasoning capture: opencode `reasoning` parts coalesced into
+#     Turn.thinking by the preprocessor (D5).
+#   - Per-tool framework_metadata (Tier-2 first-deployment) with
+#     tool-class-discriminated keys (read.preview, write.diagnostics,
+#     edit.diff, bash.output, grep.matches, etc.).
+#   - Cross-session lineage: parent emits `delegates-to`, child emits
+#     `delegated-by`, when both are in the same input batch.
+#     Cross-link extracted from task.state.metadata.sessionId (structured,
+#     not regex — cleaner than goose's orchestrator__start_agent text scan).
+#   - Subagent type (`subagent_type` from task tool input) annotated
+#     symmetrically on parent's task call AND child session environment (D9).
+#   - Cache decomposition (D8): flat primitives populated; nested shape
+#     preserved in framework_metadata.
+#   - Snapshot and patch parts: the pre-processor collects them for sessions
+#     with session.version < 1.14.0 (D12), but no rule below maps them, so
+#     they do not reach the trace; the pre-processor reports each patch part
+#     in its per-session warning line.
+#   - opencode_session_messages + opencode_events as pass-through annotation
+#     channels when populated (D11, forward-compat).
+#
+# Deferred to later iterations (per scoping note out-of-scope table):
+#   - session_message / event interpretation (untriggered in observed corpus).
+#   - ACP server / workspace / multi-account differences.
+#   - Phase 5 validation oracle via opencode export round-trip diff.
+#
+# Pinned to opencode session.version 1.2.20 + 1.14.40 (verified-stable
+# corpus + throwaway range, 2026-03 → 2026-05). Schema dispatch happens in
+# the preprocessor; this DSL is schema-agnostic.
+#
+# Conforms to minitrace-spec v0.3.0 + minitrace-adapter-dsl-spec v0.1.0.
+
+adapter:
+  name: opencode
+  harness_version: "opencode/multi-version"
+  dsl_version: "0.1.0"
+  source_format: opencode-sqlite
+  converter_version: minitrace-opencode-dsl-0.1.0
+  produces_schema: "0.3.0"
+
+input:
+  type: json
+  encoding: utf-8
+  container:
+    record_path: messages
+
+state:
+  next_turn_index: 0
+  last_assistant_turn_index: null
+  next_ann_id: 0
+  total_input_tokens: 0
+  total_output_tokens: 0
+  total_reasoning_tokens: 0
+  total_cache_read_tokens: 0
+  total_cache_write_tokens: 0
+  total_tokens: 0
+  total_cost: 0
+
+constants:
+  default_capture_mode: scrubbed
+
+# Tool-name → operation_type mapping. opencode tools are bare
+# (no namespacing; D2). Coverage: 13 built-in tools per 1.14.40 error
+# message + 1.2.20 corpus surface (read, write, edit, bash, grep, glob,
+# task, webfetch, todowrite, skill, invalid, question, fetch).
+operation_types:
+  read: READ
+  glob: READ
+  grep: READ
+  webfetch: READ
+  fetch: READ
+  question: READ
+  write: NEW
+  edit: MODIFY
+  bash: EXECUTE
+  todowrite: MODIFY
+  skill: OTHER
+  invalid: OTHER
+  task: DELEGATE
+  default: OTHER
+
+sessions:
+
+  agent:
+    static:
+      schema_version: "0.3.0"
+      trace_type: "agent-session"
+      profile: "opencode"
+      # Nothing here checks for personal data, so the flags assume it is present:
+      # unchecked, not clean. contains_pii forces classification >= confidential.
+      classification: "confidential"
+      flags.for_research: false
+      flags.needs_cleaning: true
+      flags.contains_error: false
+      flags.contains_pii: true
+    derived:
+      id: "$container.trace_id"
+      title: "$container.trace_title"
+      timing.started_at: "$container.created_at"
+      timing.ended_at: "$container.updated_at"
+      environment.agent_framework: "opencode"
+      environment.agent_version: "$container.version_label"
+      environment.model: "$container.model_observed"
+      environment.provider: "$container.provider"
+      environment.opencode_agent: "$container.agent"
+      operational_context.working_directory: "$container.session_path"
+      operational_context.framework_config.project_id: "$container.project_id"
+      operational_context.framework_config.workspace_id: "$container.workspace_id"
+      operational_context.framework_config.opencode_version: "$container.version"
+      provenance.source_format: "$container.source_format_versioned"
+      provenance.source_session_id: "$container.session_id"
+      provenance.source_schema_version: "$container.version"
+      coordination.parent_session: "$container.parent_trace_id"
+
+emit:
+
+  # ===== SESSION_INIT — fires once per container =====
+  # Synthetic record at messages[0]. Anchor for session-level annotations
+  # and lineage edges.
+
+  # Subagent-type annotation on child session environment (D9, child side).
+  # Emitted only for sessions that have a parent_session_id — i.e., child
+  # sessions invoked via the parent's task tool. The subagent_type is
+  # recoverable from the parent's task.state.input.subagent_type, but
+  # since we're processing the child here, we read from the message-data
+  # agent (which the preprocessor derives as "explore" or "general" for
+  # subagent sessions).
+  - target: agent
+    name: agent_emit_subagent_type_annotation
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+        - { container_field: parent_session_id, present: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "opencode-ann-subagent-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$container.created_at"
+          annotator: "opencode-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Subagent session: agent kind derived from message-data."
+          claim_type: "observation"
+          opencode_subagent_type: "$container.agent"
+          taxonomy:
+            - "opencode/${container.version_label}/session/subagent_type/${container.agent}"
+
+  # Nested JSON (message and part data) that strict parsing refused and
+  # replaced by the default; emitted only when there was any.
+  - target: agent
+    name: agent_emit_nested_json_refused
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+        - { container_field: nested_json_refused, present: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "opencode-ann-nestedjson-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$container.created_at"
+          annotator: "opencode-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Nested JSON values refused by strict parsing (out-of-range number, NaN, nesting too deep) and replaced by the field's default; nested_json_refused counts them."
+          claim_type: "observation"
+          nested_json_refused: "$container.nested_json_refused"
+          taxonomy:
+            - "opencode/${container.version_label}/session/nested_json_refused"
+
+  # opencode_session_messages pass-through (D11). Emit only when populated.
+  # Forward-compat: triggers identified post-cycle will give this channel data;
+  # current observed state is empty across all tested triggers.
+  - target: agent
+    name: agent_emit_session_messages_passthrough
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+        - { container_field: opencode_session_messages_present, value: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "opencode-ann-sessmsgs-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$container.created_at"
+          annotator: "opencode-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "opencode 1.14.40+ session_message rows (raw pass-through; trigger semantics unknown at adapter v0.1)."
+          claim_type: "observation"
+          opencode_session_messages_raw: "$container.opencode_session_messages"
+          taxonomy:
+            - "opencode/${container.version_label}/session/session_messages_passthrough"
+
+  # opencode_events (D11): SUMMARY, not pass-through. The event log replays
+  # message/part content already in turns; raw rows were 69-84% of the trace
+  # on the 1.17.15 rungs and a second copy of the text outside turn-level
+  # redaction. Emits row count + rows per event type only (since 2026-09-25).
+  - target: agent
+    name: agent_emit_events_passthrough
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+        - { container_field: opencode_events_present, value: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "opencode-ann-events-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$container.created_at"
+          annotator: "opencode-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "opencode 1.14.40+ event log for this session (aggregate-id correlation): row count and rows per event type. Event data is not carried; it replays message content already in turns."
+          claim_type: "observation"
+          opencode_events_summary: "$container.opencode_events_summary"
+          taxonomy:
+            - "opencode/${container.version_label}/session/events_passthrough"
+
+  # Lineage: parent → child (delegates-to) for every in-batch child.
+  - target: agent
+    name: agent_emit_delegates_to_lineage
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+    foreach_block: "$container.spawned_trace_ids_in_batch"
+    on_block:
+      - name: delegates_to_one_child
+        when:
+          has_any: true
+        do:
+          - emit_lineage:
+              type: "delegates-to"
+              target_trace_id: "$block"
+              target_content_hash: "${trace:${block}:content_hash}"
+              authored_by: "opencode/${container.version_label}"
+              authored_at: "$container.created_at"
+
+  # Lineage: child → parent (delegated-by) when parent is in batch.
+  - target: agent
+    name: agent_emit_delegated_by_lineage
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+        - { container_field: parent_trace_id, present: true }
+    do:
+      - emit_lineage:
+          type: "delegated-by"
+          target_trace_id: "$container.parent_trace_id"
+          authored_by: "opencode/${container.version_label}"
+          authored_at: "$container.created_at"
+
+  # ===== USER text turn =====
+  # opencode user messages are pure text (no tool responses split into user
+  # role like goose/claude-code; tools are atomic and live in assistant
+  # messages).
+  - target: agent
+    name: agent_user_text_turn
+    when:
+      all_of:
+        - { field: event_kind, value: user_text }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "user"
+          source: "human"
+          content_type: "text"
+          content: "$record.content_text"
+          timestamp: "$record.timestamp"
+      - set:
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  # ===== ASSISTANT text turn (no tools) =====
+  - target: agent
+    name: agent_assistant_text_turn
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_text }
+    do:
+      - accumulate:
+          state.total_tokens: "$record.tokens_raw.total"
+          state.total_input_tokens: "$record.tokens_raw.input"
+          state.total_output_tokens: "$record.tokens_raw.output"
+          state.total_reasoning_tokens: "$record.tokens_raw.reasoning"
+          state.total_cache_read_tokens: "$record.tokens_raw.cache.read"
+          state.total_cache_write_tokens: "$record.tokens_raw.cache.write"
+          state.total_cost: "$record.cost"
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "assistant"
+          source: "model"
+          content_type: "text"
+          content: "$record.content_text"
+          thinking: "$record.thinking"
+          stop_reason: "$record.finish"
+          timestamp: "$record.timestamp"
+      - set:
+          state.last_assistant_turn_index: "$state.next_turn_index"
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  # ===== ASSISTANT turn with tool calls (atomic) =====
+  # opencode tools are atomic: state.input + state.output unified in a
+  # single part. No cross-message matching required.
+  - target: agent
+    name: agent_assistant_with_tools
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_with_tools }
+    do:
+      - accumulate:
+          state.total_tokens: "$record.tokens_raw.total"
+          state.total_input_tokens: "$record.tokens_raw.input"
+          state.total_output_tokens: "$record.tokens_raw.output"
+          state.total_reasoning_tokens: "$record.tokens_raw.reasoning"
+          state.total_cache_read_tokens: "$record.tokens_raw.cache.read"
+          state.total_cache_write_tokens: "$record.tokens_raw.cache.write"
+          state.total_cost: "$record.cost"
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "assistant"
+          source: "model"
+          content_type: "text"
+          content: "$record.content_text"
+          thinking: "$record.thinking"
+          stop_reason: "$record.finish"
+          timestamp: "$record.timestamp"
+      - set:
+          state.last_assistant_turn_index: "$state.next_turn_index"
+          state.next_turn_index: "$state.next_turn_index + 1"
+    foreach_block: "$record.tool_calls"
+    on_block:
+      - name: emit_one_atomic_tool_call
+        when:
+          all_of:
+            - { block_field: id, present: true }
+        do:
+          - emit_tool_call:
+              id: "$block.id"
+              tool_name: "$block.tool_name"
+              tool_provider: "opencode"
+              emitting_turn_index: "$state.last_assistant_turn_index"
+              input:
+                arguments: "$block.input"
+              output:
+                success: "$block.success"
+                result: "$block.output_text"
+                content_origin: "tool_output"
+              invocation_source: "agent_choice"
+              framework_metadata:
+                opencode_tool_metadata: "$block.metadata"
+                opencode_tool_title: "$block.title"
+                opencode_tool_status: "$block.tool_status"
+                opencode_time_start_ms: "$block.time_start"
+                opencode_time_end_ms: "$block.time_end"
+                opencode_subagent_type: "$block.subagent_type"
+                opencode_spawned_session_id: "$block.spawned_session_id"
+              taxonomy:
+                - "opencode/${container.version_label}/tool/${block.tool_name}"
+
+  # ===== ASSISTANT thinking-only turn (rare; opencode has separate text+reasoning parts) =====
+  # When an assistant message has only reasoning parts and no text/tools,
+  # emit as a thinking-only turn so reasoning is preserved.
+  - target: agent
+    name: agent_assistant_thinking_only
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_thinking_only }
+    do:
+      - accumulate:
+          state.total_tokens: "$record.tokens_raw.total"
+          state.total_input_tokens: "$record.tokens_raw.input"
+          state.total_output_tokens: "$record.tokens_raw.output"
+          state.total_reasoning_tokens: "$record.tokens_raw.reasoning"
+          state.total_cost: "$record.cost"
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "assistant"
+          source: "model"
+          content_type: "text"
+          content: ""
+          thinking: "$record.thinking"
+          stop_reason: "$record.finish"
+          timestamp: "$record.timestamp"
+      - set:
+          state.last_assistant_turn_index: "$state.next_turn_index"
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  # ===== ASSISTANT empty (only step boundaries, no content) =====
+  # Skip turn emission (no content to emit), but still accumulate metrics
+  # so session-level cost/tokens reflect the actual API usage.
+  - target: agent
+    name: agent_assistant_empty_metrics_only
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_empty_with_metrics }
+    do:
+      - accumulate:
+          state.total_tokens: "$record.tokens_raw.total"
+          state.total_input_tokens: "$record.tokens_raw.input"
+          state.total_output_tokens: "$record.tokens_raw.output"
+          state.total_reasoning_tokens: "$record.tokens_raw.reasoning"
+          state.total_cache_read_tokens: "$record.tokens_raw.cache.read"
+          state.total_cache_write_tokens: "$record.tokens_raw.cache.write"
+          state.total_cost: "$record.cost"
+
+finalize:
+  computed:
+    metrics.total_tokens: "$container.total_tokens"
+    metrics.total_input_tokens: "$container.input_tokens"
+    metrics.total_output_tokens: "$container.output_tokens"
+    metrics.total_reasoning_tokens: "$container.reasoning_tokens"
+    # D8: flatten cache decomposition to existing flat primitives
+    metrics.total_cache_read_input_tokens: "$container.cache_read_tokens"
+    metrics.total_cache_creation_input_tokens: "$container.cache_write_tokens"
+    metrics.total_cost_usd: "$container.total_cost"

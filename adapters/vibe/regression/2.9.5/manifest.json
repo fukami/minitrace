@@ -1,0 +1,19 @@
+{
+  "freeze_semantics": "Content-hash freeze of the vibe adapter's output over the conformance scenario at harness 2.9.5 (first IMAGE rung; baseline of the image release-delta 2.9.5 -> 2.22.0). vibe uses the preprocess path: preprocess_vibe.py normalises the native session directory (meta.json + messages.jsonl) into a container array, which vibe.dsl.yaml turns into one trace per session; dsl_runner's multi-trace path stamps content_hash itself (verify.py asserts the stamp and must NOT re-run back-fill, per cross_trace R2). verify.py re-runs preprocess+DSL on each input (cwd = this dir, input paths relative) and asserts trace_count, per-trace content_hash, and unmapped_path_count. vibe traces carry no provenance.source_path, so the content_hash is checkout-independent.",
+  "harness_version": "2.9.5",
+  "capture_provenance": "Live container capture on the arm64 capture workstation (2026-07-25) via the version-pinned image built from frameworks/vibe/ (pip mistral-vibe==2.9.5, python:3.12-slim, linux-arm64), routed to the arm64 capture workstation's ollama (qwen3:8b) through vibe's GENERIC provider backend (api_style=openai, api_base=http://host.docker.internal:11434/v1 — no socat: vibe honours the configured api_base with no localhost preflight). qwen3:8b emits real function_call items (qwen2.5* emit tool calls as TEXT). Unattended approval via the builtin auto-approve AGENT (--agent auto-approve): 2.9.5 predates the --auto-approve flag. Scenario s1-count: 'Count the lines in data.txt and write just the number to count.txt' (data.txt has 4 lines). Format era confirmed 2.9-era in-band (title_source / parent_session_id / loops present in meta.json). Host brew vibe untouched.",
+  "adapter_pin": "vibe/multi-version (vibe.dsl.yaml, 2.4-era + 2.9-era vocabulary)",
+  "converter_version": "minitrace-vibe-dsl-0.1.0",
+  "frozen_at": "2026-07-25",
+  "scenarios": {
+    "s1-count": {
+      "input": "inputs/s1-count",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:7e41201e41b777573ad0f1fcbe79db57e577c677d3d7c6c4f19cf4d4be5adda3"
+      ],
+      "unmapped_path_count": 80,
+      "annotated_cells_fired": [1, 2, 3, 4, 7, 8, 26]
+    }
+  }
+}

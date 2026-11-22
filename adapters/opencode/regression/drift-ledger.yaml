@@ -1,0 +1,53 @@
+# Drift ledger — opencode adapter
+#
+# Machine-readable record of Axis-C drifts the drift watch has surfaced and
+# triaged. A drift whose surface an entry covers downgrades from FATAL to an
+# acknowledged line; a drift no entry covers still gates (exit 1). Format and
+# the verdict/disposition taxonomies: adapters/DRIFT-LEDGER.md.
+#
+# Matching is exact on the record type (the part before "::" in a
+# new_unmapped/dropped_dependency item, or the bare type for new_record_type).
+# opencode versions its event types in the type string itself (session.created.1),
+# so a bumped or novel type does NOT match a listed one and correctly re-fires.
+
+# Version-coverage declaration (adapters/DRIFT-LEDGER.md "Coverage declaration").
+# supported = the tested rung versions; versions between rungs are
+# expected-compatible unless a ledger entry / changelog note says otherwise
+# (NB the 1.14.40 boundary: event-sourcing tables appear there, covered by
+# OC-0001; the DSL dispatches 1.2.20 and 1.14.40 vocabularies). tested must
+# equal the regression/<version>/ rung dirs (fleet sweep asserts this). Both
+# rungs reproduce via capture/opencode:<v>.
+coverage:
+  tested: ["1.2.20", "1.17.15"]
+  policy: point-tested
+
+entries:
+  - id: OC-0001
+    # Confirmed edge = the delta actually run. The opencode preprocess docstring
+    # attributes the event/session_message/event_sequence tables to 1.14.40;
+    # narrow introduced_at to {from: 1.2.20, to: 1.14.40} once a 1.14.40 rung is
+    # frozen and the 1.2.20 -> 1.14.40 edge confirms it. (unverified: 1.14.40)
+    introduced_at: { from: "1.2.20", to: "1.17.15" }
+    signal: new_unmapped
+    matches:
+      record_types:
+        - session.created.1
+        - session.updated.1
+        - message.updated.1
+        - message.part.updated.1
+    verdict: benign_redundant
+    disposition: dismissed
+    rationale: >
+      opencode's event-sourcing `event` table (populated from 1.14.40; 67 rows in
+      the s1-config capture) is a journal, not new content: every event payload is
+      a full projection of the session / message / part row it mirrors
+      (session.created/updated carry `info` = the session row; message.updated
+      carries `info` = the message row; message.part.updated carries `part` = the
+      part row). Confirmed by direct payload inspection. Mapping it into the trace
+      would duplicate content the adapter already emits from session/message/part,
+      so the correct handling is to NOT pass it through and to dismiss the unmapped
+      paths here. A genuinely new event type (e.g. permission.updated.1) or a bumped
+      schema (session.created.2) is not covered by this entry and still fires.
+    confirmed_by: payload-inspection
+    date: "2026-07-23"
+    followup: null

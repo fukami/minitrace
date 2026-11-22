@@ -1,0 +1,29 @@
+{
+  "freeze_semantics": "Content-hash freeze of the aider adapter's output over the conformance scenario at harness 0.86.2. aider uses the preprocess path: preprocess_aider.py parses the native markdown transcript (.aider.chat.history.md) — aider's only complete source — into one container, which aider.dsl.yaml turns into one trace. verify.py re-runs preprocess+DSL on each input (cwd = this dir, input paths relative) and asserts trace_count, per-trace content_hash, and unmapped_path_count; the drift_watch self-test asserts annotated_cells_fired equals the aider CELL_SIGNALS extractor. aider traces carry no provenance.source_path, so the content_hash is checkout-independent. Newer end of aider's release-delta (candidate against the 0.82.0 baseline).",
+  "harness_version": "0.86.2",
+  "capture_provenance": "Live container capture on the arm64 capture workstation (2026-07-25) via the version-pinned image miniobserve/aider-capture:0.86.2 (aider from pip aider-chat==0.86.2), routed to the arm64 capture workstation's ollama (qwen3:8b) via OLLAMA_API_BASE=host.docker.internal:11434 (aider/litellm reads it directly — no socat). --no-auto-commits, HOME=/workspace. Scenario s1-edit: 'Add a line delta to data.txt, then create summary.txt containing just the number of lines in data.txt' — exercises MODIFY (data.txt existed in the seed commit) + NEW (summary.txt created), so the rung fires cells 6 and 7 both. Host aider untouched.",
+  "capture_provenance_round2": "Round-2 coverage capture on the arm64 capture workstation (2026-07-25) closing aider's EXECUTE (cell 8) gap, alongside the adapter change that made EXECUTE emittable at all. Same PUBLISHED image, BYTE-IDENTICAL and unmodified (miniobserve/aider-capture:0.86.2), same ollama route. Model gemma4:12b, not the s1 rung's qwen3:8b. TWO INVOCATION DEVIATIONS, and both were mandatory — aider CANNOT execute a shell command under the recipe's own entrypoint, for two structural reasons verified against the installed aider 0.86.2 source rather than inferred: (1) EDIT FORMAT. shell_commands is appended in exactly ONE place fleet-wide, aider/coders/editblock_coder.py; aider/coders/wholefile_coder.py has no shell handling at all. The entrypoint pins no --edit-format, so aider auto-selects `whole` for these ollama models and run_shell_commands() is a guaranteed no-op. Requires --edit-format diff. (2) --yes-always, which the entrypoint hardcodes. aider/coders/base_coder.py confirms the shell prompt with explicit_yes_required=True, and aider/io.py answers exactly those prompts 'n' when --yes-always is set — blanket-yes AUTO-DECLINES shell, by deliberate aider safety design. Requires dropping the flag and answering 'y' on stdin. Because --yes-always sits on the entrypoint's CLI (env cannot override a CLI flag), this capture ran with the container ENTRYPOINT OVERRIDDEN — the image itself is untouched, so capture_image attribution stays exact; only the invocation differs, as with opencode's OPENCODE_CONFIG_CONTENT and pi's separate mount. The entrypoint should grow an env-gated shell-capture mode so this is reproducible through the recipe; that is a separate capture-recipe change and is NOT done here. Scenario is a shell-only arm (the shared s2 EXECUTE-steering clauses, but 'Do not edit or create any files' and no write target) — deliberately narrowed because aider REFUSES to write outside /workspace, so the fleet's shared /tmp/claude/todos.txt target is unreachable on aider, and because edit-confirmation prompts consume stdin unpredictably once --yes-always is gone. Four earlier attempts retained unfrozen under captures/aider-0.86.2-round2/s2-bash/, all doomed by (1)/(2) rather than by the model: attempt1 refused the /tmp/claude write; attempt2 wrote the file but proposed no command; attempt3 SIMULATED the command output instead of proposing a command; attempt4 is the clearest — gemma4:12b emitted a perfectly-formed single-command ```bash block, exactly what a shell suggestion requires, and aider still neither offered nor ran it. The kept run genuinely executed: the transcript records `> Running grep -rn \"TODO\" .` followed by 'Added 45 lines of output to the chat', and the workspace seed is unmodified (shell-only arm, 0 edits). ALSO NOTE the command's STDOUT is structurally absent from the transcript — aider records only the line count — so the EXECUTE tool_call carries the command with an empty result. Ledger that as a limitation before comparing aider EXECUTE output cross-harness.",
+  "adapter_pin": "aider/multi-version (aider.dsl.yaml, chat-history-md vocabulary)",
+  "converter_version": "minitrace-aider-dsl-0.1.0",
+  "frozen_at": "2026-07-25",
+  "scenarios": {
+    "s1-edit": {
+      "input": "inputs/s1-edit.chat.history.md",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:3c89e5860db8c05894517c765efeeb20c39a2bc58880ac315802ad2e3924634c"
+      ],
+      "unmapped_path_count": 1,
+      "annotated_cells_fired": [1, 2, 3, 4, 6, 7, 26]
+    },
+    "s2-shell": {
+      "input": "inputs/s2-shell.chat.history.md",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:66bb29648dbc7ba0b0db184dbc71d3a4c127a1fd4b094a159ae3922a0074dbcc"
+      ],
+      "unmapped_path_count": 1,
+      "annotated_cells_fired": [1, 2, 3, 4, 8, 26]
+    }
+  }
+}

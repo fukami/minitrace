@@ -1,0 +1,694 @@
+{
+  "record_types": {
+    "user": 3,
+    "assistant": 3,
+    "file-history-snapshot": 1,
+    "progress": 1,
+    "attachment": 1,
+    "permission-mode": 1
+  },
+  "field_count": 73,
+  "fields": {
+    "attachment": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "attachment.content": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "PostToolUse:Edit hook completed."
+      ]
+    },
+    "attachment.type": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "hook_success"
+      ]
+    },
+    "cwd": {
+      "types": [
+        "str"
+      ],
+      "count": 9,
+      "sample_values": [
+        "/home/agent/workspace"
+      ]
+    },
+    "data": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "data.command": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "echo synthetic-hook"
+      ]
+    },
+    "data.hookEvent": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "PostToolUse"
+      ]
+    },
+    "data.hookName": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "PostToolUse:Edit"
+      ]
+    },
+    "data.type": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "hook_progress"
+      ]
+    },
+    "gitBranch": {
+      "types": [
+        "str"
+      ],
+      "count": 9,
+      "sample_values": [
+        "main"
+      ]
+    },
+    "isSidechain": {
+      "types": [
+        "bool"
+      ],
+      "count": 9,
+      "sample_values": [
+        "False"
+      ]
+    },
+    "isSnapshotUpdate": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "False"
+      ]
+    },
+    "message": {
+      "types": [
+        "dict"
+      ],
+      "count": 6,
+      "sample_values": []
+    },
+    "message.content": {
+      "types": [
+        "list",
+        "str"
+      ],
+      "count": 6,
+      "sample_values": [
+        "Add a docstring to the greet function in main.py."
+      ]
+    },
+    "message.content[]": {
+      "types": [
+        "dict"
+      ],
+      "count": 8,
+      "sample_values": []
+    },
+    "message.content[].caller": {
+      "types": [
+        "dict"
+      ],
+      "count": 2,
+      "sample_values": []
+    },
+    "message.content[].caller.type": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "direct"
+      ]
+    },
+    "message.content[].content": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "The file main.py has been updated.",
+        "def greet(name):\n    return f\"Hello, {name}!\""
+      ]
+    },
+    "message.content[].id": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "toolu_synthetic000000000000edit",
+        "toolu_synthetic000000000000read"
+      ]
+    },
+    "message.content[].input": {
+      "types": [
+        "dict"
+      ],
+      "count": 2,
+      "sample_values": []
+    },
+    "message.content[].input.file_path": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "main.py"
+      ]
+    },
+    "message.content[].input.limit": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "50"
+      ]
+    },
+    "message.content[].input.new_string": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "message.content[].input.old_string": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "def greet(name):"
+      ]
+    },
+    "message.content[].is_error": {
+      "types": [
+        "bool"
+      ],
+      "count": 2,
+      "sample_values": [
+        "False"
+      ]
+    },
+    "message.content[].name": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "Edit",
+        "Read"
+      ]
+    },
+    "message.content[].signature": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "synthetic-thinking-signature"
+      ]
+    },
+    "message.content[].text": {
+      "types": [
+        "str"
+      ],
+      "count": 3,
+      "sample_values": [
+        "I'll read main.py first to see the greet function.",
+        "Now I'll add the docstring."
+      ]
+    },
+    "message.content[].thinking": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "I'll read main.py to find the greet function."
+      ]
+    },
+    "message.content[].tool_use_id": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "toolu_synthetic000000000000edit",
+        "toolu_synthetic000000000000read"
+      ]
+    },
+    "message.content[].type": {
+      "types": [
+        "str"
+      ],
+      "count": 8,
+      "sample_values": [
+        "text",
+        "thinking",
+        "tool_result",
+        "tool_use"
+      ]
+    },
+    "message.id": {
+      "types": [
+        "str"
+      ],
+      "count": 3,
+      "sample_values": [
+        "msg_synthetic00000000000001",
+        "msg_synthetic00000000000002",
+        "msg_synthetic00000000000003"
+      ]
+    },
+    "message.model": {
+      "types": [
+        "str"
+      ],
+      "count": 3,
+      "sample_values": [
+        "claude-sonnet-4-5"
+      ]
+    },
+    "message.role": {
+      "types": [
+        "str"
+      ],
+      "count": 6,
+      "sample_values": [
+        "assistant",
+        "user"
+      ]
+    },
+    "message.stop_reason": {
+      "types": [
+        "str"
+      ],
+      "count": 3,
+      "sample_values": [
+        "end_turn",
+        "tool_use"
+      ]
+    },
+    "message.stop_sequence": {
+      "types": [
+        "null"
+      ],
+      "count": 3,
+      "sample_values": []
+    },
+    "message.type": {
+      "types": [
+        "str"
+      ],
+      "count": 3,
+      "sample_values": [
+        "message"
+      ]
+    },
+    "message.usage": {
+      "types": [
+        "dict"
+      ],
+      "count": 3,
+      "sample_values": []
+    },
+    "message.usage.cache_creation": {
+      "types": [
+        "dict"
+      ],
+      "count": 3,
+      "sample_values": []
+    },
+    "message.usage.cache_creation.ephemeral_1h_input_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 3,
+      "sample_values": [
+        "0"
+      ]
+    },
+    "message.usage.cache_creation.ephemeral_5m_input_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 3,
+      "sample_values": [
+        "0"
+      ]
+    },
+    "message.usage.cache_creation_input_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 3,
+      "sample_values": [
+        "0"
+      ]
+    },
+    "message.usage.cache_read_input_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 3,
+      "sample_values": [
+        "0",
+        "120",
+        "300"
+      ]
+    },
+    "message.usage.input_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 3,
+      "sample_values": [
+        "120",
+        "180",
+        "250"
+      ]
+    },
+    "message.usage.output_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 3,
+      "sample_values": [
+        "30",
+        "45",
+        "60"
+      ]
+    },
+    "message.usage.service_tier": {
+      "types": [
+        "str"
+      ],
+      "count": 3,
+      "sample_values": [
+        "standard"
+      ]
+    },
+    "messageId": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "00000000-0000-4000-8000-000000000002"
+      ]
+    },
+    "parentToolUseID": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "toolu_synthetic000000000000edit"
+      ]
+    },
+    "parentUuid": {
+      "types": [
+        "null",
+        "str"
+      ],
+      "count": 9,
+      "sample_values": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000003",
+        "00000000-0000-4000-8000-000000000004",
+        "00000000-0000-4000-8000-000000000005"
+      ]
+    },
+    "permissionMode": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "acceptEdits",
+        "default"
+      ]
+    },
+    "promptId": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "00000000-0000-4000-8000-000000000900"
+      ]
+    },
+    "requestId": {
+      "types": [
+        "str"
+      ],
+      "count": 3,
+      "sample_values": [
+        "req_synthetic00000000000001",
+        "req_synthetic00000000000002",
+        "req_synthetic00000000000003"
+      ]
+    },
+    "sessionId": {
+      "types": [
+        "str"
+      ],
+      "count": 9,
+      "sample_values": [
+        "aaaaaaaa-0000-4000-8000-000000000000"
+      ]
+    },
+    "slug": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "example-session"
+      ]
+    },
+    "snapshot": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "snapshot.messageId": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "00000000-0000-4000-8000-000000000002"
+      ]
+    },
+    "snapshot.timestamp": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "2026-01-01T00:00:04.100Z"
+      ]
+    },
+    "snapshot.trackedFileBackups": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "sourceToolAssistantUUID": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000004"
+      ]
+    },
+    "timestamp": {
+      "types": [
+        "str"
+      ],
+      "count": 9,
+      "sample_values": [
+        "2026-01-01T00:00:00.000Z",
+        "2026-01-01T00:00:01.000Z",
+        "2026-01-01T00:00:02.000Z",
+        "2026-01-01T00:00:03.000Z",
+        "2026-01-01T00:00:04.000Z",
+        "2026-01-01T00:00:04.200Z",
+        "2026-01-01T00:00:04.300Z",
+        "2026-01-01T00:00:04.400Z",
+        "2026-01-01T00:00:05.000Z"
+      ]
+    },
+    "toolUseID": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "toolu_synthetic000000000000edit"
+      ]
+    },
+    "toolUseResult": {
+      "types": [
+        "dict",
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "The file main.py has been updated."
+      ]
+    },
+    "toolUseResult.file": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "toolUseResult.file.content": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "def greet(name):\n    return f\"Hello, {name}!\""
+      ]
+    },
+    "toolUseResult.file.filePath": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "main.py"
+      ]
+    },
+    "toolUseResult.file.numLines": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "2"
+      ]
+    },
+    "toolUseResult.file.startLine": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "1"
+      ]
+    },
+    "toolUseResult.file.totalLines": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "2"
+      ]
+    },
+    "toolUseResult.type": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "text"
+      ]
+    },
+    "type": {
+      "types": [
+        "str"
+      ],
+      "count": 10,
+      "sample_values": [
+        "assistant",
+        "attachment",
+        "file-history-snapshot",
+        "permission-mode",
+        "progress",
+        "user"
+      ]
+    },
+    "userType": {
+      "types": [
+        "str"
+      ],
+      "count": 9,
+      "sample_values": [
+        "external"
+      ]
+    },
+    "uuid": {
+      "types": [
+        "str"
+      ],
+      "count": 9,
+      "sample_values": [
+        "00000000-0000-4000-8000-000000000001",
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000003",
+        "00000000-0000-4000-8000-000000000004",
+        "00000000-0000-4000-8000-000000000005",
+        "00000000-0000-4000-8000-000000000006",
+        "00000000-0000-4000-8000-000000000007",
+        "00000000-0000-4000-8000-000000000008",
+        "00000000-0000-4000-8000-000000000009"
+      ]
+    },
+    "version": {
+      "types": [
+        "str"
+      ],
+      "count": 9,
+      "sample_values": [
+        "2.1.76"
+      ]
+    }
+  }
+}

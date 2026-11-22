@@ -1,0 +1,627 @@
+# minitrace adapter DSL — Claude Code (Anthropic CLI harness, JSONL v2 format)
+#
+# Reads a single pre-processed container produced by preprocess_claude_code.py
+# (one parent claude-code session per container; subagents not yet handled in
+# this minimal DSL — Step 2 of the implementation walk).
+#
+# Step 2 scope: parent-only agent-session emission for user / user_tool_result /
+# assistant turns + tool_use blocks. Other event_kinds (attachment, system_event,
+# permission_mode_change, user_meta) deliberately fall through to a catch-all
+# warning so the coverage report drives the next iteration.
+#
+# Pinned to claude-code 2.1.131 (May 2026). Older harness versions may need a
+# back-compat pre-processor branch (see scoping note §"Out-of-scope items").
+#
+# Conforms to minitrace-spec v0.3.0 + minitrace-adapter-dsl-spec v0.1.0.
+
+adapter:
+  name: claude-code
+  harness_version: "claude-code/2.1.131"
+  dsl_version: "0.1.0"
+  source_format: claude-code-jsonl-v2
+  converter_version: minitrace-claude-code-dsl-0.1.0-step2
+  produces_schema: "0.3.0"
+
+input:
+  type: json
+  encoding: utf-8
+  container:
+    record_path: events
+
+state:
+  next_turn_index: 0
+  last_assistant_turn_index: null
+  next_ann_id: 0
+  next_pt_id: 0
+  next_sm_id: 0
+  total_input_tokens: 0
+  total_output_tokens: 0
+  total_cache_creation_tokens: 0
+  total_cache_read_tokens: 0
+  total_turn_duration_ms: 0
+
+constants:
+  # Taxonomy version qualifiers are derived per-event from
+  # ${record.harness_version} (set by pre-processor) so a single trace can
+  # span producer versions if the session survived a harness upgrade.
+  adapter_pin: "claude-code/2.1.131"
+
+# Tool-name → operation_type mapping (ported from v0.2.0 classify_operation).
+# The runner fills tool_call.operation_type from this table by tool_name when
+# emit_tool_call doesn't set it explicitly.
+operation_types:
+  Read: READ
+  Glob: READ
+  Grep: READ
+  Edit: MODIFY
+  Write: NEW
+  NotebookEdit: MODIFY
+  Bash: EXECUTE
+  Agent: DELEGATE
+  Task: DELEGATE
+  TaskCreate: DELEGATE
+  TaskUpdate: DELEGATE
+  TaskGet: READ
+  TaskList: READ
+  TaskOutput: READ
+  TaskStop: EXECUTE
+  Skill: OTHER
+  AskUserQuestion: OTHER
+  WebFetch: READ
+  WebSearch: READ
+  ToolSearch: READ
+  default: OTHER
+
+sessions:
+
+  agent:
+    static:
+      schema_version: "0.3.0"
+      trace_type: "agent-session"
+      profile: "claude-code"
+      # Nothing here checks for personal data, so the flags assume it is present:
+      # unchecked, not clean. contains_pii forces classification >= confidential.
+      classification: "confidential"
+      flags.for_research: false
+      flags.needs_cleaning: true
+      flags.contains_error: false
+      flags.contains_pii: true
+    derived:
+      id: "$container.trace_id"
+      title: "$container.trace_title"
+      environment.agent_framework: "claude-code"
+      environment.agent_version: "$container.harness_version"
+      environment.model: "$container.model_observed"
+      # CC >= 2.1.260 prompt_snapshot / deferred_tools_record / environment /
+      # instructions attachments, hoisted by the pre-processor. null = not in
+      # the source; ext:claude-code states which (snapshot_status).
+      environment.system_prompt: "$container.system_prompt"
+      environment.tools_enabled: "$container.tools_enabled"
+      environment.platform_type: "agent"
+      environment.ext:claude-code: "$container.ext_claude_code"
+      operational_context.working_directory: "$container.cwd"
+      operational_context.git_branch: "$container.git_branch"
+      provenance.source_format: "$container.harness_format"
+      provenance.source_session_id: "$container.session_id"
+      provenance.source_path: "$container.session_path"
+      coordination.parent_session: "$container.parent_trace_id"
+      timing.started_at: "$container.session_started_at"
+      timing.ended_at: "$container.session_ended_at"
+
+emit:
+
+  # ===== SESSION INIT — fires once per container =====
+  # Synthetic event injected by the pre-processor at events[0]. Used as the
+  # stable anchor for trace-once emission (lineage edges per A1+A2/R6).
+
+  # Parent emits one delegates-to per subagent.
+  - target: agent
+    name: agent_emit_delegates_to
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+        - { container_field: kind, value: parent }
+    foreach_block: "$container.subagents"
+    on_block:
+      - name: delegates_to_for_subagent
+        when:
+          all_of:
+            - { block_field: trace_id, present: true }
+        do:
+          - emit_lineage:
+              type: "delegates-to"
+              target_trace_id: "$block.trace_id"
+              target_content_hash: "${trace:${block.trace_id}:content_hash}"
+              authored_by: "claude-code/${block.harness_version}"
+              authored_at: "$block.agent_started_at"
+
+  # Subagent emits one delegated-by edge to the parent.
+  # Discovery-aid only — no target_content_hash to avoid the R3 cycle that
+  # arises if both directions assert integrity (parent → child via
+  # delegates-to already carries the integrity claim). Spec §3.4 allows
+  # lineage edges to omit target_content_hash for non-integrity edge types.
+  - target: agent
+    name: agent_emit_delegated_by
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+        - { container_field: kind, value: subagent }
+    do:
+      - emit_lineage:
+          type: "delegated-by"
+          target_trace_id: "$container.parent_trace_id"
+          authored_by: "claude-code/${container.harness_version}"
+          authored_at: "$container.session_started_at"
+
+  # ===== USER PROMPT (real operator turn) =====
+  - target: agent
+    name: agent_user_prompt
+    when:
+      all_of:
+        - { field: event_kind, value: user_prompt }
+        - { field: permission_mode_changed, present: false }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "user"
+          source: "human"
+          content_type: "text"
+          content: "$record.content"
+          timestamp: "$record.timestamp"
+      - set:
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  # ===== USER PROMPT that opens a permission-mode segment =====
+  # The pre-processor flags the first prompt submitted under a new
+  # permissionMode (observed, timestamped). Mode shifts demarcate segments
+  # (segment_type mode_shift, trace §4.5). Marker and turn share the prompt's
+  # timestamp, and the §4.3 ordering key puts a turn (kind 0) before a
+  # segment marker (kind 2) at equal timestamps and `ordering`, so both carry
+  # `ordering` (marker 0, turn 1), which is compared before the kind: the
+  # prompt belongs to the new segment.
+  - target: agent
+    name: agent_user_prompt_mode_segment
+    when:
+      all_of:
+        - { field: event_kind, value: user_prompt }
+        - { field: permission_mode_changed, present: true }
+    do:
+      - set:
+          state.next_sm_id: "$state.next_sm_id + 1"
+      - emit_segment_marker:
+          id: "claude-code-sm-pm-${container.session_id}-${state.next_sm_id}"
+          timestamp: "$record.timestamp"
+          segment_type: "mode_shift"
+          segment_label: "$record.permission_mode"
+          ordering: 0
+          taxonomy:
+            - "claude-code/${record.harness_version}/permission-mode/${record.permission_mode}"
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "user"
+          source: "human"
+          content_type: "text"
+          content: "$record.content"
+          timestamp: "$record.timestamp"
+          ordering: 1
+      - set:
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  # ===== USER TOOL-RESULT (wraps a list of tool_result blocks) =====
+  # The pre-processor flattens the list under record.tool_results; we attach
+  # each result to its emitting tool_call by tool_use_id. No turn emitted —
+  # tool results are not stand-alone turns in v0.3.0 (they ride on tool_calls).
+  - target: agent
+    name: agent_user_tool_result
+    when:
+      all_of:
+        - { field: event_kind, value: user_tool_result }
+    foreach_block: "$record.tool_results"
+    on_block:
+      - name: attach_tool_result_block
+        when:
+          all_of:
+            - { block_field: tool_use_id, present: true }
+        do:
+          - attach_tool_result:
+              target_id: "$block.tool_use_id"
+              output:
+                success: "not $block.is_error"
+                result: "$block.content"
+                content_origin: "tool_output"
+
+  # ===== USER TEXT beside tool results =====
+  # Text blocks in the same user message as tool results. Who wrote them
+  # (the operator, or the harness, e.g. an interruption note) is not
+  # recorded, so source is null (spec v0.2.0 turn.source).
+  - target: agent
+    name: agent_user_tool_result_text
+    when:
+      all_of:
+        - { field: event_kind, value: user_tool_result }
+        - { field: accompanying_text, present: true }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "user"
+          source: null
+          content_type: "text"
+          content: "$record.accompanying_text"
+          timestamp: "$record.timestamp"
+      - set:
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  # ===== ASSISTANT TURN + tool_use blocks =====
+  # Always emit a turn; foreach over content_blocks emits one tool_call per
+  # tool_use block. Text/thinking blocks are folded into Turn.content +
+  # Turn.thinking via the pre-processor's content_blocks shape (the runner
+  # doesn't expose a per-block emit for non-tool blocks at this phase).
+  # ===== MODEL SWITCH =====
+  # The pre-processor sets model_shift_from on an assistant turn whose real
+  # model differs from the previous real model (<synthetic> ignored). The
+  # marker and the turn share the timestamp; `ordering` (marker 0, turn 1)
+  # puts the marker first, since the §4.3 ordering key compares `ordering`
+  # before the kind (which alone would put the turn first), so the turn
+  # belongs to the new segment, as for modes.
+  # x-model_shift: the §4.5 enumeration has no model value (x-* escape).
+  - target: agent
+    name: agent_assistant_model_shift
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_turn }
+        - { field: model_shift_from, present: true }
+    do:
+      - set:
+          state.next_sm_id: "$state.next_sm_id + 1"
+      - emit_segment_marker:
+          id: "claude-code-sm-model-${container.session_id}-${state.next_sm_id}"
+          timestamp: "$record.timestamp"
+          segment_type: "x-model_shift"
+          segment_label: "$record.model"
+          ordering: 0
+          ext_claude_code_model_from: "$record.model_shift_from"
+          taxonomy:
+            - "claude-code/${record.harness_version}/model/${record.model}"
+
+  - target: agent
+    name: agent_assistant_turn
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_turn }
+    do:
+      # Token accumulation per draft-4 §metrics.
+      - accumulate:
+          state.total_input_tokens: "$record.usage.input_tokens"
+          state.total_output_tokens: "$record.usage.output_tokens"
+          state.total_cache_creation_tokens: "$record.usage.cache_creation_input_tokens"
+          state.total_cache_read_tokens: "$record.usage.cache_read_input_tokens"
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "assistant"
+          source: "model"
+          content_type: "text"
+          content: "text_blocks_join($record.content_blocks)"
+          thinking: "first_block_text_of_type($record.content_blocks, thinking)"
+          timestamp: "$record.timestamp"
+          stop_reason: "$record.stop_reason"
+          ordering: "$record.model_shift_from ? 1 : None"
+        omit_if_none: [ordering]
+      - set:
+          state.last_assistant_turn_index: "$state.next_turn_index"
+          state.next_turn_index: "$state.next_turn_index + 1"
+    foreach_block: "$record.content_blocks"
+    on_block:
+      - name: emit_tool_call_for_assistant
+        when:
+          all_of:
+            - { block_field: type, value: tool_use }
+            - { block_field: id, present: true }
+        do:
+          - emit_tool_call:
+              id: "$block.id"
+              tool_name: "$block.name"
+              emitting_turn_index: "$state.last_assistant_turn_index"
+              input:
+                arguments: "$block.input"
+              invocation_source: "agent_choice"
+              spawned_agent: "$block.spawned_agent_payload"
+              # mcp__<server>__<tool> parsed by the pre-processor; null for
+              # non-MCP tools. tool_name stays the framework name, op stays OTHER.
+              framework_metadata: "$block.framework_metadata"
+
+  # ===== USER META (isMeta=true; framework-injected user-shape records) =====
+  # Emit as observation annotation per scoping note Q5; not as a turn.
+  - target: agent
+    name: agent_user_meta_annotation
+    when:
+      all_of:
+        - { field: event_kind, value: user_meta }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "claude-code-ann-meta-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$record.timestamp"
+          annotator: "claude-code-runtime"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "${container.trace_id}"
+          content:
+            text: "$record.content"
+          claim_type: "observation"
+          taxonomy:
+            - "claude-code/${record.harness_version}/input-channel/framework_control"
+
+  # ===== ATTACHMENT subtype dispatch (per scoping note Q4 + Step-3 expansions) =====
+  # Behaviorally-impactful subtypes → observation annotations.
+  # Registration-noise subtypes → note: info (no trace artefact emitted).
+
+  - target: agent
+    name: agent_attachment_hook_success
+    when:
+      all_of:
+        - { field: event_kind, value: attachment }
+        - { field: attachment_subtype, value: hook_success }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "claude-code-ann-hook-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$record.timestamp"
+          annotator: "claude-code-runtime"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "${container.trace_id}"
+          content:
+            text: "$record.attachment.content"
+          claim_type: "observation"
+          taxonomy:
+            - "claude-code/${record.harness_version}/hook/${record.attachment.hookEvent}"
+            - "claude-code/${record.harness_version}/hook-name/${record.attachment.hookName}"
+
+  - target: agent
+    name: agent_attachment_hook_additional_context
+    when:
+      all_of:
+        - { field: event_kind, value: attachment }
+        - { field: attachment_subtype, value: hook_additional_context }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "claude-code-ann-hookctx-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$record.timestamp"
+          annotator: "claude-code-runtime"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "${container.trace_id}"
+          content:
+            text: "$record.attachment.content"
+          claim_type: "observation"
+          taxonomy:
+            - "claude-code/${record.harness_version}/hook-additional-context/${record.attachment.hookName}"
+
+  # Blocking hook feedback (exit 2, e.g. PostToolUse checks): the message the
+  # model received about one tool call. Scoped to that call when the record
+  # names it (toolUseID), else to the trace. Previously unmapped, so
+  # these were dropped and hook friction was not countable.
+  - target: agent
+    name: agent_attachment_hook_blocking_error
+    when:
+      all_of:
+        - { field: event_kind, value: attachment }
+        - { field: attachment_subtype, value: hook_blocking_error }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "claude-code-ann-hookblock-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$record.timestamp"
+          annotator: "claude-code-runtime"
+          source:
+            type: "runtime"
+          scope:
+            type: "$record.attachment.toolUseID ? 'tool_call' : 'trace'"
+            target_id: "coalesce($record.attachment.toolUseID, $container.trace_id)"
+          content:
+            text: "$record.attachment.blockingError.blockingError"
+          claim_type: "observation"
+          ext_claude_code_hook_command: "$record.attachment.blockingError.command"
+          taxonomy:
+            - "claude-code/${record.harness_version}/hook/${record.attachment.hookEvent}"
+            - "claude-code/${record.harness_version}/hook-blocking-error/${record.attachment.hookName}"
+
+  - target: agent
+    name: agent_attachment_task_reminder
+    when:
+      all_of:
+        - { field: event_kind, value: attachment }
+        - { field: attachment_subtype, value: task_reminder }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "claude-code-ann-taskrem-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$record.timestamp"
+          annotator: "claude-code-runtime"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "${container.trace_id}"
+          content:
+            text: "$record.attachment.content"
+          claim_type: "observation"
+          taxonomy:
+            - "claude-code/${record.harness_version}/attachment/task_reminder"
+
+  - target: agent
+    name: agent_attachment_date_change
+    when:
+      all_of:
+        - { field: event_kind, value: attachment }
+        - { field: attachment_subtype, value: date_change }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "claude-code-ann-date-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$record.timestamp"
+          annotator: "claude-code-runtime"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "${container.trace_id}"
+          content:
+            text: "$record.attachment.newDate"
+          claim_type: "observation"
+          taxonomy:
+            - "claude-code/${record.harness_version}/attachment/date_change"
+
+  - target: agent
+    name: agent_attachment_command_permissions
+    when:
+      all_of:
+        - { field: event_kind, value: attachment }
+        - { field: attachment_subtype, value: command_permissions }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "claude-code-ann-cmdperm-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$record.timestamp"
+          annotator: "claude-code-runtime"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "${container.trace_id}"
+          content:
+            text: "command_permissions"
+          claim_type: "observation"
+          taxonomy:
+            - "claude-code/${record.harness_version}/attachment/command_permissions"
+
+  - target: agent
+    name: agent_attachment_diagnostics
+    when:
+      all_of:
+        - { field: event_kind, value: attachment }
+        - { field: attachment_subtype, value: diagnostics }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "claude-code-ann-diag-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$record.timestamp"
+          annotator: "claude-code-runtime"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "${container.trace_id}"
+          content:
+            text: "diagnostics"
+          claim_type: "observation"
+          taxonomy:
+            - "claude-code/${record.harness_version}/attachment/diagnostics"
+
+  # Registration-noise subtypes → note: info (no trace artefact emitted).
+  - target: agent
+    name: agent_attachment_registration_noise
+    when:
+      all_of:
+        - { field: event_kind, value: attachment }
+        - any_of:
+            - { field: attachment_subtype, value: skill_listing }
+            - { field: attachment_subtype, value: mcp_instructions_delta }
+            - { field: attachment_subtype, value: deferred_tools_delta }
+            # agent_listing_delta: the 2.1.153->2.1.215 successor slot to
+            # deferred_tools_delta. Same session-start housekeeping role (it lists
+            # available agent/subagent types), same registration-noise treatment.
+            # deferred_tools_delta is KEPT for back-compat with <=2.1.153 captures.
+            # Restoring parity for this renamed slot, NOT new modelled coverage:
+            # emits a note, no trace artefact.
+            - { field: attachment_subtype, value: agent_listing_delta }
+            - { field: attachment_subtype, value: companion_intro }
+    do:
+      - note:
+          level: "info"
+          message: "registration-noise attachment subtype: ${record.attachment_subtype}"
+
+  # ===== SYSTEM EVENT split (Q6 wrinkle: subtype-specific dispatch) =====
+  # stop_hook_summary → policy_trigger per hook in hookInfos[]
+  # away_summary → observation annotation
+  # turn_duration → metrics aggregation (NOT a policy_trigger)
+
+  - target: agent
+    name: agent_system_stop_hook_summary
+    when:
+      all_of:
+        - { field: event_kind, value: system_event }
+        - { field: subtype, value: stop_hook_summary }
+    foreach_block: "$record.hook_infos"
+    on_block:
+      - name: emit_policy_trigger_for_hook
+        when:
+          all_of:
+            - { block_field: command, present: true }
+        do:
+          - set:
+              state.next_pt_id: "$state.next_pt_id + 1"
+          - emit_policy_trigger:
+              id: "claude-code-pt-${container.session_id}-${state.next_pt_id}"
+              timestamp: "$record.timestamp"
+              trigger_name: "$block.command"
+              fired: "$record.prevented_continuation"
+              taxonomy:
+                - "claude-code/${record.harness_version}/stop-hook/${record.tool_use_id}"
+
+  - target: agent
+    name: agent_system_away_summary
+    when:
+      all_of:
+        - { field: event_kind, value: system_event }
+        - { field: subtype, value: away_summary }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "claude-code-ann-away-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$record.timestamp"
+          annotator: "claude-code-runtime"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "${container.trace_id}"
+          content:
+            text: "$record.content"
+          claim_type: "observation"
+          taxonomy:
+            - "claude-code/${record.harness_version}/system/away_summary"
+
+  - target: agent
+    name: agent_system_turn_duration
+    when:
+      all_of:
+        - { field: event_kind, value: system_event }
+        - { field: subtype, value: turn_duration }
+    do:
+      - accumulate:
+          state.total_turn_duration_ms: "$record.duration_ms"
+
+finalize:
+  computed:
+    metrics.total_input_tokens: "$state.total_input_tokens"
+    metrics.total_output_tokens: "$state.total_output_tokens"
+    metrics.total_cache_creation_tokens: "$state.total_cache_creation_tokens"
+    metrics.total_cache_read_tokens: "$state.total_cache_read_tokens"
+    metrics.total_turn_duration_ms: "$state.total_turn_duration_ms"

@@ -1,0 +1,44 @@
+{
+  "freeze_semantics": "Content-hash freeze of the cursor adapter's output over the conformance scenarios at harness 2026.07.23-e383d2b. cursor uses the preprocess path: preprocess_cursor.py normalises the native `--output-format stream-json` STDOUT event stream into one container, which cursor.dsl.yaml turns into one trace. verify.py re-runs preprocess+DSL on each input (cwd = this dir, input paths relative) and asserts trace_count, per-trace content_hash, and unmapped_path_count; the drift_watch self-test asserts annotated_cells_fired equals the cursor CELL_SIGNALS extractor. cursor traces carry no provenance.source_path, so the content_hash is checkout-independent. The harness version enters the hash via inputs/framework-meta.json (taxonomy strings) because the stream carries NO in-band version \u2014 see the no-inband-version limitation in drift-ledger.yaml.",
+  "harness_version": "2026.07.23-e383d2b",
+  "capture_provenance": "Live container capture on the arm64 capture workstation (2026-07-25) via the version-pinned image capture/cursor:2026.07.23-e383d2b (cursor-agent from downloads.cursor.com/lab/2026.07.23-e383d2b/linux/arm64). CANDIDATE end of the release delta against the 2026.06.04-5fd875e baseline. Same non-offline caveat as the baseline rung: cloud backend, identity-bound key, verifiable but not regenerable. Model pinned by NAME as claude-4-sonnet; backend resolved it to \"Sonnet 4 No Thinking\". Host cursor-agent untouched. Scenario s1-config: 'read config.yaml, change count to 2, then run: cat config.yaml' \u2014 fires READ (readToolCall) + MODIFY (editToolCall on an existing file) + a shell call that classifies READ because `cat` is a read verb under the shared codex verb semantics. Scenario s2-new-exec: 'create report.txt containing ok, then run: echo BUILD_DONE' \u2014 fires NEW (editToolCall against a path with no beforeFullFileContent) + EXECUTE (echo is not a read verb). The two scenarios together fire cells 5,6,7,8, so this adapter has no op-cell gap.",
+  "adapter_pin": "cursor/multi-version (cursor.dsl.yaml, stream-json vocabulary)",
+  "converter_version": "minitrace-cursor-dsl-0.1.0",
+  "frozen_at": "2026-07-25",
+  "scenarios": {
+    "s1-config": {
+      "input": "inputs/s1-config.stream.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:9d1954957785ba4c2738622b19341e91b9fc24efa2c1b6697c948f058334253d"
+      ],
+      "unmapped_path_count": 0,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        26
+      ]
+    },
+    "s2-new-exec": {
+      "input": "inputs/s2-new-exec.stream.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:d40e5e6e2e58836af61a8577781309be1f4d1df9d0c715c2f164b5d6ff6ef5a0"
+      ],
+      "unmapped_path_count": 0,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        7,
+        8,
+        26
+      ]
+    }
+  }
+}

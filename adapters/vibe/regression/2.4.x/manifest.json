@@ -1,0 +1,50 @@
+{
+  "freeze_semantics": "Content-hash freeze of the vibe adapter's output over the conformance scenarios at harness 2.4.x (archived anchor). vibe uses the preprocess path: preprocess_vibe.py normalises native session DIRECTORIES (meta.json + messages.jsonl each) into a container array, which vibe.dsl.yaml turns into one trace per session \u2014 vibe is the fleet's only multi-trace adapter (sessions: DSL), so dsl_runner itself resolves cross-trace lineage placeholders and stamps content_hash (verify.py asserts the stamp and must NOT re-run back-fill, per cross_trace R2). verify.py re-runs preprocess+DSL on each input (cwd = this dir, input paths relative) and asserts trace_count, per-trace content_hash, and unmapped_path_count. vibe traces carry no provenance.source_path, so the content_hash is checkout-independent. The container-batch scenario (5 sessions, one batch) exercises the multi-trace emission path; s3-modify (a single session dir) exercises the single-session input shape \u2014 its hash equals trace 3 of the batch, confirming batch-context independence for lineage-free sessions.",
+  "harness_version": "2.4.x",
+  "capture_provenance": "Archived container capture (2026-03-16T03:56-03:57Z, the 2026-03-16-container-run batch): mistral-vibe in the March scenario-runner container (python:3.12-slim, /workspace, devstral-2 via api.mistral.ai behind a capture proxy), scenarios S1-S5 of the shared scenario set. VERSION IS DATE-BOUND, NOT IN-BAND: vibe carries no version identifier anywhere in its session output (meta.json has no version field), and the runner Dockerfile pinning mistral-vibe==2.4.2 was committed 2026-03-31 \u2014 AFTER this capture \u2014 so it corroborates but cannot prove the exact patch level. What the dates DO prove: the capture finished at 2026-03-16T03:57Z, before 2.5.0's PyPI release the same day at 16:54Z, and 2.4.0/2.4.1/2.4.2 released 03-09/03-10/03-12 \u2014 so the binary was 2.4.x (latest available: 2.4.2). Format era confirmed 2.4-era in-band (no title_source / parent_session_id / loops in meta.json). Hence the rung label 2.4.x, not a point version.",
+  "adapter_pin": "vibe/multi-version (vibe.dsl.yaml, 2.4-era + 2.9-era vocabulary)",
+  "converter_version": "minitrace-vibe-dsl-0.1.0",
+  "frozen_at": "2026-07-25",
+  "scenarios": {
+    "container-batch": {
+      "input": "inputs/container-batch",
+      "trace_count": 5,
+      "content_hashes": [
+        "sha256:3b2a2374e7868c44dc9bfc6609534d65ec237847c71a9e66b14b00365a46c483",
+        "sha256:bcf773bfc9a74b5b609720e3a99bb00b828758a417b062f0c57922f772be8cd8",
+        "sha256:07f54312ebea49fd0ab10b9eca62e0db322c2f482e0e4aa852ce05f2a08eafb6",
+        "sha256:1878d5426da84dbd173dc03264f3ce655e5a3c28d3bebb7445b98683873b88e0",
+        "sha256:42bf0a3747b6f73df458e6186a534ebb4220d72a25813feab9ccfb334a2536a9"
+      ],
+      "unmapped_path_count": 81,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        26
+      ]
+    },
+    "s3-modify": {
+      "input": "inputs/s3-modify",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:07f54312ebea49fd0ab10b9eca62e0db322c2f482e0e4aa852ce05f2a08eafb6"
+      ],
+      "unmapped_path_count": 81,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        26
+      ]
+    }
+  }
+}

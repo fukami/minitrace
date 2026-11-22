@@ -1,0 +1,4 @@
+Synthetic witness payload for the minitrace envelope example.
+It records no observation of the session. It exists so that witness
+verification (envelope spec section 6.2, steps 3 and 4) has a listed
+file and a witness record to check.

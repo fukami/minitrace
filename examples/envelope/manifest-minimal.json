@@ -1,0 +1,60 @@
+{
+  "envelope_version": "0.1.0",
+  "envelope_id": "0193d4a0-aaaa-7890-abcd-ef0123456789",
+  "created_at": "2026-05-03T10:01:00.000000Z",
+  "producer": {
+    "id": "spec-example-pipeline",
+    "kind": "automated_pipeline",
+    "tool": "minitrace-envelope-builder/0.1.0",
+    "host_clock_id": "host-clock-0"
+  },
+  "clocks": [
+    {
+      "id": "host-clock-0",
+      "kind": "host_system",
+      "manipulated": false
+    }
+  ],
+  "traces": [
+    {
+      "trace_id": "0193d4a0-1234-7890-abcd-ef0123456789",
+      "path": "traces/agent-session-example.minitrace.json",
+      "trace_content_hash": "sha256:9d67dbcd9141f00c4b39418be2c8d5e9a78ab740d6afdf76deeaf1fafca3b016",
+      "file_content_hash": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "trace_type": "agent-session",
+      "schema_version": "0.3.0",
+      "primary": true,
+      "clock_id": "host-clock-0"
+    }
+  ],
+  "raw_artefacts": [
+    {
+      "id": "raw-001",
+      "path": "raw/pi/output.log",
+      "kind": "harness_log",
+      "harness": "pi",
+      "content_hash": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "size_bytes": 1234,
+      "produces_trace_id": "0193d4a0-1234-7890-abcd-ef0123456789"
+    }
+  ],
+  "witnesses": [
+    {
+      "id": "w-screenshot-001",
+      "kind": "screenshot",
+      "scope": {
+        "type": "trace",
+        "target_trace_id": "0193d4a0-1234-7890-abcd-ef0123456789"
+      },
+      "captured_at": "2026-05-03T10:00:01.500000Z",
+      "captured_by": "pi-screenshot-tool",
+      "content_hash": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "size_bytes": 48213,
+      "primary_path": "witnesses/w-screenshot-001/session-end.png",
+      "auxiliary_paths": [],
+      "redaction": null
+    }
+  ],
+  "annotations": [],
+  "extensions": {}
+}

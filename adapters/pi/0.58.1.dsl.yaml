@@ -1,0 +1,224 @@
+# minitrace adapter DSL — pi 0.58.1
+# Converts pi's native JSONL session format to a v0.3.0 minitrace agent-session trace.
+# Conforms to minitrace-adapter-dsl-spec v0.1.0.
+
+adapter:
+  name: pi
+  harness_version: "0.58.1"
+  dsl_version: "0.1.0"
+  source_format: pi-agent-jsonl-v3
+  converter_version: minitrace-pi-dsl-0.1.0
+  produces_schema: "0.3.0"
+
+input:
+  type: jsonl
+  encoding: utf-8
+
+# Accumulators mutated as records are scanned in order.
+state:
+  current_model: null
+  current_provider: null
+  current_thinking_level: null
+  next_turn_index: 0
+  last_turn_index: null
+  turn_text: null
+  all_timestamps: []
+  token_totals:
+    input: 0
+    output: 0
+    cache_read: 0
+    cache_creation: 0
+
+constants:
+  default_capture_mode: scrubbed
+
+# Tool-name → operation_type mapping. Used implicitly by emit_tool_call.
+operation_types:
+  bash: EXECUTE
+  read: READ
+  read_file: READ
+  write: NEW
+  write_file: NEW
+  edit: MODIFY
+  edit_file: MODIFY
+  search: READ
+  grep: READ
+  glob: READ
+  list_files: READ
+  default: OTHER
+
+session:
+  static:
+    schema_version: "0.3.0"
+    trace_type: "agent-session"
+    profile: "scenario-run"
+    # Nothing here checks for personal data, so the flags assume it is present:
+    # unchecked, not clean. contains_pii forces classification >= confidential.
+    classification: "confidential"
+    flags.for_research: false
+    flags.needs_cleaning: true
+    flags.contains_error: false
+    flags.contains_pii: true
+    # NOTE: operator.* fields are NOT declared here. Per DSL spec §7.1, the
+    # consent-claim values (type, operator_aware, capture_mode, capture_purpose)
+    # are supplied at runtime via the dsl_runner --operator-* flags. The runner
+    # refuses to emit a trace if they are missing.
+    environment.agent_framework: "pi"
+    coordination.human_attention: "active"
+
+  derived:
+    id: "$record_first.id"
+    title: "pi session ${record_first.id}"
+    operational_context.working_directory: "$record_first.cwd"
+    environment.agent_version: "$adapter.harness_version"
+    provenance.source_format: "$adapter.source_format"
+    provenance.converter_version: "$adapter.converter_version"
+    provenance.original_session_id: "$record_first.id"
+
+  passthrough:
+    handover:
+      received: null
+      produced: null
+    coordination:
+      project_id: null
+      predecessor_session: null
+      concurrent_sessions: null
+      human_attention: "active"
+    operational_context:
+      git_branch: null
+      git_ref: null
+      autonomy_level: "supervised"
+      sandbox: true
+      framework_config: null
+    condition: null
+
+# Records arrive in source order; the first matching rule fires per record.
+emit:
+
+  - name: session_init
+    when: { field: type, value: session }
+    do:
+      - set:
+          session.id: "$record.id"
+          # session.timing.started_at is set in finalize from min(all_timestamps).
+          # The session record carries an ISO timestamp at ms precision, but
+          # we prefer the first message's timestamp as session start.
+
+  - name: model_change
+    when: { field: type, value: model_change }
+    do:
+      - set:
+          state.current_model: "$record.modelId"
+          state.current_provider: "$record.provider"
+          session.environment.model: "$record.modelId"
+          session.environment.provider_hint: "$record.provider"
+
+  - name: thinking_level_change
+    when: { field: type, value: thinking_level_change }
+    do:
+      - set:
+          state.current_thinking_level: "$record.thinkingLevel"
+
+  - name: tool_result_message
+    # toolResult records carry message.role == "toolResult" with toolCallId at
+    # message level (not inside a block). Result text lives in content[0].text.
+    when:
+      all_of:
+        - { has: message }
+        - { field: message.role, value: toolResult }
+    do:
+      - accumulate:
+          state.all_timestamps: iso_from_ms($record.message.timestamp)
+      - attach_tool_result:
+          target_id: "$record.message.toolCallId"
+          output:
+            success: "not $record.message.isError"
+            result: "first_block_text($record.message.content)"
+            error: "$record.message.isError ? first_block_text($record.message.content) : null"
+            content_origin: "tool_output"
+
+  - name: user_or_assistant_message
+    # Role allowlist (not just `has: message`): toolResult records also carry
+    # `message`, and top-level dispatch is all-match (no break) since 02badb67.
+    # Without this guard, toolResult records fire BOTH tool_result_message
+    # (attach) AND this rule (emit_turn), producing spurious standalone turns.
+    # No `not` predicate exists in the runner, so allowlist user/assistant.
+    when:
+      all_of:
+        - { has: message }
+        - any_of:
+            - { field: message.role, value: user }
+            - { field: message.role, value: assistant }
+    do:
+      - accumulate:
+          state.all_timestamps: iso_from_ms($record.message.timestamp)
+          # Token field names drifted between pi builds while the v3 session-record
+          # schema stayed constant. Coalesce both schemes: terse (observed in corpus)
+          # first, Anthropic-style (genuine 0.58.1) as fallback. cacheWrite == cache
+          # creation.
+          state.token_totals.input: "coalesce($record.message?.usage?.input, $record.message?.usage?.inputTokens)"
+          state.token_totals.output: "coalesce($record.message?.usage?.output, $record.message?.usage?.outputTokens)"
+          state.token_totals.cache_read: "coalesce($record.message?.usage?.cacheRead, $record.message?.usage?.cacheReadInputTokens)"
+          state.token_totals.cache_creation: "coalesce($record.message?.usage?.cacheWrite, $record.message?.usage?.cacheCreationInputTokens)"
+      # Joined once, so an unusable text block is reported once.
+      - set:
+          state.turn_text: "text_blocks_join($record.message.content)"
+      - emit_turn:
+          index: "$state.next_turn_index"
+          timestamp: "iso_from_ms($record.message.timestamp)"
+          role: "$record.message.role"
+          source: "$record.message.role == 'user' ? 'human' : 'model'"
+          model: "$state.current_model"
+          # content_type is defined in trace v0.2.0 §3 (applying via rc3
+          # §1.4), where null means unknown or not classified; null exactly
+          # when content is null is a ruling (ruled 2026-10-21), not a spec
+          # requirement. A message with no text block has null content.
+          content_type: "$state.turn_text == null ? null : 'text'"
+          content: "$state.turn_text"
+          thinking: "first_block_text_of_type($record.message.content, thinking)"
+      - set:
+          state.next_turn_index: "$state.next_turn_index + 1"
+    foreach_block: "$record.message.content"
+    on_block:
+      - name: tool_call_block
+        when: { block_type: toolCall }
+        do:
+          - emit_tool_call:
+              id: "$block.id"
+              timestamp: iso_from_ms($record.message.timestamp)
+              tool_name: "$block.name"
+              emitting_turn_index: "$state.last_turn_index"
+              input:
+                arguments: "$block.arguments"
+                command: "$block.arguments?.command"
+                file_path: "$block.arguments?.path"
+              invocation_source: "agent_choice"
+              context:
+                position_in_session: null
+                tools_before: []
+                time_since_last_user: null
+
+  # NOTE: no catch-all rule (ruled 2026-10-21). Top-level dispatch is
+  # all-match and the DSL has no negation, so a `has_any: true` note fires on
+  # every record, handled ones included. Every pi v3 record type seen
+  # (session, model_change, thinking_level_change, message) has a rule above;
+  # a new type is format drift, for the drift watcher to report.
+
+finalize:
+  computed:
+    timing.started_at: "min($state.all_timestamps)"
+    timing.ended_at: "max($state.all_timestamps)"
+    timing.duration_seconds: "duration_seconds(min($state.all_timestamps), max($state.all_timestamps))"
+    timing.active_duration_seconds: "duration_seconds(min($state.all_timestamps), max($state.all_timestamps))"
+    metrics.turn_count: "len($trace.turns)"
+    metrics.tool_call_count: "len($trace.tool_calls)"
+    metrics.execute_count: "count_where($trace.tool_calls, operation_type, EXECUTE)"
+    metrics.read_count: "count_where($trace.tool_calls, operation_type, READ)"
+    metrics.modify_count: "count_where($trace.tool_calls, operation_type, MODIFY)"
+    metrics.create_count: "count_where($trace.tool_calls, operation_type, NEW)"
+    metrics.delegate_count: "count_where($trace.tool_calls, operation_type, DELEGATE)"
+    metrics.total_input_tokens: "$state.token_totals.input"
+    metrics.total_output_tokens: "$state.token_totals.output"
+    metrics.total_cache_read_tokens: "$state.token_totals.cache_read"
+    metrics.total_cache_creation_tokens: "$state.token_totals.cache_creation"
+    provenance.converted_at: now_microseconds()

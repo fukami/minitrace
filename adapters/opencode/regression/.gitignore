@@ -1,0 +1,3 @@
+# transient SQLite sidecars created when the adapter/verify opens an opencode db
+*.db-wal
+*.db-shm

@@ -1,0 +1,165 @@
+# Drift ledger — cursor adapter (harness #9, OUT of the current release cut)
+#
+# Machine-readable record of Axis-C drifts the drift watch has surfaced and
+# triaged. A drift whose surface an entry covers downgrades from FATAL to an
+# acknowledged line; a drift no entry covers still gates (exit 1). Format and the
+# verdict/disposition taxonomies: adapters/DRIFT-LEDGER.md.
+#
+# cursor's native surface is the `--output-format stream-json` STDOUT event
+# stream, read by a bespoke raw_reader that records event SHAPE (type, tool kind,
+# envelope/result/arg key sets) rather than content. cursor's captures are neither
+# keyless nor offline: inference runs against Cursor's cloud backend under an
+# identity-bound account key. Rungs are VERIFIABLE offline forever but NOT
+# regenerable.
+#
+# cursor is NOT the only key-bound harness. Eight of the fleet's 22 rungs are
+# cloud-backed, enumerated at source rather than inferred (re-measured
+# 2026-07-25): claude-code ×3 (message.model = claude-opus-4-8), goose ×2
+# (sessions.provider_name = anthropic), cursor ×2 (api2.cursor.sh), and
+# vibe/2.4.x (devstral-2 via api.mistral.ai behind a capture proxy).
+#
+# The other 14 ran against an ollama daemon on localhost / host.docker.internal
+# :11434. Note what does NOT establish that: neither the provider name nor the
+# local endpoint, because ollama also serves cloud-hosted models through that
+# same local port. The discriminator is the model tag — those 14 name plain
+# open-weight tags (qwen3:8b, qwen2.5-coder), none with a -cloud suffix. Any
+# future rung added on an ollama base URL has to be classified on its tag, not
+# on the word "ollama".
+#
+# (This comment previously read "the only fleet harness whose captures are
+# neither keyless nor offline"; corrected 2026-07-25 after measurement. The
+# first correction gave the right count off a reason that supported only five
+# rungs, which is why the enumeration is spelled out above.)
+#
+# What is specific to cursor is that the authenticated SESSION is identity-bound,
+# i.e. class D2 of miniobserve frameworks/HARNESS-ADMISSION.md.
+#
+# Changelog (format-evolution facts across frozen rungs — not ledger entries
+# unless a drift GATES):
+#
+#   2026.06.04-5fd875e  (baseline image rung; live container capture)
+#     Baseline. Event vocabulary: system/init, user, assistant, tool_call
+#     started|completed, interaction_query request|response, result/success.
+#     Tool kinds: read / edit / shell / glob / createPlan / switchMode.
+#     tool_call envelope carries the tool payload only — NO startedAtMs,
+#     completedAtMs or toolCallId. Per-tool timing is therefore UNAVAILABLE at
+#     this rung and the adapter must not require it. Fires cells
+#     1,2,3,4,5,6,26 (s1-config) and 1,2,3,4,7,8,26 (s2-new-exec).
+#     unmapped surface = 0 paths.
+#
+#   2026.06.04-5fd875e -> 2026.07.23-e383d2b  (image delta, ~7 weeks)
+#     Delta exits 0; no gating drift. Purely ADDITIVE at the raw surface, five
+#     new paths. At 06.04 the tool_call envelope carries NO non-tool keys at
+#     all; at 07.23 it carries four, plus one new shell arg:
+#         + tool_call.startedAtMs
+#         + tool_call.completedAtMs
+#         + tool_call.toolCallId
+#         + tool_call.hookAdditionalContexts
+#         + tool_call.shellToolCall.args.conversationId
+#     Per-tool timing arrives between the rungs. The adapter consumes
+#     startedAtMs/completedAtMs when present and falls back to the shell
+#     result's executionTime otherwise, so both rungs produce a duration on
+#     shell calls and only the newer rung produces one on edits.
+#     toolCallId is promoted to the envelope here; before it existed only
+#     inside shell args. hookAdditionalContexts is a hook-context channel that
+#     is empty in these captures — its arrival is recorded, its semantics are
+#     NOT characterised, and no scenario exercises it.
+#     Fired-cell sets are IDENTICAL across the delta, and both rungs hold
+#     unmapped surface at 0.
+#
+#     NB calver+hash versioning means cursor ships near-daily, so this "delta"
+#     spans roughly 35 unsampled builds. `policy: point-tested` carries more
+#     weight here than for the semver harnesses.
+
+coverage:
+  tested: ["2026.06.04-5fd875e", "2026.07.23-e383d2b"]
+  policy: point-tested
+
+# Known limitations of the drift watch itself, as opposed to drifts of the
+# harness. These do not gate; they bound what a green run means.
+limitations:
+  - id: no-inband-version
+    summary: >-
+      cursor's stream carries NO harness version string anywhere. The version
+      reaches the trace only through inputs/framework-meta.json, which the
+      capture harness writes from the image tag.
+    consequence: >-
+      Unlike aider (transcript banner) and codex (session_meta), there is no
+      version arm and therefore NO capture verification: a capture mislabelled
+      with the wrong version is not detectable from the artefact. The raw-surface
+      arm detects that A change occurred (the envelope-field delta above) but
+      never proves WHICH version produced a file.
+    mitigation: >-
+      Version attribution rests on the capture image, whose tag is asserted at
+      build time against `cursor-agent --version` and stamped into the OCI
+      version label. Treat the image as the version evidence, not the stream.
+
+  - id: thinking-unobserved
+    summary: >-
+      `thinking` events are documented in the June 2026 probes (under Composer
+      2.5 Fast) but were emitted in NONE of the captures behind these rungs.
+    consequence: >-
+      The adapter maps thinking defensively onto the owning assistant turn, but
+      no rung exercises the path, so the mapping is unverified against real data.
+    mitigation: >-
+      The captures pin --model claude-4-sonnet, which the backend resolves to
+      "Sonnet 4 No Thinking". A rung on a thinking-enabled model would close
+      this; it needs a model whose name we can pin AND whose backend emits
+      reasoning.
+
+  - id: non-success-result-unobserved
+    summary: >-
+      Every capture produced result/subtype:success. No rung exercises a
+      result with subtype != success or is_error true.
+    consequence: >-
+      The capture entrypoint's exit-66 assertion and the adapter's error path
+      are correct by construction but untested against a real failing stream.
+
+  - id: operation-type-not-cross-comparable
+    summary: >-
+      cursor's shell classifier shares codex's verb SETS but not its DISPATCH.
+      A 10-command differential (2026-07-25, both classifiers at HEAD) diverges
+      on 4: bare `ls` and bare `cat` (codex EXECUTE / cursor READ, because
+      codex's patterns require trailing whitespace), `echo 'a>b'` (codex NEW /
+      cursor EXECUTE, because codex scans the raw string for ">"), and
+      `python3 -c "open('f').read()"` (codex READ / cursor EXECUTE, a codex
+      pattern cursor lacks).
+    consequence: >-
+      A cross-harness comparison of operation_type between codex and cursor
+      traces attributes ADAPTER-DISPATCH differences to harness behaviour —
+      exactly the confound the drift fleet exists to remove. An earlier comment
+      in preprocess_cursor.py claimed the two were "fleet-comparable"; that was
+      an overclaim, corrected 2026-07-25.
+    mitigation: >-
+      Within-adapter comparisons (rung vs rung) are unaffected and are what the
+      rungs actually assert. For cross-adapter work, lift a shared classifier
+      into adapters/ so both call one implementation. Do NOT degrade cursor to
+      match codex: cursor is the more accurate classifier in 3 of the 4
+      divergent cases. The frozen rungs exercise none of them.
+
+  - id: rung-blind-to-ignored-fields
+    summary: >-
+      A rung's content_hash only moves when a field the ADAPTER CONSUMES
+      changes. Injecting a novel top-level field into a tool_call event leaves
+      the hash untouched and verify.py exits 0.
+    consequence: >-
+      Rung verification alone cannot detect new native fields. That is the
+      correct division of labour — new fields are the raw-surface arm's job, and
+      it is how tool_call.hookAdditionalContexts was found — but it means a
+      green verify.py is NOT evidence the native format is unchanged. Both must
+      run. Kill-testing a rung requires mutating a CONSUMED value (verified
+      2026-07-25: mutating editToolCall.result.success.path exits 1; injecting
+      an ignored field exits 0).
+
+  - id: cloud-backend-confounds-drift
+    summary: >-
+      The model is pinnable by NAME only; the backend serving that name is
+      Cursor's and can change without notice.
+    consequence: >-
+      A future delta between these rungs and a later capture confounds harness
+      version drift with server-side model drift — the exact separation the
+      fleet exists to make. Observed instance: claude-4-sonnet resolved to
+      "Sonnet 4 No Thinking", a variant selection we did not request and cannot
+      pin.
+
+entries: []

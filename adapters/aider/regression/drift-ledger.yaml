@@ -1,0 +1,35 @@
+# Drift ledger — aider adapter (conditional harness #7)
+#
+# Machine-readable record of Axis-C drifts the drift watch has surfaced and
+# triaged. A drift whose surface an entry covers downgrades from FATAL to an
+# acknowledged line; a drift no entry covers still gates (exit 1). Format and the
+# verdict/disposition taxonomies: adapters/DRIFT-LEDGER.md.
+#
+# aider carries its harness RELEASE version in-band on the transcript banner
+# (`> Aider v<version>`), like codex's cli_version — it changes every release, so
+# the version_arm WARNING is EXPECTED across a release delta and doubles as
+# capture verification. aider's native surface is the MARKDOWN transcript
+# (.aider.chat.history.md), read by a bespoke raw_reader (banner meta + per-turn
+# records); matching is exact on the record type the raw_reader emits.
+#
+# Changelog (format-evolution facts across frozen rungs — not ledger entries
+# unless a drift GATES):
+#
+#   0.82.0  (first image rung; live container capture, pip aider-chat==0.82.0)
+#     Baseline. whole edit format. Transcript vocabulary: `# aider chat started`
+#     banner (`> Aider v`, `> Model: … with <fmt> edit format`), `#### ` user
+#     turns, `<thinking-content-HASH>` reasoning blocks, whole-file listings,
+#     `> Create new file?` + `> Applied edit to <f>` console lines, `> Tokens:`
+#     lines. Fires cells 1,2,3,4,6,7,26. unmapped surface = 1 advisory path.
+#
+#   0.82.0 -> 0.86.2  (image delta)
+#     Delta exits 0; no gating drift (transcript vocabulary stable, whole edit
+#     format both ends, same fired-cell set 1,2,3,4,6,7,26). Any additive banner
+#     field surfaces as a non-gating raw-surface WARNING via the markdown
+#     raw_reader.
+
+coverage:
+  tested: ["0.82.0", "0.86.2"]
+  policy: point-tested
+
+entries: []

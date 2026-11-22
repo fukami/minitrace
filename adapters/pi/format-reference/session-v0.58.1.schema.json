@@ -1,0 +1,304 @@
+{
+  "record_types": {
+    "session": 1,
+    "model_change": 1,
+    "thinking_level_change": 1,
+    "message": 2
+  },
+  "field_count": 32,
+  "fields": {
+    "cwd": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "/home/user/project"
+      ]
+    },
+    "id": {
+      "types": [
+        "str"
+      ],
+      "count": 5,
+      "sample_values": [
+        "0c6df901",
+        "3e587c8f",
+        "56c4ea11",
+        "d8921023",
+        "f3c9f518-b7df-46ec-aed5-dd7262a3c6e9"
+      ]
+    },
+    "message": {
+      "types": [
+        "dict"
+      ],
+      "count": 2,
+      "sample_values": []
+    },
+    "message.api": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "openai-responses"
+      ]
+    },
+    "message.content": {
+      "types": [
+        "list"
+      ],
+      "count": 2,
+      "sample_values": []
+    },
+    "message.content[].text": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "hello, respond in one sentence"
+      ]
+    },
+    "message.content[].type": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "text"
+      ]
+    },
+    "message.errorMessage": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "message.model": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "qwen3.5:cloud"
+      ]
+    },
+    "message.provider": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "openai"
+      ]
+    },
+    "message.role": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "assistant",
+        "user"
+      ]
+    },
+    "message.stopReason": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "error"
+      ]
+    },
+    "message.timestamp": {
+      "types": [
+        "int"
+      ],
+      "count": 2,
+      "sample_values": [
+        "1773595750236",
+        "1773595750237"
+      ]
+    },
+    "message.usage": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "message.usage.cacheRead": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "0"
+      ]
+    },
+    "message.usage.cacheWrite": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "0"
+      ]
+    },
+    "message.usage.cost": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "message.usage.cost.cacheRead": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "0"
+      ]
+    },
+    "message.usage.cost.cacheWrite": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "0"
+      ]
+    },
+    "message.usage.cost.input": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "0"
+      ]
+    },
+    "message.usage.cost.output": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "0"
+      ]
+    },
+    "message.usage.cost.total": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "0"
+      ]
+    },
+    "message.usage.input": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "0"
+      ]
+    },
+    "message.usage.output": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "0"
+      ]
+    },
+    "message.usage.totalTokens": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "0"
+      ]
+    },
+    "modelId": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "qwen3.5:cloud"
+      ]
+    },
+    "parentId": {
+      "types": [
+        "null",
+        "str"
+      ],
+      "count": 4,
+      "sample_values": [
+        "0c6df901",
+        "3e587c8f",
+        "56c4ea11"
+      ]
+    },
+    "provider": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "openai"
+      ]
+    },
+    "thinkingLevel": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "medium"
+      ]
+    },
+    "timestamp": {
+      "types": [
+        "str"
+      ],
+      "count": 5,
+      "sample_values": [
+        "2026-03-15T17:29:10.235Z",
+        "2026-03-15T17:29:10.236Z",
+        "2026-03-15T17:29:10.237Z",
+        "2026-03-15T17:29:10.684Z"
+      ]
+    },
+    "type": {
+      "types": [
+        "str"
+      ],
+      "count": 5,
+      "sample_values": [
+        "message",
+        "model_change",
+        "session",
+        "thinking_level_change"
+      ]
+    },
+    "version": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "3"
+      ]
+    }
+  }
+}

@@ -1,0 +1,255 @@
+{
+  "id": "0193d4a0-1234-7890-abcd-ef0123456789",
+  "schema_version": "0.3.0",
+  "trace_type": "agent-session",
+  "schema_uri": null,
+  "profile": "synthetic",
+  "scenario_id": "example-spec-walkthrough",
+  "quality": "demonstration",
+  "title": "Worked example: minimal agent-session trace",
+  "summary": "Synthetic two-turn session with one tool call, one segment marker, one policy trigger, one annotation, and one redaction record. Constructed for the v0.3.0 specification; not a real session.",
+  "classification": "public",
+  "operator": {
+    "type": "human",
+    "operator_aware": true,
+    "capture_mode": "scrubbed",
+    "capture_purpose": null
+  },
+  "provenance": {
+    "source_format": "synthetic",
+    "source_path": null,
+    "converted_at": "2026-05-03T10:00:00.000000Z",
+    "converter_version": "spec-example-0.3.0",
+    "original_session_id": null
+  },
+  "flags": {
+    "for_research": true,
+    "needs_cleaning": false,
+    "contains_error": false,
+    "contains_pii": false,
+    "category": [
+      "worked-example"
+    ]
+  },
+  "environment": {
+    "model": "example-model",
+    "model_version": "1.0",
+    "temperature": 0.0,
+    "tools_enabled": [
+      "bash"
+    ],
+    "system_prompt": null,
+    "agent_framework": "spec-example",
+    "agent_version": "0.3.0",
+    "platform_type": "agent",
+    "provider_hint": null
+  },
+  "operational_context": {
+    "working_directory": "/tmp/example",
+    "git_branch": null,
+    "git_ref": null,
+    "autonomy_level": "supervised",
+    "sandbox": true,
+    "framework_config": null
+  },
+  "timing": {
+    "privacy_level": "scrubbed",
+    "duration_seconds": 1.5,
+    "active_duration_seconds": 1.5,
+    "started_at": "2026-05-03T10:00:00.000000Z",
+    "ended_at": "2026-05-03T10:00:01.500000Z",
+    "hour_of_day": 10,
+    "day_of_week": 5
+  },
+  "condition": null,
+  "coordination": {
+    "project_id": null,
+    "predecessor_session": null,
+    "concurrent_sessions": null,
+    "human_attention": "active"
+  },
+  "handover": {
+    "received": null,
+    "produced": null
+  },
+  "turns": [
+    {
+      "index": 0,
+      "timestamp": "2026-05-03T10:00:00.000000Z",
+      "role": "user",
+      "source": "human",
+      "model": null,
+      "content_type": "text",
+      "input_channel": "user_input",
+      "content": "Please list the files in the <pseudonym:dir-001>.",
+      "framework_metadata": null,
+      "tool_calls_in_turn": [],
+      "thinking": null,
+      "intent_markers": null,
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": null
+    },
+    {
+      "index": 1,
+      "timestamp": "2026-05-03T10:00:00.250000Z",
+      "role": "assistant",
+      "source": "model",
+      "model": "example-model",
+      "content_type": "text",
+      "input_channel": null,
+      "content": "I'll list the files using ls.",
+      "framework_metadata": null,
+      "tool_calls_in_turn": [
+        "tc-example-0001"
+      ],
+      "thinking": null,
+      "intent_markers": {
+        "requested": true,
+        "inferred": false,
+        "proactive": false
+      },
+      "streaming": {
+        "was_streamed": false,
+        "stream_log": null
+      },
+      "usage": {
+        "input_tokens": 12,
+        "output_tokens": 8,
+        "cache_read_tokens": null,
+        "cache_creation_tokens": null,
+        "reasoning_tokens": null,
+        "tool_tokens": null
+      }
+    }
+  ],
+  "tool_calls": [
+    {
+      "id": "tc-example-0001",
+      "emitting_turn_index": 1,
+      "timestamp": "2026-05-03T10:00:00.500000Z",
+      "tool_name": "bash",
+      "operation_type": "EXECUTE",
+      "input": {
+        "file_path": null,
+        "command": "ls",
+        "arguments": null
+      },
+      "output": {
+        "success": true,
+        "result": "example.txt\n",
+        "error": null,
+        "duration_ms": 12,
+        "truncated": false,
+        "full_bytes": 12,
+        "full_hash": null,
+        "full_reference": null,
+        "redacted": false,
+        "content_origin": null
+      },
+      "context": {
+        "position_in_session": 1.0,
+        "tools_before": [],
+        "time_since_last_user": 0.5
+      },
+      "framework_metadata": null,
+      "spawned_agent": null,
+      "invocation_source": "agent_choice"
+    }
+  ],
+  "segment_markers": [
+    {
+      "id": "seg-example-0001",
+      "timestamp": "2026-05-03T10:00:00.250000Z",
+      "segment_type": "mode_shift",
+      "segment_label": "exploration"
+    }
+  ],
+  "policy_triggers": [
+    {
+      "id": "trig-example-0001",
+      "timestamp": "2026-05-03T10:00:00.490000Z",
+      "trigger_name": "shell-execution-classifier",
+      "threshold_proximity": 0.42,
+      "fired": false
+    }
+  ],
+  "outcome": {
+    "success": true,
+    "partial": false,
+    "failure_codes": [],
+    "outcome_notes": "Demonstration session completed without issue."
+  },
+  "annotations": [
+    {
+      "id": "ann-example-0001",
+      "timestamp": "2026-05-03T10:05:00.000000Z",
+      "annotator": "spec-author",
+      "source": {
+        "type": "reviewer"
+      },
+      "scope": {
+        "type": "tool_call",
+        "target_id": "tc-example-0001"
+      },
+      "claim_type": "observation",
+      "content": {
+        "category": "observation",
+        "tags": [
+          "benign"
+        ],
+        "title": "Routine shell invocation",
+        "detail": "Tool call is a simple ls; included to demonstrate event-range addressing."
+      },
+      "taxonomy_mappings": {
+        "minitrace": [],
+        "mast": [],
+        "toolemu": []
+      },
+      "taxonomy": [],
+      "classification": null
+    }
+  ],
+  "lineage": [],
+  "redactions": [
+    {
+      "id": "red-example-0001",
+      "target_kind": "field",
+      "target": "/turns/0/content",
+      "operation": "pseudonymise",
+      "reason_code": "operator_privacy",
+      "authorised_by": "spec-author",
+      "authorised_at": "2026-05-03T10:00:00.000000Z",
+      "original_content_hash": "sha256:56610f0ddad58d3bf36501f971a70c7736d4fa932f4312b319275ba8fa3946a8"
+    }
+  ],
+  "pattern": null,
+  "content_hash": "sha256:9d67dbcd9141f00c4b39418be2c8d5e9a78ab740d6afdf76deeaf1fafca3b016",
+  "metrics": {
+    "turn_count": 2,
+    "tool_call_count": 1,
+    "read_count": 0,
+    "modify_count": 0,
+    "create_count": 0,
+    "execute_count": 1,
+    "delegate_count": 0,
+    "read_ratio": null,
+    "time_to_first_action": 0.5,
+    "idle_ratio": null,
+    "total_input_tokens": 12,
+    "total_output_tokens": 8,
+    "total_cache_read_tokens": null,
+    "total_cache_creation_tokens": null,
+    "total_reasoning_tokens": null,
+    "total_tool_tokens": null,
+    "session_cost": null,
+    "subagent_count": 0,
+    "subagent_tool_calls": 0,
+    "model_switches": null,
+    "unique_models": 1,
+    "median_response_tokens": 8,
+    "max_response_tokens": 8
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "assistantActiveTimeMs": 18566,
+  "model": "custom:capture-0",
+  "reasoningEffort": "none",
+  "interactionMode": "auto",
+  "autonomyLevel": "high",
+  "autonomyMode": "auto-high",
+  "tags": [
+    {
+      "name": "exec"
+    }
+  ],
+  "providerLock": "generic-chat-completion-api",
+  "providerLockTimestamp": "2026-07-23T19:53:23.856Z",
+  "tokenUsage": {
+    "inputTokens": 51796,
+    "outputTokens": 178,
+    "cacheCreationTokens": 0,
+    "cacheReadTokens": 0,
+    "thinkingTokens": 0
+  }
+}

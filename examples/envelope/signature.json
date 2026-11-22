@@ -1,0 +1,14 @@
+{
+  "signatures": [
+    {
+      "id": "sig-001",
+      "signer": "spec-example-pipeline",
+      "algorithm": "ed25519-v0-placeholder",
+      "key_id": "key-2026-05",
+      "manifest_hash": "sha256:8888888888888888888888888888888888888888888888888888888888888888",
+      "signed_at": "2026-05-03T10:02:00.000000Z",
+      "signature": "c2lnbmF0dXJlLWJ5dGVzLXBsYWNlaG9sZGVy",
+      "covers": ["manifest"]
+    }
+  ]
+}

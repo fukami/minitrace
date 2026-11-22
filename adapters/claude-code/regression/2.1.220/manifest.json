@@ -1,0 +1,134 @@
+{
+  "freeze_semantics": "Content-hash freeze of the claude-code adapter's output over the conformance-scenario corpus at harness 2.1.220. verify.py re-runs preprocess+DSL on each input (with cwd = this dir and input paths relative to it) and asserts trace_count, per-trace content_hash, and unmapped_path_count match. The adapter is deterministic. NOTE: content_hash folds in provenance.source_path, so inputs MUST stay at inputs/<name>.jsonl for the hashes to reproduce; verify.py enforces the relative-path convention. This catches ADAPTER drift; format (Axis-C) drift is caught separately by drift_watch.py. annotated_cells_fired is the structural fired-cell set from the verified 2.1.220 capture (drift self-test asserts it equals the extractor exactly). The 2.1.215 -> 2.1.220 drift run (2026-07-25, baseline 2.1.215) reported NO drift: identical fired-cell sets, no new unmapped fields, no dropped dependencies, no new raw record types \u2014 notably the cc 2.1.219 subagent spawn-depth default change (1 -> 3) and stream-json nested-subagent forwarding left the captured session/sidechain transcript shape unchanged on the delegation scenario. This cycle adds zero ledger entries and zero new spec first-deployment candidates.",
+  "harness_version": "2.1.220",
+  "capture_image": "miniobserve/claude-code-combo2:0.1.2-cc2.1.220",
+  "adapter_pin": "claude-code/2.1.131",
+  "converter_version": "minitrace-claude-code-dsl-0.1.0-step2",
+  "frozen_at": "2026-07-25",
+  "scenarios": {
+    "s1-fetch-example": {
+      "input": "inputs/s1-fetch.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:e6be3d0af2eac8b19c0efb410c7069e7dd3f466a6b8d42ef6911d5fbc1d2fa26"
+      ],
+      "unmapped_path_count": 37,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        8,
+        26
+      ]
+    },
+    "delegation-subagent": {
+      "input": "inputs/delegation.jsonl",
+      "trace_count": 2,
+      "content_hashes": [
+        "sha256:f9ec2c7e1ad44496db4503b70e01434d3b65683ecfa0a80b4553b9f51a3ba6c6",
+        "sha256:17730297b27ea1c796c6d37b902db8d2a1b01aaf38e3f4e14351ea6af64d5955"
+      ],
+      "unmapped_path_count": 70,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        9,
+        12,
+        13,
+        26
+      ]
+    },
+    "tool-fill-webfetch-notebook": {
+      "input": "inputs/tool-fill.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:5aadd5f1deb88743e67bdab9f10c33e76bd848cd8ecb6e00f3b52c9266f1c457"
+      ],
+      "unmapped_path_count": 54,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        11,
+        26
+      ]
+    },
+    "websearch-cell11": {
+      "input": "inputs/websearch.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:9fa844fff362de55ba751d1f427c3c3ac4a19928bce648287a0f7b63ca723e41"
+      ],
+      "unmapped_path_count": 40,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        11,
+        26
+      ]
+    },
+    "hooks-cell16-17": {
+      "input": "inputs/hooks.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:df6eab83120fe0cf5b313b2a771774dbfd9345c64da8b5ab3a49457716644c2d"
+      ],
+      "unmapped_path_count": 42,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        8,
+        16,
+        17,
+        26
+      ]
+    },
+    "slashcmd-cell14-20": {
+      "input": "inputs/slashcmd.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:68dad5a8ddec977ec92453b6cbb65f5e2c070f63b54751b43a35b5d3651bee3e"
+      ],
+      "unmapped_path_count": 38,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        8,
+        14,
+        20,
+        26
+      ]
+    },
+    "skill-write-cell10-7": {
+      "input": "inputs/skill-write.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:3a660f20e51dd32f1d86f777e054c878a4ea5108cdd11623004b328011cb7ced"
+      ],
+      "unmapped_path_count": 42,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        7,
+        10,
+        14,
+        20,
+        26
+      ]
+    }
+  }
+}

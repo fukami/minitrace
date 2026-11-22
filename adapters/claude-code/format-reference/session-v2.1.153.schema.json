@@ -1,0 +1,809 @@
+{
+  "record_types": {
+    "assistant": 3,
+    "queue-operation": 2,
+    "user": 2,
+    "attachment": 2,
+    "ai-title": 2,
+    "last-prompt": 1
+  },
+  "field_count": 87,
+  "fields": {
+    "aiTitle": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "Fetch example.com and extract title element"
+      ]
+    },
+    "attachment": {
+      "types": [
+        "dict"
+      ],
+      "count": 2,
+      "sample_values": []
+    },
+    "attachment.addedLines": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "attachment.addedLines[]": {
+      "types": [
+        "str"
+      ],
+      "count": 18,
+      "sample_values": [
+        "CronCreate",
+        "CronDelete",
+        "CronList",
+        "EnterPlanMode",
+        "EnterWorktree",
+        "ExitPlanMode",
+        "ExitWorktree",
+        "Monitor",
+        "NotebookEdit",
+        "PushNotification"
+      ]
+    },
+    "attachment.addedNames": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "attachment.addedNames[]": {
+      "types": [
+        "str"
+      ],
+      "count": 18,
+      "sample_values": [
+        "CronCreate",
+        "CronDelete",
+        "CronList",
+        "EnterPlanMode",
+        "EnterWorktree",
+        "ExitPlanMode",
+        "ExitWorktree",
+        "Monitor",
+        "NotebookEdit",
+        "PushNotification"
+      ]
+    },
+    "attachment.content": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "attachment.isInitial": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "True"
+      ]
+    },
+    "attachment.names": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "attachment.names[]": {
+      "types": [
+        "str"
+      ],
+      "count": 12,
+      "sample_values": [
+        "claude-api",
+        "code-review",
+        "fewer-permission-prompts",
+        "init",
+        "keybindings-help",
+        "loop",
+        "review",
+        "run",
+        "security-review",
+        "simplify"
+      ]
+    },
+    "attachment.pendingMcpServers": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "attachment.readdedNames": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "attachment.removedNames": {
+      "types": [
+        "list"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "attachment.skillCount": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "12"
+      ]
+    },
+    "attachment.type": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "deferred_tools_delta",
+        "skill_listing"
+      ]
+    },
+    "content": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "cwd": {
+      "types": [
+        "str"
+      ],
+      "count": 7,
+      "sample_values": [
+        "/workspace"
+      ]
+    },
+    "entrypoint": {
+      "types": [
+        "str"
+      ],
+      "count": 7,
+      "sample_values": [
+        "sdk-cli"
+      ]
+    },
+    "gitBranch": {
+      "types": [
+        "str"
+      ],
+      "count": 7,
+      "sample_values": [
+        "HEAD"
+      ]
+    },
+    "isSidechain": {
+      "types": [
+        "bool"
+      ],
+      "count": 7,
+      "sample_values": [
+        "False"
+      ]
+    },
+    "lastPrompt": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "leafUuid": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "43614d78-1745-4f73-a4df-8f8b11a9c3ba"
+      ]
+    },
+    "message": {
+      "types": [
+        "dict"
+      ],
+      "count": 5,
+      "sample_values": []
+    },
+    "message.content": {
+      "types": [
+        "list",
+        "str"
+      ],
+      "count": 5,
+      "sample_values": []
+    },
+    "message.content[]": {
+      "types": [
+        "dict"
+      ],
+      "count": 4,
+      "sample_values": []
+    },
+    "message.content[].caller": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "message.content[].caller.type": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "direct"
+      ]
+    },
+    "message.content[].content": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "message.content[].id": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "toolu_01AyQVggMMcQhDEbuA7yofM1"
+      ]
+    },
+    "message.content[].input": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "message.content[].input.command": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "curl -s -i https://example.com"
+      ]
+    },
+    "message.content[].input.description": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "Fetch example.com with headers and body"
+      ]
+    },
+    "message.content[].is_error": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "False"
+      ]
+    },
+    "message.content[].name": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "Bash"
+      ]
+    },
+    "message.content[].text": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "I'll fetch example.com and extract both pieces of information."
+      ]
+    },
+    "message.content[].tool_use_id": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "toolu_01AyQVggMMcQhDEbuA7yofM1"
+      ]
+    },
+    "message.content[].type": {
+      "types": [
+        "str"
+      ],
+      "count": 4,
+      "sample_values": [
+        "text",
+        "tool_result",
+        "tool_use"
+      ]
+    },
+    "message.diagnostics": {
+      "types": [
+        "null"
+      ],
+      "count": 3,
+      "sample_values": []
+    },
+    "message.id": {
+      "types": [
+        "str"
+      ],
+      "count": 3,
+      "sample_values": [
+        "msg_011CcoJobS5rq6EDygvXURxN",
+        "msg_011CcoJopQh9zo2BqtvuthNh"
+      ]
+    },
+    "message.model": {
+      "types": [
+        "str"
+      ],
+      "count": 3,
+      "sample_values": [
+        "claude-opus-4-8"
+      ]
+    },
+    "message.role": {
+      "types": [
+        "str"
+      ],
+      "count": 5,
+      "sample_values": [
+        "assistant",
+        "user"
+      ]
+    },
+    "message.stop_details": {
+      "types": [
+        "null"
+      ],
+      "count": 3,
+      "sample_values": []
+    },
+    "message.stop_reason": {
+      "types": [
+        "str"
+      ],
+      "count": 3,
+      "sample_values": [
+        "end_turn",
+        "tool_use"
+      ]
+    },
+    "message.stop_sequence": {
+      "types": [
+        "null"
+      ],
+      "count": 3,
+      "sample_values": []
+    },
+    "message.type": {
+      "types": [
+        "str"
+      ],
+      "count": 3,
+      "sample_values": [
+        "message"
+      ]
+    },
+    "message.usage": {
+      "types": [
+        "dict"
+      ],
+      "count": 3,
+      "sample_values": []
+    },
+    "message.usage.cache_creation": {
+      "types": [
+        "dict"
+      ],
+      "count": 3,
+      "sample_values": []
+    },
+    "message.usage.cache_creation.ephemeral_1h_input_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 3,
+      "sample_values": [
+        "0"
+      ]
+    },
+    "message.usage.cache_creation.ephemeral_5m_input_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 3,
+      "sample_values": [
+        "480",
+        "6770"
+      ]
+    },
+    "message.usage.cache_creation_input_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 3,
+      "sample_values": [
+        "480",
+        "6770"
+      ]
+    },
+    "message.usage.cache_read_input_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 3,
+      "sample_values": [
+        "17941",
+        "24711"
+      ]
+    },
+    "message.usage.inference_geo": {
+      "types": [
+        "str"
+      ],
+      "count": 3,
+      "sample_values": [
+        "global"
+      ]
+    },
+    "message.usage.input_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 3,
+      "sample_values": [
+        "2"
+      ]
+    },
+    "message.usage.iterations": {
+      "types": [
+        "list"
+      ],
+      "count": 3,
+      "sample_values": []
+    },
+    "message.usage.iterations[]": {
+      "types": [
+        "dict"
+      ],
+      "count": 3,
+      "sample_values": []
+    },
+    "message.usage.iterations[].cache_creation": {
+      "types": [
+        "dict"
+      ],
+      "count": 3,
+      "sample_values": []
+    },
+    "message.usage.iterations[].cache_creation.ephemeral_1h_input_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 3,
+      "sample_values": [
+        "0"
+      ]
+    },
+    "message.usage.iterations[].cache_creation.ephemeral_5m_input_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 3,
+      "sample_values": [
+        "480",
+        "6770"
+      ]
+    },
+    "message.usage.iterations[].cache_creation_input_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 3,
+      "sample_values": [
+        "480",
+        "6770"
+      ]
+    },
+    "message.usage.iterations[].cache_read_input_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 3,
+      "sample_values": [
+        "17941",
+        "24711"
+      ]
+    },
+    "message.usage.iterations[].input_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 3,
+      "sample_values": [
+        "2"
+      ]
+    },
+    "message.usage.iterations[].output_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 3,
+      "sample_values": [
+        "109",
+        "44"
+      ]
+    },
+    "message.usage.iterations[].type": {
+      "types": [
+        "str"
+      ],
+      "count": 3,
+      "sample_values": [
+        "message"
+      ]
+    },
+    "message.usage.output_tokens": {
+      "types": [
+        "int"
+      ],
+      "count": 3,
+      "sample_values": [
+        "109",
+        "44"
+      ]
+    },
+    "message.usage.server_tool_use": {
+      "types": [
+        "dict"
+      ],
+      "count": 3,
+      "sample_values": []
+    },
+    "message.usage.server_tool_use.web_fetch_requests": {
+      "types": [
+        "int"
+      ],
+      "count": 3,
+      "sample_values": [
+        "0"
+      ]
+    },
+    "message.usage.server_tool_use.web_search_requests": {
+      "types": [
+        "int"
+      ],
+      "count": 3,
+      "sample_values": [
+        "0"
+      ]
+    },
+    "message.usage.service_tier": {
+      "types": [
+        "str"
+      ],
+      "count": 3,
+      "sample_values": [
+        "standard"
+      ]
+    },
+    "message.usage.speed": {
+      "types": [
+        "str"
+      ],
+      "count": 3,
+      "sample_values": [
+        "standard"
+      ]
+    },
+    "operation": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "dequeue",
+        "enqueue"
+      ]
+    },
+    "parentUuid": {
+      "types": [
+        "null",
+        "str"
+      ],
+      "count": 7,
+      "sample_values": [
+        "213a6833-6eb2-40af-9f52-b44fff7ded6c",
+        "36673e0f-ee60-4239-81bc-705073f1aab4",
+        "5cc75af2-83d1-4b8b-964d-ff89e68d49e8",
+        "84e1eda9-28b0-4c03-bf7c-adb930fe4ecf",
+        "9ec3e90e-0e2a-4e0f-a669-269f2b18fb37",
+        "abd7bfae-e53f-4251-bba5-ce3b7dbf67f7"
+      ]
+    },
+    "permissionMode": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "bypassPermissions"
+      ]
+    },
+    "promptId": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": [
+        "42baf9ae-133c-42f0-bfcd-73d09013b462"
+      ]
+    },
+    "requestId": {
+      "types": [
+        "str"
+      ],
+      "count": 3,
+      "sample_values": [
+        "req_011CcoJoar7UTy692WBeLi6H",
+        "req_011CcoJoohHNd2hAAqa3qLYt"
+      ]
+    },
+    "sessionId": {
+      "types": [
+        "str"
+      ],
+      "count": 12,
+      "sample_values": [
+        "0b9d3675-ba60-4f9a-ae83-6ba92ec18c24"
+      ]
+    },
+    "sourceToolAssistantUUID": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "84e1eda9-28b0-4c03-bf7c-adb930fe4ecf"
+      ]
+    },
+    "timestamp": {
+      "types": [
+        "str"
+      ],
+      "count": 9,
+      "sample_values": [
+        "2026-07-07T20:12:50.053Z",
+        "2026-07-07T20:12:50.055Z",
+        "2026-07-07T20:12:50.078Z",
+        "2026-07-07T20:12:52.380Z",
+        "2026-07-07T20:12:52.787Z",
+        "2026-07-07T20:12:53.115Z",
+        "2026-07-07T20:12:55.285Z"
+      ]
+    },
+    "toolUseResult": {
+      "types": [
+        "dict"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "toolUseResult.interrupted": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "False"
+      ]
+    },
+    "toolUseResult.isImage": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "False"
+      ]
+    },
+    "toolUseResult.noOutputExpected": {
+      "types": [
+        "bool"
+      ],
+      "count": 1,
+      "sample_values": [
+        "False"
+      ]
+    },
+    "toolUseResult.stderr": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        ""
+      ]
+    },
+    "toolUseResult.stdout": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": []
+    },
+    "type": {
+      "types": [
+        "str"
+      ],
+      "count": 12,
+      "sample_values": [
+        "ai-title",
+        "assistant",
+        "attachment",
+        "last-prompt",
+        "queue-operation",
+        "user"
+      ]
+    },
+    "userType": {
+      "types": [
+        "str"
+      ],
+      "count": 7,
+      "sample_values": [
+        "external"
+      ]
+    },
+    "uuid": {
+      "types": [
+        "str"
+      ],
+      "count": 7,
+      "sample_values": [
+        "213a6833-6eb2-40af-9f52-b44fff7ded6c",
+        "36673e0f-ee60-4239-81bc-705073f1aab4",
+        "43614d78-1745-4f73-a4df-8f8b11a9c3ba",
+        "5cc75af2-83d1-4b8b-964d-ff89e68d49e8",
+        "84e1eda9-28b0-4c03-bf7c-adb930fe4ecf",
+        "9ec3e90e-0e2a-4e0f-a669-269f2b18fb37",
+        "abd7bfae-e53f-4251-bba5-ce3b7dbf67f7"
+      ]
+    },
+    "version": {
+      "types": [
+        "str"
+      ],
+      "count": 7,
+      "sample_values": [
+        "2.1.153"
+      ]
+    }
+  }
+}

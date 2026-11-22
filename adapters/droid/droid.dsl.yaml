@@ -1,0 +1,504 @@
+# minitrace adapter DSL — droid (Factory, Apache-2.0)
+#
+# Reads a JSON array of pre-processed containers produced by
+# preprocess_droid.py — one container per droid <uuid>.jsonl session
+# (paired with its <uuid>.settings.json sidecar at preprocess time).
+# Each container becomes one minitrace agent-session trace.
+#
+# v0.1 scope per the droid adapter scoping note (2026-05-12):
+#   - Single-trace adapter; no fork or sub-agent emission (D1).
+#   - Paired-file input absorbed by preprocessor (D2); DSL sees one container.
+#   - Producer pinned to droid 0.122.0+ (D3); legacy 0.74.0 vocabulary
+#     remains covered by the v0.1.0 Python adapter, which this release does not include.
+#   - Three-way user-record dispatch: real prompt / tool-result wrapper /
+#     visibility=both frame-shift (D4).
+#   - Settings sidecar projected into ext:droid:* annotations (D5).
+#   - Execute.riskLevel + riskLevelReason captured as a per-tool-call
+#     risk_assessment annotation (D6); A26 deployment at tool-input scope.
+#   - todo_state records emit a segment_marker plus ext:droid:todo_state
+#     annotation (D7).
+#   - Inner-message openaiMessageId + chatCompletionReasoningField captured
+#     as a per-turn ext:droid:provider_metadata annotation (D8); A26
+#     deployment at per-message scope. thinking-block signatureProvider
+#     captured similarly on assistant turns with thinking content.
+#   - Tool-name → operation_type via operation_types block (D9).
+#   - Telemetry side-channel disclosed in README only; not in trace (D10).
+#   - parentId captured verbatim per turn under ext:droid:parent_id (D11).
+#
+# Deferred to later iterations (gated on fresh corpus or out-of-band capture
+# rust v1.0 readiness):
+#   - --fork lineage shape and multi-trace emission.
+#   - Sub-agent trace persistence and delegates-to/delegated-by edges.
+#   - MCP tool-call shape (mcp__<server>__<tool> name dispatch).
+#   - Plugin tool-call shape.
+#   - Worktree-mode session shape (droid -w).
+#   - Hooks-injected events.
+#   - Out-of-band telemetry capture (api.factory.ai).
+#
+# Conforms to minitrace-spec v0.3.0 + minitrace-adapter-dsl-spec v0.1.0.
+
+adapter:
+  name: droid
+  harness_version: "droid/0.122.0+"
+  dsl_version: "0.1.0"
+  source_format: droid-session-jsonl-v2
+  converter_version: minitrace-droid-dsl-0.1.0
+  produces_schema: "0.3.0"
+
+input:
+  type: json
+  encoding: utf-8
+  container:
+    record_path: messages
+
+state:
+  next_turn_index: 0
+  last_assistant_turn_index: null
+  next_ann_id: 0
+  next_seg_id: 0
+
+constants:
+  default_capture_mode: scrubbed
+
+# Tool-name → operation_type. Droid 0.122.0+ vocabulary (D3/D9).
+# Legacy 0.74.0 names (Bash, Write, Glob, Agent) are NOT covered;
+# the preprocessor emits coverage diagnostics for unknown names.
+operation_types:
+  Execute: EXECUTE
+  Read: READ
+  Create: NEW
+  Edit: MODIFY
+  Grep: READ
+  TodoWrite: OTHER
+  default: OTHER
+
+sessions:
+
+  agent:
+    static:
+      schema_version: "0.3.0"
+      trace_type: "agent-session"
+      profile: "droid"
+      # Nothing here checks for personal data, so the flags assume it is present:
+      # unchecked, not clean. contains_pii forces classification >= confidential.
+      classification: "confidential"
+      flags.for_research: false
+      flags.needs_cleaning: true
+      flags.contains_error: false
+      flags.contains_pii: true
+    derived:
+      id: "$container.trace_id"
+      title: "$container.trace_title"
+      timing.started_at: "$container.created_at"
+      timing.ended_at: "$container.updated_at"
+      environment.agent_framework: "droid"
+      environment.agent_version: "$container.harness_version"
+      environment.model: "$container.model_observed"
+      environment.provider: "$container.provider_hint"
+      operational_context.working_directory: "$container.working_directory"
+      operational_context.framework_config.owner: "$container.owner"
+      operational_context.framework_config.source_schema_version: "$container.schema_version"
+      provenance.source_format: "$container.source_format_versioned"
+      provenance.source_session_id: "$container.session_id"
+      provenance.source_schema_version: "$container.version_label"
+
+emit:
+
+  # ===== SESSION_INIT — fires once per container =====
+  # Anchor for session-level annotations (settings projection,
+  # ext:droid:* extensions).
+
+  # D5 (Tier-3 corroborative): producer_settings_snapshot.
+  # The full settings.json sidecar projected, including model,
+  # reasoningEffort, interactionMode, autonomyLevel, autonomyMode,
+  # tags, providerLock, providerLockTimestamp, assistantActiveTimeMs.
+  # Captured verbatim so the trace records the producer's per-run
+  # configuration at session-start.
+  - target: agent
+    name: agent_emit_settings_snapshot
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "droid-ann-settings-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$container.created_at"
+          annotator: "droid-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Producer settings snapshot (droid). Captured verbatim from the .settings.json sidecar paired with the JSONL session file. Includes model, reasoning_effort, interaction_mode, autonomy_level, autonomy_mode, tags, provider_lock (and timestamp), and the producer-instrumentation field assistant_active_time_ms (often zero in failed runs)."
+          claim_type: "observation"
+          ext_droid_settings: "$container.settings_projection"
+          taxonomy:
+            - "droid/${container.version_label}/session/producer_settings_snapshot"
+
+  # D10 disclosure: telemetry side-channel exists. The adapter does not
+  # capture it (out-of-scope for v0.1); the annotation surfaces the
+  # fact to consumers of the trace so they don't infer completeness.
+  - target: agent
+    name: agent_emit_telemetry_disclosure
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "droid-ann-telemetry-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$container.created_at"
+          annotator: "droid-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Telemetry side-channel disclosure. The droid producer emits traffic to api.factory.ai:443 regardless of LLM-upstream configuration; this is not represented in the JSONL trace and is not captured by this adapter. Consumers should not infer that the trace is a complete record of droid's outbound activity. Out-of-band telemetry capture is out of scope for this adapter."
+          claim_type: "observation"
+          ext_droid_telemetry_disclosure: "api.factory.ai:443"
+          taxonomy:
+            - "droid/${container.version_label}/session/telemetry_side_channel"
+
+  # ===== USER text turn — real operator prompt =====
+  - target: agent
+    name: agent_user_real_prompt_turn
+    when:
+      all_of:
+        - { field: event_kind, value: user_real_prompt }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "user"
+          source: "human"
+          content_type: "text"
+          content: "$record.content_text"
+          timestamp: "$record.timestamp"
+          ext_droid_parent_id: "$record.parent_id"
+      - set:
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  # ===== USER frame-shift — producer-injected pseudo-user message =====
+  # D4: visibility=both with text-only content. Emitted as observation
+  # annotation, NOT as a user turn. This is the droid analogue of
+  # claude-code's isMeta: true carrier; second-deployment partner of
+  # the same semantic problem (different discriminator field).
+  - target: agent
+    name: agent_user_frame_shift_annotation
+    when:
+      all_of:
+        - { field: event_kind, value: user_frame_shift }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "droid-ann-frameshift-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$record.timestamp"
+          annotator: "droid-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Producer-injected user-role message (droid). visibility=both flag signals UI display AND log persistence, but content is harness-authored (typical: billing/limit notifications). Treat as observation, NOT as an operator turn."
+          claim_type: "observation"
+          ext_droid_frame_shift_content: "$record.content_text"
+          ext_droid_frame_shift_visibility: "$record.visibility"
+          ext_droid_parent_id: "$record.parent_id"
+          taxonomy:
+            - "droid/${container.version_label}/turn/producer_frame_shift"
+
+  # ===== USER tool-result wrapper — skipped =====
+  # The preprocessor pre-pairs tool_result blocks into the originating
+  # tool_call's record (result_content, result_is_error, has_result).
+  # The user_tool_result records are kept for stream-order verification
+  # but the DSL does not emit anything from them — the data lives on
+  # the assistant_with_tools turn's tool_calls[].
+  - target: agent
+    name: agent_user_tool_result_skip
+    when:
+      all_of:
+        - { field: event_kind, value: user_tool_result }
+    do: []
+
+  # Text blocks in the same user message as tool results. Who wrote them is
+  # not recorded, so source is null (spec v0.2.0 turn.source).
+  - target: agent
+    name: agent_user_tool_result_text
+    when:
+      all_of:
+        - { field: event_kind, value: user_tool_result }
+        - { field: accompanying_text, present: true }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "user"
+          source: null
+          content_type: "text"
+          content: "$record.accompanying_text"
+          timestamp: "$record.timestamp"
+          ext_droid_parent_id: "$record.parent_id"
+      - set:
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  # ===== ASSISTANT text turn (no tools) =====
+  - target: agent
+    name: agent_assistant_text_turn
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_text }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "assistant"
+          source: "model"
+          content_type: "text"
+          content: "$record.content_text"
+          thinking: "$record.thinking_text"
+          timestamp: "$record.timestamp"
+          ext_droid_parent_id: "$record.parent_id"
+          ext_droid_openai_message_id: "$record.openai_message_id"
+          ext_droid_reasoning_field: "$record.reasoning_field"
+          ext_droid_thinking_signature_provider: "$record.thinking_signature_provider"
+          ext_droid_thinking_signature: "$record.thinking_signature"
+      - set:
+          state.last_assistant_turn_index: "$state.next_turn_index"
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  # D8 provider_metadata annotation for assistant turns with provider
+  # bearing fields present. Emitted only when at least one provider
+  # bearing field is non-null on the record.
+  - target: agent
+    name: agent_assistant_text_provider_metadata
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_text }
+        - { field: openai_message_id, present: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "droid-ann-provmeta-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$record.timestamp"
+          annotator: "droid-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "turn"
+            target_id: "${state.last_assistant_turn_index}"
+          content:
+            text: "Provider-of-origin metadata for the assistant turn (droid). Preserves OpenAI-Chat-Completions-compat provider-bearing fields verbatim."
+          claim_type: "observation"
+          ext_droid_openai_message_id: "$record.openai_message_id"
+          ext_droid_reasoning_field: "$record.reasoning_field"
+          ext_droid_thinking_signature_provider: "$record.thinking_signature_provider"
+          taxonomy:
+            - "droid/${container.version_label}/turn/provider_metadata"
+
+  # ===== ASSISTANT thinking-only turn =====
+  # An assistant turn with no text content but with thinking content.
+  # Rare in the surveyed corpus (no observed instance); structure ready
+  # for thinking-on models on completed sessions.
+  - target: agent
+    name: agent_assistant_thinking_only_turn
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_thinking_only }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "assistant"
+          source: "model"
+          content_type: "text"
+          content: ""
+          thinking: "$record.thinking_text"
+          timestamp: "$record.timestamp"
+          ext_droid_parent_id: "$record.parent_id"
+      - set:
+          state.last_assistant_turn_index: "$state.next_turn_index"
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  # ===== ASSISTANT turn with tool calls (atomic emission) =====
+  # The preprocessor pre-pairs results onto each tool_call's record.
+  # Emit the turn first, then iterate tool_calls via foreach_block.
+  - target: agent
+    name: agent_assistant_with_tools_turn
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_with_tools }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "assistant"
+          source: "model"
+          content_type: "text"
+          content: "$record.content_text"
+          thinking: "$record.thinking_text"
+          timestamp: "$record.timestamp"
+          ext_droid_parent_id: "$record.parent_id"
+          ext_droid_openai_message_id: "$record.openai_message_id"
+          ext_droid_reasoning_field: "$record.reasoning_field"
+          ext_droid_thinking_signature_provider: "$record.thinking_signature_provider"
+          ext_droid_thinking_signature: "$record.thinking_signature"
+      - set:
+          state.last_assistant_turn_index: "$state.next_turn_index"
+          state.next_turn_index: "$state.next_turn_index + 1"
+    foreach_block: "$record.tool_calls"
+    on_block:
+      - name: emit_one_atomic_tool_call
+        when:
+          all_of:
+            - { block_field: id, present: true }
+        do:
+          - emit_tool_call:
+              id: "$block.id"
+              tool_name: "$block.tool_name"
+              tool_provider: "droid"
+              emitting_turn_index: "$state.last_assistant_turn_index"
+              operation_type: "$block.operation_type"
+              input:
+                arguments: "$block.arguments"
+              output:
+                success: "$block.success"
+                result: "$block.result_content"
+                content_origin: "tool_output"
+                error_present: "$block.result_is_error"
+              invocation_source: "agent_choice"
+              framework_metadata:
+                droid_tool_name_known: "$block.tool_name_known"
+                droid_has_result: "$block.has_result"
+              taxonomy:
+                - "droid/${container.version_label}/tool/${block.tool_name}"
+
+  # D6 risk_assessment annotation when a tool_call carries
+  # model-self-classified risk metadata (only Execute calls do).
+  # Tier-1 first-deployment per scoping D13.
+  #
+  # Lives in a separate top-level rule (not nested under
+  # agent_assistant_with_tools_turn's on_block) per spec §8: on_block
+  # dispatch is first-match-wins per block, so an annotation rule and
+  # the parent emit_tool_call rule cannot coexist in the same on_block
+  # list. Top-level rules are additive (multiple rules may match the
+  # same record); we re-iterate the same tool_calls collection here.
+  - target: agent
+    name: agent_assistant_with_tools_risk_annotations
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_with_tools }
+    foreach_block: "$record.tool_calls"
+    on_block:
+      - name: emit_risk_assessment_annotation
+        when:
+          all_of:
+            - { block_field: risk_level, present: true }
+        do:
+          - set:
+              state.next_ann_id: "$state.next_ann_id + 1"
+          - emit_annotation:
+              id: "droid-ann-risk-${container.session_id}-${state.next_ann_id}"
+              timestamp: "$record.timestamp"
+              annotator: "droid-adapter"
+              source:
+                type: "runtime"
+              scope:
+                type: "tool_call"
+                target_id: "$block.id"
+              content:
+                text: "Model-self-classified risk metadata for an Execute tool call (droid). The model fills riskLevel and riskLevelReason into the tool input; the producer persists them as part of the call. Unusual provenance: classification is generated by the model and used by the harness as gating signal."
+              claim_type: "observation"
+              ext_droid_risk_level: "$block.risk_level"
+              ext_droid_risk_reason: "$block.risk_reason"
+              taxonomy:
+                - "droid/${container.version_label}/tool_call/risk_assessment"
+
+  # D8 provider_metadata annotation for assistant-with-tools turns.
+  - target: agent
+    name: agent_assistant_with_tools_provider_metadata
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_with_tools }
+        - { field: openai_message_id, present: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "droid-ann-provmeta-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$record.timestamp"
+          annotator: "droid-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "turn"
+            target_id: "${state.last_assistant_turn_index}"
+          content:
+            text: "Provider-of-origin metadata for the assistant tool-using turn (droid)."
+          claim_type: "observation"
+          ext_droid_openai_message_id: "$record.openai_message_id"
+          ext_droid_reasoning_field: "$record.reasoning_field"
+          ext_droid_thinking_signature_provider: "$record.thinking_signature_provider"
+          taxonomy:
+            - "droid/${container.version_label}/turn/provider_metadata"
+
+  # ===== ASSISTANT empty — skip =====
+  - target: agent
+    name: agent_assistant_empty_skip
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_empty }
+    do: []
+
+  # ===== TODO_STATE — segment_marker + annotation =====
+  # D7 Tier-1 first-deployment: agent-plan-snapshot records outside
+  # the parent chain. Emit a segment_marker at the record's timestamp
+  # for the temporal anchor, and an ext:droid:todo_state annotation
+  # carrying the verbatim todos payload (including the nested-string
+  # oddity preserved per A26).
+  - target: agent
+    name: agent_todo_state_segment
+    when:
+      all_of:
+        - { field: event_kind, value: todo_state }
+    do:
+      - set:
+          state.next_seg_id: "$state.next_seg_id + 1"
+      - emit_segment_marker:
+          id: "droid-seg-todo-${container.session_id}-${state.next_seg_id}"
+          segment_type: "x-agent_plan_snapshot"
+          timestamp: "$record.timestamp"
+          authored_by: "droid/${container.version_label}"
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "droid-ann-todostate-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$record.timestamp"
+          annotator: "droid-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Agent plan snapshot (droid todo_state record). Captures the producer-persisted todos payload at a point in the message stream, anchored by messageIndex (not parentId). Note: in the surveyed corpus the todos payload is a nested {todos: <string>} with newline-separated lines, not a structured array — preserved verbatim per A26."
+          claim_type: "observation"
+          ext_droid_todo_state_record_id: "$record.record_id"
+          ext_droid_todo_state_message_index: "$record.message_index"
+          ext_droid_todo_state_todos: "$record.todos_payload"
+          taxonomy:
+            - "droid/${container.version_label}/session/agent_plan_snapshot"
+
+finalize:
+  computed:
+    # Derived metrics from the container's pre-counted fields.
+    metrics.tool_call_count: "$container.tool_call_count"
+    # Session-scoped token totals off the settings sidecar's tokenUsage (NOT
+    # inclusiveTokenUsage — see derive_token_totals in preprocess_droid.py for
+    # why a trace's token metrics describe that trace only). null when the
+    # sidecar reports no tokenUsage; absent measurement is not a measured zero.
+    metrics.total_input_tokens: "$container.total_input_tokens"
+    metrics.total_output_tokens: "$container.total_output_tokens"

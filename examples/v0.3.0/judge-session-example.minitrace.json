@@ -1,0 +1,137 @@
+{
+  "id": "0193d4a0-9999-7890-abcd-ef0123456789",
+  "schema_version": "0.3.0",
+  "trace_type": "judge-session",
+  "schema_uri": null,
+  "profile": "synthetic",
+  "scenario_id": "example-spec-walkthrough-judge",
+  "quality": "demonstration",
+  "title": "Worked example: minimal judge-session trace",
+  "summary": "Synthetic judge-session that issues a single judgment over the agent-session worked example via a `judges` lineage edge. Demonstrates that judge-session traces may have an empty turns array when their work is annotation- and lineage-driven.",
+  "classification": "public",
+  "operator": {
+    "type": "scripted",
+    "operator_aware": null,
+    "capture_mode": null,
+    "capture_purpose": null
+  },
+  "provenance": {
+    "source_format": "synthetic",
+    "source_path": null,
+    "converted_at": "2026-05-03T11:00:00.000000Z",
+    "converter_version": "spec-example-0.3.0",
+    "original_session_id": null
+  },
+  "flags": {
+    "for_research": true,
+    "needs_cleaning": false,
+    "contains_error": false,
+    "contains_pii": false,
+    "category": ["worked-example", "judge"]
+  },
+  "environment": {
+    "model": "example-judge-model",
+    "model_version": "1.0",
+    "temperature": 0.0,
+    "tools_enabled": [],
+    "system_prompt": null,
+    "agent_framework": "spec-example",
+    "agent_version": "0.3.0",
+    "platform_type": "agent",
+    "provider_hint": null
+  },
+  "operational_context": {
+    "working_directory": null,
+    "git_branch": null,
+    "git_ref": null,
+    "autonomy_level": "automated",
+    "sandbox": true,
+    "framework_config": null
+  },
+  "timing": {
+    "privacy_level": "scrubbed",
+    "duration_seconds": 0.1,
+    "active_duration_seconds": 0.1,
+    "started_at": "2026-05-03T11:00:00.000000Z",
+    "ended_at": "2026-05-03T11:00:00.100000Z",
+    "hour_of_day": 11,
+    "day_of_week": 5
+  },
+  "condition": null,
+  "coordination": {
+    "project_id": null,
+    "predecessor_session": null,
+    "concurrent_sessions": null,
+    "human_attention": "none"
+  },
+  "handover": {"received": null, "produced": null},
+  "turns": [],
+  "tool_calls": [],
+  "segment_markers": [],
+  "policy_triggers": [],
+  "outcome": {
+    "success": true,
+    "partial": false,
+    "failure_codes": [],
+    "outcome_notes": "Single judgment recorded via lineage edge and annotation."
+  },
+  "annotations": [
+    {
+      "id": "ann-judge-example-0001",
+      "timestamp": "2026-05-03T11:00:00.050000Z",
+      "annotator": "example-judge-model",
+      "source": {"type": "judge"},
+      "scope": {
+        "type": "session",
+        "target_id": "0193d4a0-1234-7890-abcd-ef0123456789"
+      },
+      "claim_type": "disposition",
+      "content": {
+        "category": "observation",
+        "tags": ["accepted"],
+        "title": "Judgment: routine session",
+        "detail": "Agent action set is consistent with a benign exploration. No harm linkage."
+      },
+      "taxonomy_mappings": {"minitrace": [], "mast": [], "toolemu": []},
+      "taxonomy": [],
+      "classification": null
+    }
+  ],
+  "lineage": [
+    {
+      "type": "judges",
+      "target_trace_id": "0193d4a0-1234-7890-abcd-ef0123456789",
+      "target_content_hash": "sha256:9d67dbcd9141f00c4b39418be2c8d5e9a78ab740d6afdf76deeaf1fafca3b016",
+      "authored_by": "example-judge-model",
+      "authored_at": "2026-05-03T11:00:00.000000Z"
+    }
+  ],
+  "redactions": [],
+  "pattern": null,
+  "content_hash": "sha256:443b60e096ac9be1c00251444a330fda12dc704c318a7b1c8e7fed0fa07da5f7",
+  "metrics": {
+    "turn_count": 0,
+    "tool_call_count": 0,
+    "read_count": 0,
+    "modify_count": 0,
+    "create_count": 0,
+    "execute_count": 0,
+    "delegate_count": 0,
+    "read_ratio": null,
+    "time_to_first_action": null,
+    "idle_ratio": null,
+    "total_input_tokens": null,
+    "total_output_tokens": null,
+    "total_cache_read_tokens": null,
+    "total_cache_creation_tokens": null,
+    "total_reasoning_tokens": null,
+    "total_tool_tokens": null,
+    "session_cost": null,
+    "subagent_count": 0,
+    "subagent_tool_calls": 0,
+    "model_switches": null,
+    "unique_models": null,
+    "median_response_tokens": null,
+    "max_response_tokens": null
+  }
+}

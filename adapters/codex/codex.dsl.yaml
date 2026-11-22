@@ -1,0 +1,297 @@
+# minitrace adapter DSL — codex (OpenAI Codex CLI, Apache-2.0)
+#
+# Reads a single-element JSON array of a pre-processed container produced
+# by preprocess_codex.py (one Codex session → one container). Both native
+# source formats — session/rollout (~/.codex/sessions/rollout-*.jsonl) and
+# exec (`codex exec --json` stdout) — are normalised by the preprocessor to
+# the same event_kind record stream, so this DSL is source-format-agnostic.
+#
+# Single-trace adapter: Codex sessions carry no subagent lineage in the
+# observed corpus, so there are no cross-trace edges (unlike vibe).
+#
+# v0.1 scope:
+#   - One trace per Codex session.
+#   - Per-record turn emission with event_kind dispatch (user_text,
+#     assistant_turn, error).
+#   - Atomic tool emission: the preprocessor pre-pairs function_call with
+#     function_call_output by call_id and pre-computes operation_type,
+#     file_path, and content_origin from the shell command; the DSL emits
+#     those verbatim (no command parsing at the DSL layer).
+#   - Annotations (2): producer_system_prompt, producer_config_snapshot
+#     (approval/sandbox/personality/collaboration policies), plus a
+#     producer_error annotation per exec error record.
+#   - Reasoning captured as turn.thinking on the owning assistant turn.
+#   - Session-level token totals in metrics.
+#
+# Deferred:
+#   - Non-shell tool surfaces (read_file/write_file/apply_patch) — mapped
+#     in the preprocessor but not yet observed in the corpus.
+#   - Per-turn usage annotations (usage is preprocessor-attached, surfaced
+#     via session-level metrics only in v0.1).
+#
+# Conforms to minitrace-spec v0.3.0 + minitrace-adapter-dsl-spec v0.1.0.
+
+adapter:
+  name: codex
+  harness_version: "codex/multi-version"
+  dsl_version: "0.1.0"
+  source_format: codex-jsonl-v1
+  converter_version: minitrace-codex-dsl-0.1.1
+  produces_schema: "0.3.0"
+
+input:
+  type: json
+  encoding: utf-8
+  container:
+    record_path: messages
+
+state:
+  next_turn_index: 0
+  last_assistant_turn_index: null
+  next_ann_id: 0
+
+constants:
+  default_capture_mode: scrubbed
+
+# Codex routes all tool use through exec_command; the real operation_type
+# is command-derived and pre-computed per tool_call by the preprocessor,
+# so this map is only a fallback for tool_calls that lack operation_type.
+operation_types:
+  exec_command: EXECUTE
+  read_file: READ
+  write_file: NEW
+  edit_file: MODIFY
+  apply_patch: MODIFY
+  default: OTHER
+
+session:
+  static:
+    schema_version: "0.3.0"
+    trace_type: "agent-session"
+    profile: "codex"
+    # Nothing here checks for personal data, so the flags assume it is present:
+    # unchecked, not clean. contains_pii forces classification >= confidential.
+    classification: "confidential"
+    flags.for_research: false
+    flags.needs_cleaning: true
+    flags.contains_error: false
+    flags.contains_pii: true
+  derived:
+    id: "$container.trace_id"
+    title: "$container.trace_title"
+    timing.started_at: "$container.created_at"
+    timing.ended_at: "$container.updated_at"
+    environment.agent_framework: "codex"
+    environment.agent_version: "$container.cli_version"
+    environment.model: "$container.model"
+    environment.provider: "$container.provider_hint"
+    environment.model_provider: "$container.model_provider"
+    environment.tools_enabled: "$container.tools_enabled"
+    operational_context.working_directory: "$container.cwd"
+    operational_context.autonomy_level: "$container.autonomy_level"
+    operational_context.sandbox: "$container.sandbox"
+    operational_context.framework_config.originator: "$container.originator"
+    operational_context.framework_config.personality: "$container.personality"
+    operational_context.framework_config.collaboration_mode: "$container.collaboration_mode"
+    operational_context.framework_config.reasoning_effort: "$container.reasoning_effort"
+    operational_context.framework_config.timezone: "$container.timezone"
+    operational_context.framework_config.model_context_window: "$container.context_window"
+    operational_context.framework_config.approval_policy: "$container.approval_policy"
+    operational_context.framework_config.sandbox_policy: "$container.sandbox_policy"
+    provenance.source_format: "$container.source_format_versioned"
+    provenance.source_session_id: "$container.session_id"
+    provenance.source_schema_version: "$container.version_label"
+    # Spec §3.5.1: how timing.started_at / session-anchored annotation
+    # timestamps were obtained: source_timestamp | uuidv7:thread_id | absent.
+    provenance.created_at_basis: "$container.created_at_basis"
+
+emit:
+
+  # ===== SESSION_INIT — fires once per container =====
+
+  # producer_system_prompt — the verbatim base_instructions Codex sent to
+  # the model (session format only; exec format omits it).
+  - target: agent
+    name: codex_emit_system_prompt
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+        - { container_field: system_prompt, present: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "codex-ann-sysprompt-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$container.created_at"
+          annotator: "codex-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Producer system prompt (codex base_instructions). Verbatim system message sent to the model."
+          claim_type: "observation"
+          codex_system_prompt: "$container.system_prompt"
+          taxonomy:
+            - "codex/${container.version_label}/session/producer_system_prompt"
+
+  # Nested JSON (tool arguments) that strict parsing refused; the call keeps
+  # the raw string. Emitted only when there was any.
+  - target: agent
+    name: codex_emit_nested_json_refused
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+        - { container_field: nested_json_refused, present: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "codex-ann-nestedjson-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$container.created_at"
+          annotator: "codex-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Tool arguments refused by strict JSON parsing (out-of-range number, NaN, nesting too deep); those calls carry the raw argument string. nested_json_refused counts them."
+          claim_type: "observation"
+          nested_json_refused: "$container.nested_json_refused"
+          taxonomy:
+            - "codex/${container.version_label}/session/nested_json_refused"
+
+  # producer_config_snapshot — Codex session posture (approval/sandbox
+  # policy, personality, collaboration mode, reasoning effort). Session
+  # format only; emitted when any policy field is present.
+  - target: agent
+    name: codex_emit_config_snapshot
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+        - { container_field: approval_policy, present: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "codex-ann-config-${container.session_id}-${state.next_ann_id}"
+          timestamp: "$container.created_at"
+          annotator: "codex-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Producer config snapshot (codex): approval policy, sandbox policy, personality, collaboration mode, reasoning effort. Frozen at session start."
+          claim_type: "observation"
+          codex_approval_policy: "$container.approval_policy"
+          codex_sandbox_policy: "$container.sandbox_policy"
+          codex_personality: "$container.personality"
+          codex_collaboration_mode: "$container.collaboration_mode"
+          codex_reasoning_effort: "$container.reasoning_effort"
+          taxonomy:
+            - "codex/${container.version_label}/session/producer_config_snapshot"
+
+  # ===== USER text turn =====
+  - target: agent
+    name: codex_user_text_turn
+    when:
+      all_of:
+        - { field: event_kind, value: user_text }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "user"
+          source: "human"
+          content_type: "text"
+          content: "$record.content_text"
+          input_channel: "user_input"
+          timestamp: "$record.timestamp"
+      - set:
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  # ===== ASSISTANT turn (content + thinking + atomic tool calls) =====
+  # The preprocessor accumulates reasoning into thinking and pairs every
+  # function_call with its output, so tool emission here is atomic.
+  - target: agent
+    name: codex_assistant_turn
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_turn }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "assistant"
+          source: "model"
+          content_type: "text"
+          content: "$record.content_text"
+          thinking: "$record.thinking"
+          timestamp: "$record.timestamp"
+      - set:
+          state.last_assistant_turn_index: "$state.next_turn_index"
+          state.next_turn_index: "$state.next_turn_index + 1"
+    foreach_block: "$record.tool_calls"
+    on_block:
+      - name: codex_emit_one_tool_call
+        when:
+          all_of:
+            - { block_field: id, present: true }
+        do:
+          - emit_tool_call:
+              id: "$block.id"
+              tool_name: "$block.tool_name"
+              tool_provider: "codex"
+              emitting_turn_index: "$state.last_assistant_turn_index"
+              operation_type: "$block.operation_type"
+              input:
+                command: "$block.command"
+                file_path: "$block.file_path"
+                arguments: "$block.arguments"
+              output:
+                success: "$block.success"
+                result: "$block.result"
+                error: "$block.error"
+                duration_ms: "$block.duration_ms"
+                content_origin: "$block.content_origin"
+              invocation_source: "agent_choice"
+              framework_metadata:
+                codex_function: "$block.codex_function"
+                justification: "$block.justification"
+              taxonomy:
+                - "codex/${container.version_label}/tool/${block.tool_name}"
+
+  # ===== ERROR record (exec format) → producer_error annotation =====
+  - target: agent
+    name: codex_emit_error_annotation
+    when:
+      all_of:
+        - { field: event_kind, value: error }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "codex-ann-error-${container.session_id}-${state.next_ann_id}"
+          # Exec-format records carry no time; Annotation.timestamp is required
+          # (spec §3.5.1), so fall back to the session start, whose basis is
+          # recorded in provenance.created_at_basis.
+          timestamp: "$record.timestamp ? $record.timestamp : $container.created_at"
+          annotator: "codex-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "$record.message"
+          claim_type: "observation"
+          taxonomy:
+            - "codex/${container.version_label}/session/producer_error"
+
+finalize:
+  computed:
+    metrics.total_tokens: "$container.total_tokens"
+    metrics.total_input_tokens: "$container.total_input_tokens"
+    metrics.total_output_tokens: "$container.total_output_tokens"

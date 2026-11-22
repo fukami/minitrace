@@ -1,0 +1,72 @@
+{
+  "envelope_version": "0.1.1",
+  "envelope_id": "0193d4a0-5e1f-7c3a-9b2d-4e6f8a0c1d2e",
+  "created_at": "2026-10-21T23:35:15.063580Z",
+  "producer": {
+    "id": "minitrace-examples",
+    "kind": "automated_pipeline",
+    "tool": "minitrace dsl_runner (v0.3.0 release tree)",
+    "host_clock_id": "host-clock-0"
+  },
+  "clocks": [
+    {
+      "id": "host-clock-0",
+      "kind": "host_system",
+      "manipulated": false
+    }
+  ],
+  "traces": [
+    {
+      "trace_id": "2f3393e4-cb2b-44f2-8f95-85ae8155db97",
+      "path": "traces/2f3393e4-cb2b-44f2-8f95-85ae8155db97.minitrace.json",
+      "trace_content_hash": "sha256:a3f7d0bbf93dd1e2dccf041cd25f78f20811168431ed16b408754a6d9d842c4d",
+      "file_content_hash": "sha256:87bdf8ee18b9c8cdc4d60fe6c953c6a49cb91387424376cbb2de451c7f5005ad",
+      "trace_type": "agent-session",
+      "schema_version": "0.3.0",
+      "primary": true,
+      "clock_id": "host-clock-0"
+    }
+  ],
+  "raw_artefacts": [
+    {
+      "id": "raw-001",
+      "path": "raw/pi/s1-config.jsonl",
+      "kind": "harness_log",
+      "harness": "pi",
+      "content_hash": "sha256:2363bbc7da914c9d3785f26cd80f36c4540911c99073375cb6176d8b3e176a58",
+      "size_bytes": 4939,
+      "produces_trace_id": "2f3393e4-cb2b-44f2-8f95-85ae8155db97"
+    },
+    {
+      "id": "raw-002",
+      "path": "raw/adapter/pi-0.58.1.dsl.yaml",
+      "kind": "x-adapter-dsl",
+      "harness": "pi",
+      "content_hash": "sha256:fbb9b0d314d0e87927d56e556f735fd6e2c3fd054497b6ace55b699e4f668440",
+      "size_bytes": 8967
+    }
+  ],
+  "witnesses": [
+    {
+      "id": "w-synthetic-001",
+      "kind": "x-synthetic-example",
+      "scope": {
+        "type": "trace",
+        "target_trace_id": "2f3393e4-cb2b-44f2-8f95-85ae8155db97"
+      },
+      "captured_at": "2026-10-21T23:35:15.063580Z",
+      "captured_by": "minitrace envelope example (synthetic, no observation)",
+      "primary_path": "witnesses/w-synthetic-001/note.txt",
+      "auxiliary_paths": [],
+      "path_hashes": {
+        "witnesses/w-synthetic-001/note.txt": "sha256:8adaca16ecfbe43997d5a1a0592c451f088698c9a631d7b59fbc58100d42cb29"
+      },
+      "size_bytes": 235,
+      "redaction": null,
+      "content_hash": "sha256:87b64135acd458153440a2ec3236b2bb46432ed3cf75b1f20e856e77d75a7226"
+    }
+  ],
+  "bindings": [],
+  "annotations": [],
+  "extensions": {}
+}

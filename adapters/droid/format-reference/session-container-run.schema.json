@@ -1,0 +1,372 @@
+{
+  "record_types": {
+    "session_start": 1,
+    "message": 40,
+    "todo_state": 2
+  },
+  "field_count": 35,
+  "fields": {
+    "cwd": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "/workspace"
+      ]
+    },
+    "id": {
+      "types": [
+        "str"
+      ],
+      "count": 43,
+      "sample_values": [
+        "031ef2ba-d386-46f0-a7bb-583f870a107a",
+        "03664b88-f1c0-4af1-8370-4618989a06ed",
+        "0e1b77f6-5ec9-4074-b8a9-df55c0e57d81",
+        "28f1103e-768f-42d2-80a4-94af8d2e19fd",
+        "2bc8fe82-c746-41cc-afba-b186abf2533e",
+        "3b38b9bf-1988-46f4-bd22-c3991004cf3c",
+        "59ea8601-1a73-47a7-9c97-211e24a2cc33",
+        "5b439770-da95-414e-b384-27a14ea3b77a",
+        "5c5b541f-6aad-4ee3-b9c7-2e9cf1b394c1",
+        "661f50a5-d4d1-4084-ac35-bfc20d261575"
+      ]
+    },
+    "message": {
+      "types": [
+        "dict"
+      ],
+      "count": 40,
+      "sample_values": []
+    },
+    "message.chatCompletionReasoningContent": {
+      "types": [
+        "str"
+      ],
+      "count": 20,
+      "sample_values": []
+    },
+    "message.chatCompletionReasoningField": {
+      "types": [
+        "str"
+      ],
+      "count": 20,
+      "sample_values": [
+        "reasoning"
+      ]
+    },
+    "message.content": {
+      "types": [
+        "list"
+      ],
+      "count": 40,
+      "sample_values": []
+    },
+    "message.content[].content": {
+      "types": [
+        "str"
+      ],
+      "count": 22,
+      "sample_values": [
+        "# No external dependencies for the base project\n",
+        "Python not found\n\n\n[Process exited with code 0]",
+        "TODO List Updated"
+      ]
+    },
+    "message.content[].id": {
+      "types": [
+        "str"
+      ],
+      "count": 21,
+      "sample_values": [
+        "call_0q3hzvin",
+        "call_0qs1t81x",
+        "call_3grnck22",
+        "call_4wdpjfja",
+        "call_4xzltnln",
+        "call_8247edwh",
+        "call_8e6ge8v9",
+        "call_8frjn2m8",
+        "call_9580y9rt",
+        "call_afufnax8"
+      ]
+    },
+    "message.content[].input": {
+      "types": [
+        "dict"
+      ],
+      "count": 21,
+      "sample_values": []
+    },
+    "message.content[].input.command": {
+      "types": [
+        "str"
+      ],
+      "count": 4,
+      "sample_values": [
+        "cd /workspace && python main.py",
+        "cd /workspace && python3 main.py"
+      ]
+    },
+    "message.content[].input.file_path": {
+      "types": [
+        "str"
+      ],
+      "count": 15,
+      "sample_values": [
+        "/workspace/README.md",
+        "/workspace/main.py",
+        "/workspace/requirements.txt"
+      ]
+    },
+    "message.content[].input.new_str": {
+      "types": [
+        "str"
+      ],
+      "count": 10,
+      "sample_values": []
+    },
+    "message.content[].input.old_str": {
+      "types": [
+        "str"
+      ],
+      "count": 10,
+      "sample_values": []
+    },
+    "message.content[].input.riskLevel": {
+      "types": [
+        "str"
+      ],
+      "count": 4,
+      "sample_values": [
+        "low",
+        "medium"
+      ]
+    },
+    "message.content[].input.riskLevelReason": {
+      "types": [
+        "str"
+      ],
+      "count": 4,
+      "sample_values": []
+    },
+    "message.content[].input.todos": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": []
+    },
+    "message.content[].name": {
+      "types": [
+        "str"
+      ],
+      "count": 21,
+      "sample_values": [
+        "Edit",
+        "Execute",
+        "Read",
+        "TodoWrite"
+      ]
+    },
+    "message.content[].signature": {
+      "types": [
+        "str"
+      ],
+      "count": 20,
+      "sample_values": [
+        "reasoning"
+      ]
+    },
+    "message.content[].signatureProvider": {
+      "types": [
+        "str"
+      ],
+      "count": 20,
+      "sample_values": [
+        "openai"
+      ]
+    },
+    "message.content[].text": {
+      "types": [
+        "str"
+      ],
+      "count": 6,
+      "sample_values": [
+        "Improve the code quality."
+      ]
+    },
+    "message.content[].thinking": {
+      "types": [
+        "str"
+      ],
+      "count": 20,
+      "sample_values": []
+    },
+    "message.content[].tool_use_id": {
+      "types": [
+        "str"
+      ],
+      "count": 22,
+      "sample_values": [
+        "call_0q3hzvin",
+        "call_0qs1t81x",
+        "call_3grnck22",
+        "call_4wdpjfja",
+        "call_4xzltnln",
+        "call_8247edwh",
+        "call_8e6ge8v9",
+        "call_8frjn2m8",
+        "call_9580y9rt",
+        "call_afufnax8"
+      ]
+    },
+    "message.content[].type": {
+      "types": [
+        "str"
+      ],
+      "count": 69,
+      "sample_values": [
+        "text",
+        "thinking",
+        "tool_result",
+        "tool_use"
+      ]
+    },
+    "message.openaiMessageId": {
+      "types": [
+        "str"
+      ],
+      "count": 20,
+      "sample_values": [
+        "chatcmpl-191",
+        "chatcmpl-241",
+        "chatcmpl-287",
+        "chatcmpl-300",
+        "chatcmpl-390",
+        "chatcmpl-401",
+        "chatcmpl-406",
+        "chatcmpl-412",
+        "chatcmpl-422",
+        "chatcmpl-459"
+      ]
+    },
+    "message.role": {
+      "types": [
+        "str"
+      ],
+      "count": 40,
+      "sample_values": [
+        "assistant",
+        "user"
+      ]
+    },
+    "messageIndex": {
+      "types": [
+        "int"
+      ],
+      "count": 2,
+      "sample_values": [
+        "1"
+      ]
+    },
+    "owner": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "unknown"
+      ]
+    },
+    "parentId": {
+      "types": [
+        "str"
+      ],
+      "count": 39,
+      "sample_values": [
+        "031ef2ba-d386-46f0-a7bb-583f870a107a",
+        "03664b88-f1c0-4af1-8370-4618989a06ed",
+        "0e1b77f6-5ec9-4074-b8a9-df55c0e57d81",
+        "28f1103e-768f-42d2-80a4-94af8d2e19fd",
+        "2bc8fe82-c746-41cc-afba-b186abf2533e",
+        "3b38b9bf-1988-46f4-bd22-c3991004cf3c",
+        "59ea8601-1a73-47a7-9c97-211e24a2cc33",
+        "5b439770-da95-414e-b384-27a14ea3b77a",
+        "5c5b541f-6aad-4ee3-b9c7-2e9cf1b394c1",
+        "6c2c4314-39a2-46ac-bf19-cb61c2d836a5"
+      ]
+    },
+    "sessionTitle": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "Improve the code quality."
+      ]
+    },
+    "timestamp": {
+      "types": [
+        "str"
+      ],
+      "count": 42,
+      "sample_values": [
+        "2026-03-16T03:59:39.296Z",
+        "2026-03-16T03:59:42.766Z",
+        "2026-03-16T03:59:42.783Z",
+        "2026-03-16T03:59:45.136Z",
+        "2026-03-16T03:59:45.139Z",
+        "2026-03-16T03:59:50.257Z",
+        "2026-03-16T03:59:50.277Z",
+        "2026-03-16T03:59:57.595Z",
+        "2026-03-16T03:59:57.599Z",
+        "2026-03-16T03:59:58.826Z"
+      ]
+    },
+    "title": {
+      "types": [
+        "str"
+      ],
+      "count": 1,
+      "sample_values": [
+        "Improve the code quality."
+      ]
+    },
+    "todos": {
+      "types": [
+        "dict"
+      ],
+      "count": 2,
+      "sample_values": []
+    },
+    "todos.todos": {
+      "types": [
+        "str"
+      ],
+      "count": 2,
+      "sample_values": []
+    },
+    "type": {
+      "types": [
+        "str"
+      ],
+      "count": 43,
+      "sample_values": [
+        "message",
+        "session_start",
+        "todo_state"
+      ]
+    },
+    "version": {
+      "types": [
+        "int"
+      ],
+      "count": 1,
+      "sample_values": [
+        "2"
+      ]
+    }
+  }
+}

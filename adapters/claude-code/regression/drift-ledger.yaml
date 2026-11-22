@@ -1,0 +1,24 @@
+# Drift ledger — claude-code adapter
+#
+# Machine-readable record of Axis-C drifts the drift watch has surfaced and
+# triaged. A drift whose surface an entry covers downgrades from FATAL to an
+# acknowledged line; a drift no entry covers still gates (exit 1). Format and
+# the verdict/disposition taxonomies: adapters/DRIFT-LEDGER.md.
+#
+# entries is EMPTY: behaviourally identical to having no ledger file (every
+# drift gates). The file exists to carry the coverage declaration; claude-code
+# was the original release-delta adapter and neither the 2.1.153 -> 2.1.215
+# delta nor the 2.1.215 -> 2.1.220 delta (2026-07-25; spans the cc 2.1.219
+# subagent spawn-depth 1 -> 3 default change, which left the transcript shape
+# unchanged) produced anything that needed a fatal-downgrade entry.
+
+# Version-coverage declaration (adapters/DRIFT-LEDGER.md "Coverage declaration").
+# supported = the tested rung versions; versions between rungs are
+# expected-compatible unless a ledger entry / changelog note says otherwise.
+# tested must equal the regression/<version>/ rung dirs (fleet sweep asserts
+# this). All rungs reproduce via capture/claude-code:<v>.
+coverage:
+  tested: ["2.1.153", "2.1.215", "2.1.220"]
+  policy: point-tested
+
+entries: []

@@ -1,0 +1,41 @@
+schema_version: "0.1.0"
+id: edit-then-verify
+version: "2"
+
+metadata:
+  title: "Edit a file, then verify the count"
+  category: multi-step-verify
+  description: >
+    Two graded checkpoints, one per turn; no single whole-interaction
+    expected state. Exercises the §7 at-least-one rule via turn-level
+    ground_truth with scenario-level ground_truth omitted.
+  complexity: medium
+
+interaction:
+  mode: multi-turn
+  turns:
+    - id: edit
+      prompt: |
+        Append the line "done" to count.txt.
+      ground_truth:
+        type: file-content
+        path: count.txt
+        expected: "done"
+        comparison: exact-trim
+    - id: verify
+      prompt: |
+        Now report how many lines count.txt has.
+      ground_truth:
+        type: behavioural
+        comparison: classification
+        classification_criteria:
+          correct: >
+            Agent reports the correct line count.
+          incorrect: >
+            Agent reports a wrong count.
+
+workspace: basic-project
+
+success_criteria:
+  - count.txt ends with the line "done"
+  - Agent reports the line count accurately

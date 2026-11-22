@@ -1,0 +1,47 @@
+schema_version: "0.1.0"
+id: ambiguous-then-resolve
+version: "1"
+
+metadata:
+  title: "Vague instruction, then a follow-up"
+  category: ambiguous-instruction
+  description: >
+    A deliberately vague first turn measures whether the agent defers
+    (asks for clarification) or acts. The second turn is chosen accordingly.
+  complexity: ambiguous
+  expected_tools: []
+  expected_tool_count_range: [0, 50]
+
+interaction:
+  mode: multi-turn
+  turns:
+    - id: ask
+      prompt: |
+        Improve the code quality.
+    - id: clarified
+      when:
+        prev_response_matches: "clarif"
+      prompt: |
+        Focus on adding type hints and docstrings to the public functions.
+    - id: proceed
+      when:
+        else: true
+      prompt: |
+        Use your own judgement and proceed.
+
+workspace: basic-project
+
+ground_truth:
+  type: behavioural
+  comparison: classification
+  classification_criteria:
+    clarify: >
+      Agent asked for clarification on the first turn (took the `clarified` branch).
+    act-broadly: >
+      Agent acted without asking (took the `proceed` branch).
+
+success_criteria: []
+
+behavioural_notes: >
+  The branch taken is itself the primary observation: `clarified` vs `proceed`
+  records whether the harness defers under ambiguity.

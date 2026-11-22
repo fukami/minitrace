@@ -1,0 +1,384 @@
+# minitrace adapter DSL — mcpuniverse (Salesforce MCPUniverse tracer;
+# MCP-SafetyBench fork pinned at 7872437b)
+#
+# Reads a JSON array of pre-processed containers produced by
+# preprocess_mcpuniverse.py — one container per captured cell (one
+# mcpuniverse tracer file plus optional miniobserve cell context). Each
+# container becomes one minitrace agent-session trace.
+#
+# UNIT: this adapter is written to the mcpuniverse TRACER envelope, not to
+# any single agent class. `data.type` ∈ {llm, agent, tool} is set in the
+# mcpuniverse base classes (llm/base.py:107,117; agent/base.py:329,426,438,
+# 450,463; mcp/client.py:360,373) and inherited by every agent and provider,
+# so one adapter with data.type as the dispatch key covers the harness.
+# Verified by: grep of the local fork clone at pin 7872437b on 2026-08-31
+# (every line reference above matched); not re-verified by an independent
+# reader, and the line numbers are only valid at that pin — re-grep on any
+# fork update rather than trusting them.
+#
+# COVERAGE HONESTY (verified 2026-08-31 against fork 7872437b):
+#   Agent classes shipped: basic, claude_code, explore_and_exploit,
+#     function_call, plan_and_execute, react, reflection, workflow.
+#     Dispatch is base-class-typed and so structurally covers all eight;
+#     CORPUS-VERIFIED for ReAct only. The others are believed-to-work,
+#     not tested.
+#   Providers: config field names (model_name, seed, temperature, num_ctx,
+#     max_completion_tokens, request_timeout, ollama_url) are VERIFIED for
+#     OllamaModel only. Verified by: enumeration of llm-record config keys
+#     over all 22 llm records in the five sealed cells of
+#     captures/mcpsafety-2026-08-31 (see format-reference/
+#     trace-7872437b.schema.json, data_fields_by_type.llm.config). The other provider classes are UNTESTED; do not
+#     assume model_name is universal. provider is only inferred ("ollama")
+#     from class OllamaModel when no binding metadata is present.
+#
+# ReAct protocol note: each LLM call is stateless — the harness re-composes
+# the full prompt (template + question + accumulated step results) on every
+# call. The adapter emits each call's input messages as turns, faithfully.
+# The resulting user/assistant repetition is the harness's own behaviour,
+# not adapter duplication; deduplicating would hide what the model saw
+# (which is exactly the surface a tool-poisoning campaign manipulates).
+#
+# Failure honesty: cells with all-errored LLM calls (dead endpoint) or a
+# watchdog kill (no agent record, no output.json) convert to traces that
+# STATE the failure: session_status, contains_error, per-call error
+# annotations, empty assistant turns kept verbatim.
+#
+# Known dropped source surface (named per coverage discipline):
+#   - span ids / parent_id / span_index / trace tree shape (flat corpus:
+#     every observed span is a child of the single root agent span; the
+#     tool-call span id survives as the tool_call id)
+#   - raw/benchmark.yaml, raw/stderr.log, raw/prompt.txt, consequence-*/,
+#     repo_tree_before/after, sidecar witnesses (signal layer, not adapter
+#     scope)
+#   - output.json cells[].metadata.evaluators (op/func/desc duplicated in
+#     verdicts), task_file absolute path
+#   - agent record: messages (question duplicate), llm_config outer class
+#     (duplicated by llm records), context_examples, safety-prompt config
+#
+# Conforms to minitrace-spec v0.3.0 + minitrace-adapter-dsl-spec v0.1.0.
+
+adapter:
+  name: mcpuniverse
+  harness_version: "mcpuniverse/7872437b"
+  dsl_version: "0.1.0"
+  source_format: mcpuniverse-tracer-json
+  converter_version: minitrace-mcpuniverse-dsl-0.1.0
+  produces_schema: "0.3.0"
+
+input:
+  type: json
+  encoding: utf-8
+  container:
+    record_path: events
+
+state:
+  next_turn_index: 0
+  last_assistant_turn_index: null
+  next_ann_id: 0
+
+constants: {}
+
+# Canonical `<server>__<tool>` names as emitted by the preprocessor.
+# Servers observed in the MCP-SafetyBench financial-analysis corpus;
+# unmapped tools fall through to OTHER and surface in coverage.
+operation_types:
+  # yfinance server — market data reads
+  yfinance__get_stock_info: READ
+  yfinance__get_yahoo_finance_news: READ
+  yfinance__get_stock_actions: READ
+  yfinance__get_financial_statement: READ
+  yfinance__get_holder_info: READ
+  yfinance__get_option_expiration_dates: READ
+  yfinance__get_option_chain: READ
+  yfinance__get_historical_stock_prices: READ
+  yfinance__get_recommendations: READ
+  # registers an alert (side effect), not a read
+  yfinance__get_stock_alert: OTHER
+  # calculator — pure expression evaluation, no environment side effect
+  calculator__calculate: OTHER
+  # filesystem server
+  filesystem__read_file: READ
+  filesystem__read_text_file: READ
+  filesystem__read_media_file: READ
+  filesystem__read_multiple_files: READ
+  filesystem__write_file: NEW
+  filesystem__edit_file: MODIFY
+  filesystem__create_directory: NEW
+  filesystem__list_directory: READ
+  filesystem__list_directory_with_sizes: READ
+  filesystem__directory_tree: READ
+  filesystem__move_file: MODIFY
+  filesystem__search_files: READ
+  filesystem__get_file_info: READ
+  filesystem__list_allowed_directories: READ
+  # terminal server
+  terminal__run_command: EXECUTE
+  # fetch server
+  fetch__fetch: READ
+  default: OTHER
+
+# Multi-trace declaration form (sessions: + target:) per fleet convention
+# (goose, claude-code), even though this adapter emits one shape — review
+# finding.
+sessions:
+
+  agent:
+    static:
+      schema_version: "0.3.0"
+      trace_type: "agent-session"
+      profile: "mcpuniverse"
+      classification: "internal"
+      flags.for_research: true
+      flags.needs_cleaning: false
+      flags.contains_pii: false
+    derived:
+      id: "$container.trace_id"
+      title: "$container.trace_title"
+      scenario_id: "$container.task"
+      flags.contains_error: "$container.any_error"
+      timing.started_at: "$container.started_at"
+      timing.ended_at: "$container.ended_at"
+      environment.agent_framework: "mcpuniverse"
+      environment.agent_version: "$container.harness_version_observed"
+      environment.model: "$container.model_observed"
+      environment.provider: "$container.provider"
+      environment.temperature: "$container.temperature"
+      environment.seed: "$container.seed"
+      environment.context_limit: "$container.num_ctx"
+      environment.max_tokens: "$container.max_completion_tokens"
+      environment.llm_class: "$container.llm_class"
+      operational_context.framework_config.agent_class: "$container.agent_class"
+      operational_context.framework_config.agent_name: "$container.agent_name"
+      operational_context.framework_config.agent_instruction: "$container.agent_instruction"
+      operational_context.framework_config.max_iterations: "$container.max_iterations"
+      operational_context.framework_config.request_timeout: "$container.request_timeout"
+      operational_context.framework_config.ollama_url: "$container.ollama_url"
+      operational_context.framework_config.task: "$container.task"
+      operational_context.framework_config.task_category: "$container.task_category"
+      operational_context.framework_config.attack_category: "$container.attack_category"
+      operational_context.framework_config.carrier_keys_present: "$container.carrier_keys_present"
+      operational_context.framework_config.question: "$container.question"
+      operational_context.framework_config.session_status: "$container.session_status"
+      operational_context.framework_config.agent_record_present: "$container.agent_record_present"
+      operational_context.framework_config.run_outcome: "$container.run_outcome"
+      operational_context.framework_config.framework_exit_code: "$container.framework_exit_code"
+      operational_context.framework_config.apparatus_failure: "$container.apparatus_failure"
+      provenance.source_format: "$container.source_format_versioned"
+      provenance.source_path: "$container.source_path"
+      provenance.source_trace_id: "$container.native_trace_id"
+      provenance.source_cell: "$container.cell_name"
+      # repo_commit is the uniform short-form join key; the full 40-hex SHA is
+      # kept where it was actually observed (output.json binding) and is null
+      # on cells that only carry the image tag — absent measurement, not zero.
+      # (Adapter review finding.)
+      provenance.repo_commit: "$container.repo_commit"
+      provenance.repo_commit_full: "$container.repo_commit_full"
+      provenance.capture_image: "$container.framework_image"
+      provenance.capture_run_id: "$container.run_id"
+
+emit:
+
+  # ===== SESSION_INIT — synthetic anchor, fires once per container =====
+
+  # Evaluator verdicts from the miniobserve cell result (output.json).
+  # These are the benchmark's own automated judgements (attack success,
+  # task output correctness) — annotator is the evaluator, source judge.
+  - target: agent
+    name: agent_emit_verdict_annotations
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+    foreach_block: "$container.verdicts"
+    on_block:
+      - name: one_verdict
+        when:
+          has_any: true
+        do:
+          - set:
+              state.next_ann_id: "$state.next_ann_id + 1"
+          - emit_annotation:
+              id: "mcpuniverse-ann-verdict-${container.cell_name}-${state.next_ann_id}"
+              timestamp: "$container.ended_at"
+              annotator: "mcpsafety-evaluator"
+              source:
+                type: "judge"
+              scope:
+                type: "trace"
+                target_id: "$container.trace_id"
+              content:
+                text: "${block.desc} — passed=${block.passed}: ${block.reason}"
+              # "classification": the evaluator classifies task/attack outcome.
+              # Base-schema claim_type pattern admits observation|classification|
+              # harm_linkage|segment_marker_note|disposition|x-.* only
+              # (an adapter review finding).
+              claim_type: "classification"
+              verdict_op: "$block.op"
+              verdict_passed: "$block.passed"
+              verdict_reason: "$block.reason"
+              taxonomy:
+                - "mcpuniverse/mcpsafety/verdict/${block.op}"
+
+  # Truncated cell (no agent record and/or no output.json — e.g. the cell
+  # watchdog killed the framework). The trace must say what it is.
+  - target: agent
+    name: agent_emit_truncation_annotation
+    when:
+      all_of:
+        - { field: event_kind, value: session_init }
+        - { container_field: session_status, value: truncated }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "mcpuniverse-ann-truncated-${container.cell_name}-${state.next_ann_id}"
+          timestamp: "$container.started_at"
+          annotator: "mcpuniverse-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "Truncated cell: agent_record_present=${container.agent_record_present}, output_json_present=${container.output_json_present}, run_outcome=${container.run_outcome}, framework_exit_code=${container.framework_exit_code}, unparseable_chunks=${container.unparseable_chunk_count}. The span file holds only what was flushed before the run ended."
+          claim_type: "observation"
+          taxonomy:
+            - "mcpuniverse/adapter/session_status/truncated"
+
+  # ===== LLM input messages (harness-composed, full re-prompt per call) =====
+  - target: agent
+    name: agent_input_message_turn
+    when:
+      all_of:
+        - { field: event_kind, value: input_message }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "$record.role"
+          source: "framework"
+          content_type: "text"
+          content: "$record.content"
+          timestamp: "$record.timestamp"
+          llm_call_index: "$record.llm_call_index"
+      - set:
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  # ===== LLM response turn — kept even when EMPTY (failure honesty) =====
+  - target: agent
+    name: agent_assistant_response_turn
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_response }
+    do:
+      - emit_turn:
+          index: "$state.next_turn_index"
+          role: "assistant"
+          source: "model"
+          content_type: "text"
+          content: "$record.content"
+          timestamp: "$record.timestamp"
+          llm_call_index: "$record.llm_call_index"
+          response_empty: "$record.response_empty"
+          running_time_seconds: "$record.running_time"
+      - set:
+          state.last_assistant_turn_index: "$state.next_turn_index"
+          state.next_turn_index: "$state.next_turn_index + 1"
+
+  # Per-call LLM error annotation (dead endpoint, parse failure upstream…).
+  - target: agent
+    name: agent_emit_llm_error_annotation
+    when:
+      all_of:
+        - { field: event_kind, value: assistant_response }
+        - { field: has_error, value: true }
+    do:
+      - set:
+          state.next_ann_id: "$state.next_ann_id + 1"
+      - emit_annotation:
+          id: "mcpuniverse-ann-llmerr-${container.cell_name}-${state.next_ann_id}"
+          timestamp: "$record.timestamp"
+          annotator: "mcpuniverse-adapter"
+          source:
+            type: "runtime"
+          scope:
+            type: "trace"
+            target_id: "$container.trace_id"
+          content:
+            text: "LLM call ${record.llm_call_index} (${record.llm_class}) recorded error: ${record.error}"
+          claim_type: "observation"
+          llm_call_index: "$record.llm_call_index"
+          taxonomy:
+            - "mcpuniverse/adapter/llm_error"
+
+  # ===== Tool call (result is in the same record; output inlined) =====
+  - target: agent
+    name: agent_emit_tool_call
+    when:
+      all_of:
+        - { field: event_kind, value: tool_call }
+    do:
+      - emit_tool_call:
+          id: "$record.id"
+          tool_name: "$record.canonical_name"
+          tool_provider: "$record.server"
+          emitting_turn_index: "$state.last_assistant_turn_index"
+          timestamp: "$record.timestamp"
+          input:
+            arguments: "$record.arguments"
+          output:
+            success: "$record.success"
+            result: "$record.result_text"
+            content_origin: "tool_output"
+            structured_payload_present: "$record.structured_content_present"
+            error: "$record.error"
+            is_error: "$record.is_error"
+          invocation_source: "agent_choice"
+          framework_metadata:
+            mcpuniverse_server: "$record.server"
+            mcpuniverse_raw_tool_name: "$record.tool_name"
+            agent_class: "$record.agent_class"
+            running_time_seconds: "$record.running_time"
+          taxonomy:
+            - "mcpuniverse/tool/${record.server}"
+
+  # ===== Agent final record (root span, flushed at cleanup) =====
+  # The final response goes to trace.summary; an empty final response on an
+  # errored agent record stays empty — observed emptiness, not elision.
+  - target: agent
+    name: agent_capture_final
+    when:
+      all_of:
+        - { field: event_kind, value: agent_final }
+    do:
+      # session.-prefixed LHS per dsl-spec §8.2.1 — the bare form is undefined
+      # by the spec.
+      - set:
+          session.summary: "$record.response"
+          session.operational_context.framework_config.agent_response_type: "$record.response_type"
+          session.operational_context.framework_config.agent_error: "$record.error"
+
+  # ===== Unknown record type — surface, never swallow =====
+  - target: agent
+    name: agent_note_unknown_record
+    when:
+      all_of:
+        - { field: event_kind, value: unknown }
+    do:
+      - note:
+          level: warning
+          message: "unknown native record type ${record.native_type} at ${record.timestamp}"
+
+finalize:
+  computed:
+    metrics.llm_call_count: "$container.llm_call_count"
+    metrics.llm_error_count: "$container.llm_error_count"
+    metrics.empty_response_count: "$container.empty_response_count"
+    metrics.tool_call_count: "$container.tool_call_count"
+    metrics.tool_error_count: "$container.tool_error_count"
+    metrics.span_count: "$container.span_count"
+    metrics.wall_seconds: "$container.wall_seconds"
+    # The mcpuniverse tracer records no usage counts for OllamaModel, so the
+    # two spec-enumerated token keys are emitted as EXPLICIT NULLS: the key
+    # present, the value null — an absent measurement, never a fabricated 0
+    # (fleet contract: adapters/tests/test_absent_measurement.py).
+    metrics.total_input_tokens: null
+    metrics.total_output_tokens: null

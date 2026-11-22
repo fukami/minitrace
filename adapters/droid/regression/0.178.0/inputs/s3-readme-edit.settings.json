@@ -1,0 +1,38 @@
+{
+  "assistantActiveTimeMs": 241837,
+  "model": "custom:capture-0",
+  "reasoningEffort": "none",
+  "interactionMode": "auto",
+  "autonomyLevel": "high",
+  "autonomyMode": "auto-high",
+  "compactionThresholdCheckEnabled": true,
+  "tags": [
+    {
+      "name": "exec"
+    }
+  ],
+  "tokenUsage": {
+    "inputTokens": 46223,
+    "outputTokens": 2531,
+    "cacheCreationTokens": 0,
+    "cacheReadTokens": 0,
+    "thinkingTokens": 0,
+    "factoryCredits": 0
+  },
+  "childInclusiveTokenUsageBySessionId": {},
+  "inclusiveTokenUsage": {
+    "inputTokens": 46223,
+    "outputTokens": 2531,
+    "cacheCreationTokens": 0,
+    "cacheReadTokens": 0,
+    "thinkingTokens": 0,
+    "factoryCredits": 0
+  },
+  "providerLock": "generic-chat-completion-api",
+  "providerLockTimestamp": "2026-07-25T12:20:10.234Z",
+  "lastCallTokenUsage": {
+    "inputTokens": 15648,
+    "outputTokens": 857,
+    "cacheReadTokens": 0
+  }
+}

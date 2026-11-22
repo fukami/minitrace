@@ -1,0 +1,26 @@
+{
+  "freeze_semantics": "Content-hash freeze of the codex adapter's output over the conformance scenario at harness 0.132.0. codex uses the preprocess path: preprocess_codex.py normalises the native rollout session log into one container, which codex.dsl.yaml turns into one trace. verify.py re-runs preprocess+DSL on each input (cwd = this dir, input paths relative) and asserts trace_count, per-trace content_hash, and unmapped_path_count. codex traces carry no provenance.source_path, so the content_hash is checkout-independent. First IMAGE rung (npm-stable) and the older end of codex's image release-delta; the candidate is the 0.145.0 fresh capture.",
+  "harness_version": "0.132.0",
+  "capture_provenance": "Live container capture on the arm64 capture workstation (2026-07-25) via the version-pinned image miniobserve/codex-capture:0.132.0 (codex binary from npm @openai/codex@0.132.0, linux-arm64), routed to the arm64 capture workstation's ollama (qwen3:8b, --oss --local-provider ollama; a socat forwarder relays the container's localhost:11434 to host.docker.internal:11434 because codex --oss preflights localhost). qwen3:8b is used because qwen2.5* emit tool calls as TEXT (no structured tool_calls); qwen3:8b emits real function_call items. Sandbox bypassed (--dangerously-bypass-approvals-and-sandbox). Scenario s1-count: 'Count the lines in data.txt and write just the number to count.txt' (data.txt has 4 lines). Host brew codex untouched.",
+  "adapter_pin": "codex/multi-version (codex.dsl.yaml, rollout + exec vocabulary)",
+  "converter_version": "minitrace-codex-dsl-0.1.1",
+  "frozen_at": "2026-07-25",
+  "scenarios": {
+    "s1-count": {
+      "input": "inputs/s1-count.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:8e82b45cbd9118bb4360c2af4467aa55789dd835790cb9ec76773883e948c054"
+      ],
+      "unmapped_path_count": 7,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        7,
+        26
+      ]
+    }
+  }
+}

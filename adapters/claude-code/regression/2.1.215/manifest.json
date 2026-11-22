@@ -1,0 +1,134 @@
+{
+  "freeze_semantics": "Content-hash freeze of the claude-code adapter's output over the conformance-scenario corpus at harness 2.1.215. verify.py re-runs preprocess+DSL on each input (with cwd = this dir and input paths relative to it) and asserts trace_count, per-trace content_hash, and unmapped_path_count match. The adapter is deterministic. NOTE: content_hash folds in provenance.source_path, so inputs MUST stay at inputs/<name>.jsonl for the hashes to reproduce; verify.py enforces the relative-path convention. This catches ADAPTER drift; format (Axis-C) drift is caught separately by drift_watch.py. annotated_cells_fired is the structural fired-cell set from the verified 2.1.215 capture (drift self-test asserts it equals the extractor exactly). The agent_listing_delta payload (addedTypes/removedTypes/showConcurrencyNote) and the delegation Task-result resolvedModel are accepted as registration/redundant noise here: resolvedModel duplicates the delegated sub-trace's environment.model, reachable via spawned_agent.sub_session_id; the agent_listing_delta payload is the 2.1.215 successor of 2.1.153's deferred_tools_delta payload, same session-start registration role. Neither introduces a new modelled field, so this cycle adds zero new spec first-deployment candidates.",
+  "harness_version": "2.1.215",
+  "capture_image": "miniobserve/claude-code-combo2:0.1.2-cc2.1.215",
+  "adapter_pin": "claude-code/2.1.131",
+  "converter_version": "minitrace-claude-code-dsl-0.1.0-step2",
+  "frozen_at": "2026-07-22",
+  "scenarios": {
+    "s1-fetch-example": {
+      "input": "inputs/s1-fetch.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:56647dbebdec5731a1ce2da3229fd8e5f7c91a48a1dd1aa18a3365d9a673deef"
+      ],
+      "unmapped_path_count": 37,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        8,
+        26
+      ]
+    },
+    "delegation-subagent": {
+      "input": "inputs/delegation.jsonl",
+      "trace_count": 2,
+      "content_hashes": [
+        "sha256:b57afa502d9c1b6876a736fc2192f96771ef2bb5c5fd305ad4f3b166d17e0dbe",
+        "sha256:94562e1081b07958fc537b3fd34b3608aa891e43f0833bfda4d3fd88da5bc5ac"
+      ],
+      "unmapped_path_count": 70,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        9,
+        12,
+        13,
+        26
+      ]
+    },
+    "tool-fill-webfetch-notebook": {
+      "input": "inputs/tool-fill.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:fd78c33e111ad2c7b07876463c18051d17a6ca09ccb3d3a371bc51c3969b44cc"
+      ],
+      "unmapped_path_count": 54,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        11,
+        26
+      ]
+    },
+    "websearch-cell11": {
+      "input": "inputs/websearch.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:e5073a6b66a280ff2280602a3acbe40dd390f0d50773776460871aa21724700b"
+      ],
+      "unmapped_path_count": 40,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        11,
+        26
+      ]
+    },
+    "hooks-cell16-17": {
+      "input": "inputs/hooks.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:97aa16506ecc34b77fbdd691d4cfda086b330d97ca3e3e904c3d9a143c6d57cd"
+      ],
+      "unmapped_path_count": 42,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        8,
+        16,
+        17,
+        26
+      ]
+    },
+    "slashcmd-cell14-20": {
+      "input": "inputs/slashcmd.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:c686f378c9b5dd36e6cf48e6f91752e669c8b83c409c98176969befb94614a6f"
+      ],
+      "unmapped_path_count": 38,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        8,
+        14,
+        20,
+        26
+      ]
+    },
+    "skill-write-cell10-7": {
+      "input": "inputs/skill-write.jsonl",
+      "trace_count": 1,
+      "content_hashes": [
+        "sha256:1e850138b88206540b13c16949a495aa87c9b5aaee094dedaea60630329525b2"
+      ],
+      "unmapped_path_count": 42,
+      "annotated_cells_fired": [
+        1,
+        2,
+        3,
+        4,
+        7,
+        10,
+        14,
+        20,
+        26
+      ]
+    }
+  }
+}

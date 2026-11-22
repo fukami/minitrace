@@ -1,0 +1,196 @@
+[
+ {
+  "uuid": "00000000-0000-4000-8000-0000000000c1",
+  "name": "synthetic probe",
+  "summary": "",
+  "created_at": "2026-09-20T10:00:00.000000Z",
+  "updated_at": "2026-09-20T10:10:00.000000Z",
+  "account": {
+   "uuid": "00000000-0000-4000-8000-0000000000a1"
+  },
+  "chat_messages": [
+   {
+    "uuid": "m1",
+    "parent_message_uuid": "00000000-0000-4000-8000-000000000000",
+    "sender": "human",
+    "created_at": "2026-09-20T10:00:00.000000Z",
+    "updated_at": "2026-09-20T10:00:00.000000Z",
+    "text": "HUMAN-TEXT",
+    "attachments": [],
+    "files": [],
+    "content": [
+     {
+      "type": "injected_prompt_block",
+      "prompt": "INJECTED-PROMPT",
+      "injection_source": "memory_block_head",
+      "initial_turn_only": true,
+      "skip_on_truncated_continuation": false,
+      "flags": null,
+      "start_timestamp": "2026-09-20T10:00:00.000000Z",
+      "stop_timestamp": "2026-09-20T10:00:00.000000Z"
+     },
+     {
+      "type": "text",
+      "text": "HUMAN-TEXT",
+      "citations": [],
+      "flags": null,
+      "start_timestamp": "2026-09-20T10:00:00.000000Z",
+      "stop_timestamp": "2026-09-20T10:00:00.000000Z"
+     }
+    ]
+   },
+   {
+    "uuid": "m2",
+    "parent_message_uuid": "m1",
+    "sender": "assistant",
+    "created_at": "2026-09-20T10:01:00.000000Z",
+    "updated_at": "2026-09-20T10:01:00.000000Z",
+    "text": "ASSIST-A\n\n```\nRENDERED-TOOL\n```\n\nASSIST-B",
+    "attachments": [],
+    "files": [],
+    "content": [
+     {
+      "type": "thinking",
+      "thinking": "THINK-1",
+      "summaries": [],
+      "cut_off": false,
+      "hidden": false,
+      "thinking_hidden": false,
+      "truncated": false,
+      "signature": null,
+      "alternative_display_type": null,
+      "start_timestamp": "2026-09-20T10:01:00.000000Z",
+      "stop_timestamp": "2026-09-20T10:01:00.000000Z",
+      "flags": null
+     },
+     {
+      "type": "text",
+      "text": "ASSIST-A",
+      "citations": [],
+      "flags": null,
+      "start_timestamp": "2026-09-20T10:01:00.000000Z",
+      "stop_timestamp": "2026-09-20T10:01:00.000000Z"
+     },
+     {
+      "type": "tool_use",
+      "id": "toolu_REAL",
+      "name": "web_search",
+      "input": {
+       "query": "Q1"
+      },
+      "tool_origin": "ORIGIN-1",
+      "hidden_in_chat": null,
+      "tool_identifier": null,
+      "approval_key_legacy": null,
+      "integration_name": null,
+      "start_timestamp": "2026-09-20T10:01:01.000000Z",
+      "stop_timestamp": "2026-09-20T10:01:01.000000Z",
+      "flags": null
+     },
+     {
+      "type": "tool_result",
+      "tool_use_id": "toolu_REAL",
+      "name": "web_search",
+      "is_error": false,
+      "tool_origin": "ORIGIN-1",
+      "hidden_in_chat": null,
+      "content": [
+       {
+        "type": "text",
+        "text": "RESULT-1",
+        "links": null
+       }
+      ],
+      "start_timestamp": "2026-09-20T10:01:02.000000Z",
+      "stop_timestamp": "2026-09-20T10:01:02.000000Z",
+      "flags": null
+     },
+     {
+      "type": "thinking",
+      "thinking": "THINK-2",
+      "summaries": [],
+      "cut_off": false,
+      "hidden": false,
+      "thinking_hidden": false,
+      "truncated": false,
+      "signature": null,
+      "alternative_display_type": null,
+      "start_timestamp": "2026-09-20T10:01:03.000000Z",
+      "stop_timestamp": "2026-09-20T10:01:03.000000Z",
+      "flags": null
+     },
+     {
+      "type": "text",
+      "text": "ASSIST-B",
+      "citations": [],
+      "flags": null,
+      "start_timestamp": "2026-09-20T10:01:04.000000Z",
+      "stop_timestamp": "2026-09-20T10:01:04.000000Z"
+     }
+    ]
+   },
+   {
+    "uuid": "m3",
+    "parent_message_uuid": "m2",
+    "sender": "assistant",
+    "created_at": "2026-09-20T10:02:00.000000Z",
+    "updated_at": "2026-09-20T10:02:00.000000Z",
+    "text": "RENDERED-ONLY",
+    "attachments": [],
+    "files": [],
+    "content": [
+     {
+      "type": "tool_use",
+      "id": null,
+      "name": "web_fetch",
+      "input": {
+       "url": "https://example.invalid/"
+      },
+      "hidden_in_chat": null,
+      "tool_identifier": null,
+      "approval_key_legacy": null,
+      "integration_name": null,
+      "start_timestamp": null,
+      "stop_timestamp": null,
+      "flags": null
+     },
+     {
+      "type": "tool_result",
+      "tool_use_id": null,
+      "name": "web_fetch",
+      "is_error": true,
+      "hidden_in_chat": null,
+      "content": [
+       {
+        "type": "text",
+        "text": "RESULT-2",
+        "links": null
+       }
+      ],
+      "flags": null
+     }
+    ]
+   },
+   {
+    "uuid": "m4",
+    "parent_message_uuid": "m3",
+    "sender": "human",
+    "created_at": "2026-09-20T10:03:00.000000Z",
+    "updated_at": "2026-09-20T10:03:00.000000Z",
+    "text": "HUMAN-2",
+    "attachments": [],
+    "files": [],
+    "content": [
+     {
+      "type": "text",
+      "text": "HUMAN-2",
+      "citations": [],
+      "flags": null,
+      "start_timestamp": "2026-09-20T10:03:00.000000Z",
+      "stop_timestamp": "2026-09-20T10:03:00.000000Z"
+     }
+    ]
+   }
+  ]
+ }
+]
